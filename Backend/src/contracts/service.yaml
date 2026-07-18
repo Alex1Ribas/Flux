@@ -1,0 +1,723 @@
+openapi: 3.0.3
+info:
+  title: Finance API
+  version: 1.0.0
+  description: Personal finance management API
+servers:
+  - url: http://localhost:3000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorMessage:
+      type: object
+      additionalProperties: false
+      properties:
+        message:
+          type: string
+    RegisterUserRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, password, confPassword]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        confPassword:
+          type: string
+    CreateDependenteRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, password, confPassword]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        confPassword:
+          type: string
+    LoginUserRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    UpdateUserRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [USER, DEPENDENT]
+    CaixaRequest:
+      type: object
+      additionalProperties: false
+      required: [nome, tipo]
+      properties:
+        nome:
+          type: string
+        saldo:
+          type: number
+        tipo:
+          type: string
+          enum: [objetivo, orcamento]
+        meta:
+          type: number
+        aporteMensal:
+          type: number
+        orcamentoMensal:
+          type: number
+    CaixaUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        nome:
+          type: string
+        saldo:
+          type: number
+        tipo:
+          type: string
+          enum: [objetivo, orcamento]
+        meta:
+          type: number
+        aporteMensal:
+          type: number
+        orcamentoMensal:
+          type: number
+    DistribuicaoLancamento:
+      type: object
+      additionalProperties: false
+      required: [caixa, valor]
+      properties:
+        caixa:
+          type: string
+        valor:
+          type: number
+    LancamentoRequest:
+      type: object
+      additionalProperties: false
+      required: [tipo, horizonte, valor, descricao, competencia]
+      properties:
+        tipo:
+          type: string
+          enum: [entrada, saida]
+        horizonte:
+          type: string
+          enum: [presente, futuro]
+        valor:
+          type: number
+        descricao:
+          type: string
+        competencia:
+          type: string
+        observacao:
+          type: string
+        caixaOrigem:
+          type: string
+        caixaCompensacao:
+          type: string
+        distribuicao:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistribuicaoLancamento'
+        parcelaRef:
+          type: string
+        parcelaNum:
+          type: number
+        totalParcelas:
+          type: number
+        recorrente:
+          type: boolean
+        competenciaInicial:
+          type: string
+        duracaoMeses:
+          type: number
+        ativo:
+          type: boolean
+        mesesAbatidos:
+          type: number
+    LancamentoUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        tipo:
+          type: string
+          enum: [entrada, saida]
+        horizonte:
+          type: string
+          enum: [presente, futuro]
+        valor:
+          type: number
+        descricao:
+          type: string
+        competencia:
+          type: string
+        observacao:
+          type: string
+        caixaOrigem:
+          type: string
+        caixaCompensacao:
+          type: string
+        distribuicao:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistribuicaoLancamento'
+        parcelaRef:
+          type: string
+        parcelaNum:
+          type: number
+        totalParcelas:
+          type: number
+        recorrente:
+          type: boolean
+        competenciaInicial:
+          type: string
+        duracaoMeses:
+          type: number
+        ativo:
+          type: boolean
+        mesesAbatidos:
+          type: number
+    OrcamentoItemRequest:
+      type: object
+      additionalProperties: false
+      required: [caixa, valor]
+      properties:
+        caixa:
+          type: string
+        valor:
+          type: number
+    OrcamentoRequest:
+      type: object
+      additionalProperties: false
+      required: [orcamentos]
+      properties:
+        orcamentos:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrcamentoItemRequest'
+    LimitesRiscoRequest:
+      type: object
+      additionalProperties: false
+      required: [saudavel, atencao]
+      properties:
+        saudavel:
+          type: number
+        atencao:
+          type: number
+    ConfigLimitesRiscoRequest:
+      type: object
+      additionalProperties: false
+      required: [global, porCaixa]
+      properties:
+        global:
+          $ref: '#/components/schemas/LimitesRiscoRequest'
+        porCaixa:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/LimitesRiscoRequest'
+    PreferenciasUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        tiposEntrada:
+          type: array
+          items:
+            type: string
+        tiposSaida:
+          type: array
+          items:
+            type: string
+        limitesRisco:
+          $ref: '#/components/schemas/ConfigLimitesRiscoRequest'
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+  /api/users/register:
+    post:
+      summary: Register first account holder (titular)
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '403':
+          description: Registration closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/users/login:
+    post:
+      summary: Login
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/users:
+    post:
+      summary: Create dependente (titular only)
+      operationId: createDependente
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDependenteRequest'
+      responses:
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    get:
+      summary: List users (titular only)
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/users/{id}:
+    get:
+      summary: Get user by id
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    put:
+      summary: Update user (titular only)
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      summary: Delete user (titular only)
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /api/caixas:
+    post:
+      summary: Create caixa
+      operationId: createCaixa
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaixaRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+    get:
+      summary: List caixas
+      operationId: listCaixas
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  /api/caixas/{id}:
+    get:
+      summary: Get caixa
+      operationId: getCaixa
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    put:
+      summary: Update caixa
+      operationId: updateCaixa
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaixaUpdateRequest'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    delete:
+      summary: Delete caixa
+      operationId: deleteCaixa
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+  /api/lancamentos:
+    post:
+      summary: Create lancamento
+      operationId: createLancamento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LancamentoRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+    get:
+      summary: List lancamentos
+      operationId: listLancamentos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: competencia
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: recorrente
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  /api/lancamentos/{id}:
+    get:
+      summary: Get lancamento
+      operationId: getLancamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    put:
+      summary: Update lancamento
+      operationId: updateLancamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LancamentoUpdateRequest'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    delete:
+      summary: Delete lancamento
+      operationId: deleteLancamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+  /api/orcamentos/{competencia}:
+    get:
+      summary: List orcamentos by competencia
+      operationId: listOrcamentos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: competencia
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+    put:
+      summary: Upsert orcamentos by competencia
+      operationId: upsertOrcamentos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: competencia
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrcamentoRequest'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+  /api/acompanhamento/{competencia}:
+    get:
+      summary: Get monthly acompanhamento
+      operationId: getAcompanhamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: competencia
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  /api/preferencias:
+    get:
+      summary: Get user preferencias
+      operationId: getPreferencias
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+    put:
+      summary: Update user preferencias
+      operationId: updatePreferencias
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferenciasUpdateRequest'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized

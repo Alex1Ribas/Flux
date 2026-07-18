@@ -1,0 +1,32 @@
+---
+description: Governança finance-api — consultar AGENTS.md e rules antes de qualquer alteração
+alwaysApply: true
+---
+
+# finance-api — governança
+
+Antes de criar, mover ou refatorar código neste repositório:
+
+1. Leia **`AGENTS.md`** na raiz do projeto.
+2. Respeite **`.cursor/rules/domain-contratos-finance-api.mdc`** (interfaces, enums, `entity/interfaces/`).
+3. Respeite **`.cursor/rules/domain-seguranca-repositorio.mdc`** ao tocar em `repository/` ou ports de credenciais.
+4. Respeite **`.cursor/rules/seguranca-api-finance-api.mdc`** ao tocar em controllers, services de auth/recursos ou OpenAPI.
+
+## Não improvisar
+
+| Proibido | Use em vez disso |
+|----------|------------------|
+| `domain/common/enums/E*.ts` (entidade) | `entity/interfaces/<feature>.interface.ts` |
+| `domain/<feature>/enums/E*.ts` | `entity/interfaces/<feature>.interface.ts` |
+| `routes/` separado do controller | `application/controllers/*.controller.ts` + `initRoutes()` |
+| Repository com senha/hash | `IUserCredentialsPort` + infra |
+| Endpoint `:id` sem ownership no service | `assertResourceAccess` + testes `*.security.int.test.ts` |
+| `role` em `POST /users/register` | Titular fixo no 1º cadastro; dependente via `POST /users` |
+
+## Ao finalizar
+
+```bash
+yarn build && yarn test:unit && yarn test:int
+```
+
+Se a tarefa pedir endpoints ou auth: incluir cenários em `integration/security/`.

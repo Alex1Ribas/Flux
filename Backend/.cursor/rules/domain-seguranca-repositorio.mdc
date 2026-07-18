@@ -1,0 +1,48 @@
+---
+description: Proíbe vazamento de credenciais nos contratos de repository do domain
+globs: src/domain/**/repository/**/*.ts, src/domain/**/*.service.interface.ts
+alwaysApply: false
+---
+
+# Segurança — repositories de domínio
+
+Referência: `AGENTS.md`.
+
+## Princípio
+
+Contratos em `src/domain/<feature>/repository/` são **somente leitura/escrita de dados públicos do agregado** (`IUser`, etc.). **Credenciais (senha, hash, secret, token bruto) nunca entram no contrato de repository.**
+
+## Proibido em `I*RepositoryRead` / `I*RepositoryWrite`
+
+- Métodos cujo nome ou retorno exponha senha: `*WithPassword`, `*WithSecret`, `*WithHash`, `find*Credentials`, `selectPassword`
+- Retornar `User` / entidade com `passwordHash` quando o método for de **consulta genérica** (ex.: `findByEmail` no read)
+- `IUser` ou DTOs de repository com campos `password`, `passwordHash`, `confPassword`
+
+## Onde validar login / senha
+
+| Responsabilidade | Onde |
+|------------------|------|
+| Verificar email + senha no login | Port `IUserCredentialsPort` (ou equivalente) em `<feature>.service.interface.ts` |
+| Implementação (bcrypt, `select('+password')`) | `src/infrastructure/` apenas |
+| Hash na **criação** de usuário | `IHashService` no service de domínio (registro) |
+
+```typescript
+// ✅ domain/user/entity/interfaces/user.service.interface.ts
+export interface IUserCredentialsPort {
+  verify(email: string, plainPassword: string): Promise<ICredentialVerifyResult>;
+}
+
+// ✅ domain/user/repository/user.repository.read.ts
+export interface IUserRepositoryRead {
+  findUserByEmail(email: string): Promise<IUser | null>;
+}
+
+// ❌ findUserByEmailWithPassword(...)
+// ❌ findUserByEmail(...): Promise<User | null>  // se User tiver passwordHash no read
+```
+
+## Checklist antes de merge
+
+- [ ] Nenhum método novo em `repository/` menciona password/secret/hash
+- [ ] Login usa port de credenciais, não repository read
+- [ ] `IUser` permanece sem campo de senha
