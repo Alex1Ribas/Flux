@@ -1,0 +1,11 @@
+{
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.expo": true,
+    "**/dist": true
+  }
+}

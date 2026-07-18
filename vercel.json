@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "yarn install",
+  "buildCommand": "yarn workspace flux-api build && yarn workspace flux-app build",
+  "outputDirectory": "Frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/Backend/src/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ],
+  "functions": {
+    "Backend/src/index.ts": {
+      "includeFiles": "Backend/src/contracts/service.yaml",
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+}

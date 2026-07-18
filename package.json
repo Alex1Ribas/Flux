@@ -1,0 +1,28 @@
+{
+  "name": "flux",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Flux monorepo — app financeiro (Expo) + API",
+  "workspaces": [
+    "Frontend",
+    "Backend"
+  ],
+  "scripts": {
+    "dev:app": "yarn workspace flux-app dev",
+    "dev:app:clear": "yarn workspace flux-app exec expo start --clear",
+    "dev:api": "yarn workspace flux-api dev",
+    "dev:web": "yarn workspace flux-app web",
+    "build:app": "yarn workspace flux-app build",
+    "build:api": "yarn workspace flux-api build",
+    "build": "yarn build:api && yarn build:app",
+    "test:api": "yarn workspace flux-api test",
+    "typecheck:app": "yarn workspace flux-app typecheck",
+    "typecheck:api": "yarn workspace flux-api exec tsc --noEmit -p tsconfig.json",
+    "typecheck": "yarn typecheck:app && yarn typecheck:api",
+    "postinstall": "yarn workspace flux-app run postinstall"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "yarn@1.22.22"
+}

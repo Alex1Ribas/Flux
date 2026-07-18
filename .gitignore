@@ -1,0 +1,54 @@
+# Dependências
+node_modules/
+**/node_modules/
+
+# Env e secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Builds
+dist/
+**/dist/
+web-build/
+.expo/
+**/.expo/
+*.tsbuildinfo
+
+# Native
+android/
+ios/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro / Expo
+.metro-health-check*
+expo-env.d.ts
+
+# Logs e debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Testes / coverage
+coverage/
+**/coverage/
+
+# Vercel
+.vercel/

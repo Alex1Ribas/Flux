@@ -1,0 +1,16 @@
+{
+  "folders": [
+    { "name": "Flux", "path": "." },
+    { "name": "Frontend", "path": "Frontend" },
+    { "name": "Backend", "path": "Backend" }
+  ],
+  "settings": {
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "files.exclude": {
+      "**/node_modules": true
+    },
+    "search.exclude": {
+      "**/node_modules": true
+    }
+  }
+}
