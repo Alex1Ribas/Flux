@@ -1,0 +1,1 @@
+export { useCompetenciaNavegavel } from "./useCompetenciaNavegavel";

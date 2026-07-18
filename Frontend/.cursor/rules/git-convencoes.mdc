@@ -1,0 +1,42 @@
+---
+description: Convenções de branches e mensagens de commit (flux)
+alwaysApply: true
+---
+
+# Branches e commits
+
+## Branches
+
+- Padrão: `feat/add-<descricao-em-kebab-case>` (entrega de valor)
+- Integração: `staging` (branch principal pós-publicação)
+- Vários commits incrementais por branch — a branch conta a história da feature
+
+## Commits (Conventional Commits)
+
+- Formato: `tipo(escopo): Descrição curta`
+- Tipos: `feat`, `fix`, `chore`, `docs`, `refactor`
+- Escopo: parte lógica do trabalho (`shared`, `i18n`, `carrossel`, `store`, `pages`, `ui`…)
+- Descrição em português; verbos como *Adicionado*, *Adicionada*, *Corrigido*
+- Um passo por commit — reviewável, não monolítico
+
+## Exemplos
+
+- Branch: `feat/add-onboarding`
+- Commits na branch:
+  - `feat(i18n): Adicionado instruções do aplicativo`
+  - `feat(onboarding): Adicionado página de onboarding`
+  - `feat(carrossel): Adicionado carrossel na página`
+  - `feat(carrossel): Adicionada primeira página do carrossel de boas-vindas`
+
+## Pull requests
+
+- Base: `staging`; head: branch `feat/add-*`
+- Título: resumo da feature (ex.: `feat(onboarding): onboarding e carrossel de boas-vindas`)
+- Corpo: preencher na abertura via `gh pr create --body` seguindo `.github/pull_request_template.md`
+- **Não** commitar descrições de PR no template — o arquivo no ramo principal fica vazio (só estrutura)
+
+## Co-author proibido
+
+- **Nunca** incluir `Co-authored-by: Cursor` (ou qualquer co-author de agente) em commits
+- Hook em `.githooks/commit-msg` bloqueia isso localmente — ativar com: `git config core.hooksPath .githooks`
+- AGENTS.md reforça a mesma regra para agentes de IA

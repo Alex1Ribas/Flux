@@ -1,0 +1,160 @@
+export type Horizonte = "presente" | "futuro";
+export type TipoLancamento = "entrada" | "saida";
+export type TipoRecorrencia = "nenhum" | "dividir" | "cheio";
+
+export interface Distribuicao {
+  caixa: string;
+  valor: number;
+}
+
+export interface LancamentoInput {
+  tipo: TipoLancamento;
+  horizonte: Horizonte;
+  valor: number;
+  descricao: string;
+  competencia: string;
+  observacao?: string;
+  caixaOrigem?: string;
+  caixaCompensacao?: string;
+  distribuicao?: Distribuicao[];
+  parcelaRef?: string;
+  parcelaNum?: number;
+  totalParcelas?: number;
+  /** Compromisso recorrente (mesma coleção de lançamentos). */
+  recorrente?: boolean;
+  competenciaInicial?: string;
+  duracaoMeses?: number;
+  ativo?: boolean;
+  /** Quantidade de meses de compromisso abatidos (ex.: antecipação de parcelas) */
+  mesesAbatidos?: number;
+}
+
+export interface Lancamento extends LancamentoInput {
+  id: string;
+}
+
+/** Visão de UI de um lançamento com recorrente=true. */
+export interface ItemRecorrente {
+  id: string;
+  nome: string;
+  tipo: TipoLancamento;
+  valor: number;
+  /** Caixa planejada de destino (entrada) ou origem (saída) */
+  caixaId: string;
+  /** Competência inicial no formato AAAA-MM */
+  competenciaInicial: string;
+  duracaoMeses: number;
+  ativo: boolean;
+}
+
+export interface ParcelamentoInput {
+  valorTotal: number;
+  parcelas: number;
+  primeiraCompetencia: string;
+  descricao: string;
+  caixaOrigem: string;
+  tipoDescricao: string;
+  recorrente?: boolean;
+}
+
+export type TipoCaixa = "objetivo" | "orcamento";
+
+export interface CaixaCatalogoItem {
+  id: string;
+  nome: string;
+  tipo?: TipoCaixa;
+  meta?: number;
+  aporteMensal?: number;
+  orcamentoMensal?: number;
+}
+
+export interface LimitesRisco {
+  /** Percentual máximo comprometido ainda considerado saudável (ex.: 30) */
+  saudavel: number;
+  /** Percentual máximo comprometido antes de crítico (ex.: 50) — acima disso é crítico */
+  atencao: number;
+}
+
+export interface ConfigLimitesRisco {
+  global: LimitesRisco;
+  porCaixa: Record<string, LimitesRisco>;
+}
+
+export type NivelRiscoCaixa = "sem_orcamento" | "saudavel" | "atencao" | "critico";
+
+export interface MetricasRiscoCaixa {
+  orcamento: number;
+  saldoRestante: number;
+  percentualComprometido: number;
+  percentualRestante: number;
+  semOrcamento: boolean;
+}
+
+export type Caixas = Record<string, number>;
+export type Orcamentos = Record<string, Record<string, number>>;
+
+export interface RiscoPrevisto {
+  entradaPrevista: number;
+  comprometido: number;
+  risco: number;
+}
+
+export type StatusRiscoMensal = "saudavel" | "atencao" | "critico";
+
+export interface CompromissoMes {
+  id: string;
+  descricao: string;
+  tipo: TipoLancamento;
+  valor: number;
+}
+
+export interface AcompanhamentoMes {
+  competencia: string;
+  /** Bloco A: risco só com recorrente === true. */
+  risco: RiscoPrevisto;
+  /** Risco real (previsto + efeito dos avulsos). */
+  riscoReal: RiscoPrevisto;
+  diferencial: number;
+  diferencialValor: number;
+  status: StatusRiscoMensal;
+  dentroPlanejado: boolean;
+  limites: LimitesRisco;
+  /** Bloco B: evolução diária (previsto fixo + realidade). */
+  evolucao: PontoEvolucaoRisco[];
+  /** Bloco C: compromissos recorrentes (entradas e saídas). */
+  compromissos: CompromissoMes[];
+  /** @deprecated Preferir compromissos; mantido para compatibilidade. */
+  composicao: ComposicaoRiscoDecisao[];
+  /** Bloco D: movimentações avulsas (recorrente === false). */
+  impactos: ImpactoRisco[];
+}
+
+export interface PontoEvolucaoRisco {
+  dia: number;
+  label: string;
+  /** Linha do planejado recorrente. */
+  riscoEsperado: number;
+  /** Linha com efeito dos lançamentos individuais. */
+  riscoReal: number;
+  /** Diferencial (real - esperado) no ponto. */
+  diferencial: number;
+}
+
+export interface ComposicaoRiscoDecisao {
+  descricao: string;
+  valor: number;
+  percentual: number;
+}
+
+export type TipoImpactoRisco =
+  "despesa_futura" | "parcelamento" | "renda_extra" | "realizacao" | "abatimento" | "outro";
+
+export interface ImpactoRisco {
+  id: string;
+  descricao: string;
+  tipo: TipoImpactoRisco;
+  valor: number;
+  impactoRisco: number;
+  competencia: string;
+  direcao: "aumenta" | "reduz";
+}

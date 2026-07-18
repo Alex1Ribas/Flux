@@ -1,0 +1,1 @@
+export { ProvedorQueryApp } from "./provedorQuery";
