@@ -51,7 +51,7 @@ export function Botao({
     secondary: cores.surface,
     ghost: "transparent",
     danger: cores.errorHighlight,
-    success: cores.successHighlight,
+    success: cores.success,
   };
 
   const variantBorder: Record<VarianteBotao, string> = {
@@ -59,7 +59,7 @@ export function Botao({
     secondary: cores.border,
     ghost: "transparent",
     danger: cores.border,
-    success: cores.border,
+    success: cores.success,
   };
 
   const variantText: Record<VarianteBotao, string> = {
@@ -67,7 +67,7 @@ export function Botao({
     secondary: cores.text,
     ghost: cores.textMuted,
     danger: cores.error,
-    success: cores.success,
+    success: cores.white,
   };
 
   let iconColor = cores.text;
@@ -78,7 +78,7 @@ export function Botao({
   } else if (variant === "danger") {
     iconColor = cores.error;
   } else if (variant === "success") {
-    iconColor = cores.success;
+    iconColor = cores.white;
   } else if (variant === "primary") {
     iconColor = cores.white;
   }
@@ -101,7 +101,7 @@ export function Botao({
 
         return [
           {
-            borderRadius: 20,
+            borderRadius: size === "lg" ? 999 : 20,
             backgroundColor: disabled ? cores.surface : variantBg[variant],
             borderWidth: variant === "ghost" ? 0 : 1,
             borderColor: disabled ? cores.border : variantBorder[variant],
