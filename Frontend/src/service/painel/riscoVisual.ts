@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react-native";
 
-import { COLORS } from "@/shared/tokensDesign";
+import type { CoresTema } from "@/shared/tema";
 import { CircleAlert, CircleCheck, CircleX, Minus } from "@/shared/icons";
 import type { NivelRiscoCaixa } from "@/types/flux";
 
@@ -11,34 +11,37 @@ export interface ConfigVisualRisco {
   Icon: LucideIcon;
 }
 
-export function getConfigVisualRisco(nivel: NivelRiscoCaixa): ConfigVisualRisco {
+export function getConfigVisualRisco(
+  nivel: NivelRiscoCaixa,
+  cores: CoresTema
+): ConfigVisualRisco {
   switch (nivel) {
     case "saudavel":
       return {
-        color: COLORS.success,
+        color: cores.success,
         label: "Saudável",
-        bg: COLORS.successHighlight,
+        bg: cores.successHighlight,
         Icon: CircleCheck as LucideIcon,
       };
     case "atencao":
       return {
-        color: COLORS.warning,
+        color: cores.warning,
         label: "Atenção",
-        bg: COLORS.warningHighlight,
+        bg: cores.warningHighlight,
         Icon: CircleAlert as LucideIcon,
       };
     case "critico":
       return {
-        color: COLORS.error,
+        color: cores.error,
         label: "Crítico",
-        bg: COLORS.errorHighlight,
+        bg: cores.errorHighlight,
         Icon: CircleX as LucideIcon,
       };
     default:
       return {
-        color: COLORS.textMuted,
+        color: cores.textMuted,
         label: "Sem meta",
-        bg: COLORS.surface2,
+        bg: cores.surface2,
         Icon: Minus as LucideIcon,
       };
   }
