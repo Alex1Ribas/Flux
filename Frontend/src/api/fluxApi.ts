@@ -212,6 +212,16 @@ export const acompanhamentoApi = {
     }),
 };
 
+export interface CategoriaCreatePayload {
+  tipo: TipoLancamento;
+  categoria: string;
+}
+
+export interface CategoriaCreateResposta {
+  tipo: TipoLancamento;
+  categoria: string;
+}
+
 export const preferenciasApi = {
   obter: (token: string) =>
     cliente.get<PreferenciasApi>("/preferencias", { headers: authHeaders(token) }),
@@ -230,4 +240,8 @@ export const preferenciasApi = {
       headers: authHeaders(token),
     });
   },
+  adicionarCategoria: (token: string, payload: CategoriaCreatePayload) =>
+    cliente.post<CategoriaCreateResposta, CategoriaCreatePayload>("/categorias", payload, {
+      headers: authHeaders(token),
+    }),
 };

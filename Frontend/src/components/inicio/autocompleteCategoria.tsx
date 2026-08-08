@@ -35,6 +35,7 @@ export function AutocompleteCategoria({
   const [sugestoes, setSugestoes] = useState<string[]>([]);
   const [aberto, setAberto] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [buscaFeita, setBuscaFeita] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requisicaoRef = useRef(0);
@@ -104,16 +105,28 @@ export function AutocompleteCategoria({
     setBuscaFeita(false);
   };
 
-  const adicionarDigitado = () => {
+  const adicionarDigitado = async () => {
     const nome = texto.trim();
-    if (!nome) return;
+    if (!nome || salvando) return;
+
+    if (token) {
+      setSalvando(true);
+      try {
+        await preferenciasApi.adicionarCategoria(token, { tipo: modo, categoria: nome });
+      } catch {
+        // Registrar ainda chama garantirCategoria no backend
+      } finally {
+        setSalvando(false);
+      }
+    }
+
     selecionar(nome);
   };
 
   const mostrarAdicionar =
-    buscaFeita && !carregando && texto.trim().length > 0 && sugestoes.length === 0;
+    buscaFeita && !carregando && !salvando && texto.trim().length > 0 && sugestoes.length === 0;
 
-  const mostraLista = aberto && (carregando || sugestoes.length > 0 || mostrarAdicionar);
+  const mostraLista = aberto && (carregando || salvando || sugestoes.length > 0 || mostrarAdicionar);
 
   return (
     <View>
@@ -128,17 +141,20 @@ export function AutocompleteCategoria({
             setAberto(true);
             if (!buscaFeita) buscar(texto.trim());
           }}
-          onSubmitEditing={adicionarDigitado}
+          onSubmitEditing={() => {
+            void adicionarDigitado();
+          }}
           placeholder="Categoria"
           placeholderTextColor={tokens.textMuted}
           returnKeyType="done"
           autoCorrect={false}
           autoCapitalize="sentences"
+          editable={!salvando}
           className="flex-1 text-text text-md py-3"
           style={{ color: tokens.text }}
           accessibilityLabel="Categoria do lançamento"
         />
-        {carregando ? (
+        {carregando || salvando ? (
           <ActivityIndicator
             size="small"
             color={cores.textMuted}
@@ -151,8 +167,10 @@ export function AutocompleteCategoria({
           className="mt-2 rounded-2xl border border-border overflow-hidden"
           style={{ backgroundColor: tokens.surfaceActive }}
         >
-          {carregando && sugestoes.length === 0 ? (
-            <Text className="text-textMuted text-sm px-4 py-3">Buscando…</Text>
+          {(carregando || salvando) && sugestoes.length === 0 ? (
+            <Text className="text-textMuted text-sm px-4 py-3">
+              {salvando ? "Salvando…" : "Buscando…"}
+            </Text>
           ) : null}
 
           {sugestoes.map((item) => (
@@ -169,7 +187,9 @@ export function AutocompleteCategoria({
 
           {mostrarAdicionar ? (
             <Pressable
-              onPress={adicionarDigitado}
+              onPress={() => {
+                void adicionarDigitado();
+              }}
               className="px-4 py-3"
               accessibilityRole="button"
               accessibilityLabel={`Adicionar categoria ${texto.trim()}`}
