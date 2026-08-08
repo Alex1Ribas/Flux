@@ -211,12 +211,13 @@ export function TelaInicio({
         ) : null}
 
         {/* 5. Ação */}
-        <View className="mx-4 mb-6">
+        <View className="mx-4 mb-6 rounded-3xl border border-border bg-surface p-4">
           <Botao
             label="Registrar"
             onPress={home.registrar}
             size="lg"
             variant="success"
+            style={{ width: "100%" }}
           />
         </View>
       </ScrollView>
