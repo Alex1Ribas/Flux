@@ -2679,6 +2679,11 @@ append-field@^1.0.0:
   resolved "https://registry.yarnpkg.com/append-field/-/append-field-1.0.0.tgz#1e3440e915f0b1203d23748e78edd7b9b5b43e56"
   integrity sha512-klpgFSWLW1ZEs8svjfb7g4qWY0YS5imI82dTg+QahUvJ8YqAY0P10Uk8tTyh9ZGuYEZEMaeJYCF5BFuX552hsw==
 
+arg@^4.1.0:
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/arg/-/arg-4.1.3.tgz#269fc7ad5b8e42cb63c896d5666017261c144089"
+  integrity sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==
+
 arg@^5.0.2:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/arg/-/arg-5.0.2.tgz#c81433cc427c92c4dcf4865142dbca6f15acd59c"
@@ -4356,6 +4361,11 @@ expo-device@~57.0.0:
   dependencies:
     ua-parser-js "^0.7.33"
 
+expo-eas-client@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/expo-eas-client/-/expo-eas-client-57.0.1.tgz#2a43792be26c688f99c4e51f1696c565b533477a"
+  integrity sha512-4w51+zsl/ziUHQMJgLgUdgsNhRPAwHBfySpPB1hpWU21X74QS9T4SqDftaRnrDagn/DfcrXUMJvHbDQUxLPJNA==
+
 expo-file-system@~57.0.1:
   version "57.0.1"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-57.0.1.tgz#920792f0e5e1c1a98da80d511dc5c131ab302651"
@@ -4385,6 +4395,11 @@ expo-image@~57.0.0:
   dependencies:
     sf-symbols-typescript "^2.2.0"
 
+expo-json-utils@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/expo-json-utils/-/expo-json-utils-57.0.1.tgz#1635b80ccb124e2635765611957ac4e825880130"
+  integrity sha512-cgTe1NqzQdYs/WN+3nIY5IZg8s0pb0xaTUbhYvxQDn137GbwRfHoGM2se3m3Vsl4Qu+B9G4RPEK5WJDEU2Do7g==
+
 expo-keep-awake@~57.0.1:
   version "57.0.1"
   resolved "https://registry.yarnpkg.com/expo-keep-awake/-/expo-keep-awake-57.0.1.tgz#75dfd3d6faeb0f32eb8b670d6b736375fdf2cdb8"
@@ -4397,6 +4412,13 @@ expo-linking@~57.0.1:
   dependencies:
     expo-constants "~57.0.5"
     invariant "^2.2.4"
+
+expo-manifests@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/expo-manifests/-/expo-manifests-57.0.1.tgz#4596d35f82d65293570fcd8b636b51c5d9696dc4"
+  integrity sha512-qB/mDG2dYdl+EvUeQuqP8KFYCFgFCQjJYdWIHo8SFBgDzMYmdF286DFY2M1M9Okr99wkb5M4tgA3aCcwv3aEQA==
+  dependencies:
+    expo-json-utils "~57.0.1"
 
 expo-modules-autolinking@~57.0.8:
   version "57.0.8"
@@ -4476,6 +4498,11 @@ expo-status-bar@~57.0.0:
   resolved "https://registry.yarnpkg.com/expo-status-bar/-/expo-status-bar-57.0.1.tgz#0a8ec1657fcd0987f9612ca411a0c3d002f0eaf0"
   integrity sha512-Xwaq1gAoVRWx5dPG5VhT5RSbnI9OilhZnO5qoPBnUaBAa5VzRzfdS8q0/bsPt0jR2DKLtGuP0bQ6efMJ4RIMDg==
 
+expo-structured-headers@~57.0.0:
+  version "57.0.0"
+  resolved "https://registry.yarnpkg.com/expo-structured-headers/-/expo-structured-headers-57.0.0.tgz#6ea65c3089501e8718cd5aaa1f96fc6740033f0c"
+  integrity sha512-//t9UNPbJSEysc2x4VKJG/u7Osvv5DYJWsET5bqt/B+qcD1by/JXvSQzX3Q/YAgA96xFPontrz6OAPLbO4JKEA==
+
 expo-symbols@^57.0.1, expo-symbols@~57.0.0:
   version "57.0.1"
   resolved "https://registry.yarnpkg.com/expo-symbols/-/expo-symbols-57.0.1.tgz#3f420b1f1749da4df1deebb7bdbfc82131a262a2"
@@ -4491,6 +4518,32 @@ expo-system-ui@~57.0.0:
   dependencies:
     "@react-native/normalize-colors" "0.86.0"
     debug "^4.3.2"
+
+expo-updates-interface@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/expo-updates-interface/-/expo-updates-interface-57.0.1.tgz#2ff8a65f9ec139743b9b29273e42f2888420db00"
+  integrity sha512-+LUWwJ0gf/TEKMVdQAw/Gjih4dvrk+URgy24X9qEGKuuMDZqjBRm9T4yQyBVALGL5TTdPUaB6ILxx3lshm3pwQ==
+
+expo-updates@~57.0.12:
+  version "57.0.12"
+  resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-57.0.12.tgz#14ff256c7a2f3b04d28ba36fbee135a6de10cd8f"
+  integrity sha512-ZFsW8Mi9qFrrYPSXF++1FXejjflRdgbVPzaSJJATuHelVmIIb3D98gCO9sIsaLPHO1RCQVj1ltkj51VnwVL+4g==
+  dependencies:
+    "@expo/code-signing-certificates" "^0.0.6"
+    "@expo/plist" "^0.8.1"
+    "@expo/spawn-async" "^1.8.0"
+    arg "^4.1.0"
+    chalk "^4.1.2"
+    debug "^4.3.4"
+    expo-eas-client "~57.0.1"
+    expo-manifests "~57.0.1"
+    expo-structured-headers "~57.0.0"
+    expo-updates-interface "~57.0.1"
+    getenv "^2.0.0"
+    glob "^13.0.0"
+    ignore "^5.3.1"
+    nullthrows "^1.1.1"
+    resolve-from "^5.0.0"
 
 expo-web-browser@~57.0.0:
   version "57.0.1"

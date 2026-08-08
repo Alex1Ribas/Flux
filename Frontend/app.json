@@ -45,6 +45,12 @@
         "projectId": "d44ed6c2-a3bc-4aa2-9305-93bc8ca12a84"
       },
       "fluxApiBaseUrl": "https://flux-backend-tizm.vercel.app/api"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d44ed6c2-a3bc-4aa2-9305-93bc8ca12a84"
     }
   }
 }
