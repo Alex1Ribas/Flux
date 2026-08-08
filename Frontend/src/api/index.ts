@@ -31,4 +31,4 @@ export {
   type PreferenciasApi,
   type PreferenciasUpdatePayload,
   type UsuarioApi,
-} from "./financeApi";
+} from "./fluxApi";

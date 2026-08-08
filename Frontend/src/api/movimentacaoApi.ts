@@ -4,7 +4,7 @@ import { criarLancamentosParcelamento } from "@/service/store/lancamentos";
 import type { LancamentoInput, ParcelamentoInput } from "@/types/flux";
 import { gerarId, getMesAtual, getMesDeCompetencia, getMesesFuturos } from "@/utils/helpers";
 
-import { lancamentosApi, type LancamentoPayload } from "./financeApi";
+import { lancamentosApi, type LancamentoPayload } from "./fluxApi";
 
 export function lancamentoInputParaPayload(input: LancamentoInput): LancamentoPayload {
   return {

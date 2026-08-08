@@ -10,6 +10,7 @@
   "scripts": {
     "dev:app": "yarn workspace flux-app dev",
     "dev:app:clear": "yarn workspace flux-app exec expo start --clear",
+    "doctor:app": "yarn workspace flux-app doctor",
     "dev:api": "yarn workspace flux-api dev",
     "dev:web": "yarn workspace flux-app web",
     "build:app": "yarn workspace flux-app build",
@@ -23,6 +24,9 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "resolutions": {
+    "react-native-screens": "4.25.2"
   },
   "packageManager": "yarn@1.22.22"
 }

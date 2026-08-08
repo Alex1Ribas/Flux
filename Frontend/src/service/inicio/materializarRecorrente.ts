@@ -1,4 +1,4 @@
-import { lancamentosApi } from "@/api/financeApi";
+import { lancamentosApi } from "@/api/fluxApi";
 import type { Lancamento, TipoLancamento } from "@/types/flux";
 
 import { montarPayloadLancamentoRecorrente } from "./recorrentes";

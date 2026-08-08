@@ -9,16 +9,16 @@ import type {
   TipoLancamento,
 } from "@/types/flux";
 
-const extra = Constants.expoConfig?.extra as { financeApiBaseUrl?: string } | undefined;
+const extra = Constants.expoConfig?.extra as { fluxApiBaseUrl?: string } | undefined;
 
 /** Em dispositivo físico, troca localhost pelo IP do host do Metro (mesma máquina da API). */
 function resolverUrlApi(): string {
   const configurada =
-    process.env.EXPO_PUBLIC_FINANCE_API_URL || extra?.financeApiBaseUrl || "";
+    process.env.EXPO_PUBLIC_FLUX_API_URL || extra?.fluxApiBaseUrl || ""
 
   if (!configurada) {
     throw new Error(
-      "Defina EXPO_PUBLIC_FINANCE_API_URL no .env (ou extra.financeApiBaseUrl no app.json)."
+      "Defina EXPO_PUBLIC_FLUX_API_URL no .env (ou extra.fluxApiBaseUrl no app.json)."
     );
   }
 
