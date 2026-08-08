@@ -13,10 +13,15 @@ function NavegacaoComTema() {
   const { isDark } = useTema();
   const estadoAtualizacao = useAtualizacaoOta();
 
+  let conteudo = <Slot />;
+  if (estadoAtualizacao === "baixando") {
+    conteudo = <TelaAtualizacao />;
+  }
+
   return (
     <NavThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
-      {estadoAtualizacao === "baixando" ? <TelaAtualizacao /> : <Slot />}
+      {conteudo}
     </NavThemeProvider>
   );
 }
