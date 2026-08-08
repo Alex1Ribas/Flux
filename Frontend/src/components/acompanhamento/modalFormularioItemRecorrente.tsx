@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { Botao, Campo, SeletorCaixa, TituloSecao } from "@/shared/components";
+import { Botao, Campo, CampoData, SeletorCaixa, TituloSecao } from "@/shared/components";
 import type { FormularioItemRecorrente } from "@/service/acompanhamento";
 import type { CaixaCatalogoItem } from "@/types/flux";
 
@@ -99,11 +99,15 @@ export function ModalFormularioItemRecorrente({
                 keyboardType="numeric"
                 placeholder="R$ 0,00"
               />
-              <Campo
-                label="Competência inicial (AAAA-MM)"
-                value={formulario.competenciaInicial}
-                onChangeText={(valor) => onAtualizarCampo("competenciaInicial", valor)}
-                placeholder="2026-07"
+              <CampoData
+                label="Competência inicial"
+                value={
+                  formulario.competenciaInicial.split("-").length >= 3
+                    ? formulario.competenciaInicial
+                    : `${formulario.competenciaInicial}-01`
+                }
+                onChange={(dataIso) => onAtualizarCampo("competenciaInicial", dataIso)}
+                placeholder="Selecionar data"
               />
               <Campo
                 label="Duração (meses)"

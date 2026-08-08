@@ -11,7 +11,7 @@ import { useTelaConfigRecorrentes } from "@/entities/acompanhamento";
 import { COLORS } from "@/shared/tokensDesign";
 import { Plus } from "@/shared/icons";
 import { obterNomeCaixa } from "@/shared/catalogoCaixas";
-import { formatBRL } from "@/utils/helpers";
+import { formatBRL, getCompetenciaLabel, getDiaCompetencia, temDiaNaCompetencia } from "@/utils/helpers";
 import type { TelaProps } from "@/types/navigation";
 
 export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps) {
@@ -97,7 +97,11 @@ export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps)
                       </Text>
                     ) : null}
                     <Text className="text-textFaint text-[10px] mt-0.5">
-                      Desde {item.competenciaInicial} · {item.duracaoMeses} meses
+                      {temDiaNaCompetencia(item.competenciaInicial)
+                        ? `Dia ${getDiaCompetencia(item.competenciaInicial)} · desde ${getCompetenciaLabel(item.competenciaInicial)}`
+                        : `Desde ${getCompetenciaLabel(item.competenciaInicial)}`}
+                      {" · "}
+                      {item.duracaoMeses} meses
                     </Text>
                   </View>
                   <Text

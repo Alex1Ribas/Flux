@@ -33,6 +33,7 @@ export function ListaCompromissosMes({ compromissos }: ListaCompromissosMesProps
                   <Text className="text-text text-md font-medium">{item.descricao}</Text>
                   <Text className="text-textFaint text-md mt-0.5">
                     {item.tipo === "entrada" ? "Entrada recorrente" : "Saída recorrente"}
+                    {item.dia !== null ? ` · dia ${item.dia}` : ""}
                   </Text>
                 </View>
                 <Text
