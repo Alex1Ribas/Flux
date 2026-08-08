@@ -1,6 +1,5 @@
-import { Pressable, ScrollView, Text } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { useEffect } from "react";
+import { useMemo } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import type { CaixaId } from "@/shared/estilosCaixa";
 import type { CaixaCatalogoItem } from "@/types/flux";
@@ -15,6 +14,23 @@ interface CabecalhoCaixasProps {
   onSelect: (caixaId: CaixaId) => void;
 }
 
+/** Com saldo: maior → menor à esquerda; zeradas por último (direita). */
+function ordenarCaixasPorSaldo(
+  catalogo: CaixaCatalogoItem[],
+  saldos: Record<string, number>
+): CaixaCatalogoItem[] {
+  return [...catalogo].sort((caixaA, caixaB) => {
+    const saldoA = saldos[caixaA.id] || 0;
+    const saldoB = saldos[caixaB.id] || 0;
+    const zeradaA = saldoA === 0;
+    const zeradaB = saldoB === 0;
+
+    if (zeradaA && !zeradaB) return 1;
+    if (!zeradaA && zeradaB) return -1;
+    return saldoB - saldoA;
+  });
+}
+
 function CaixaCard({
   nome,
   valor,
@@ -27,45 +43,33 @@ function CaixaCard({
   onPress: () => void;
 }) {
   const tokens = useTokensInicio();
-  const progresso = useSharedValue(ativo ? 1 : 0);
-
-  useEffect(() => {
-    progresso.value = withTiming(ativo ? 1 : 0, { duration: 200 });
-  }, [ativo, progresso]);
-
-  /** Só anima opacidade — cores ficam no style React para acompanhar o tema. */
-  const estiloOpacidade = useAnimatedStyle(() => ({
-    opacity: 0.72 + progresso.value * 0.28,
-  }));
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: ativo }}
-      accessibilityLabel={nome}
+      accessibilityLabel={`${nome}, ${formatBRL(valor)}`}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
-      <Animated.View
-        style={[
-          {
-            width: 148,
-            borderRadius: 14,
-            paddingVertical: 14,
-            paddingHorizontal: 12,
-            minHeight: 88,
-            justifyContent: "center",
-            borderWidth: ativo ? 1.5 : 0.5,
-            borderColor: ativo ? tokens.borderActive : tokens.border,
-            backgroundColor: ativo ? tokens.surfaceActive : tokens.surface,
-          },
-          estiloOpacidade,
-        ]}
+      <View
+        style={{
+          width: 148,
+          borderRadius: 14,
+          paddingVertical: 14,
+          paddingHorizontal: 12,
+          minHeight: 88,
+          justifyContent: "center",
+          borderWidth: ativo ? 1.5 : 0.5,
+          borderColor: ativo ? tokens.borderActive : tokens.border,
+          backgroundColor: ativo ? tokens.surfaceActive : tokens.surface,
+        }}
       >
         <Text
           style={{
             color: tokens.textMuted,
             fontSize: 14,
-            fontWeight: "500",
+            fontWeight: "600",
             marginBottom: 4,
           }}
           numberOfLines={1}
@@ -76,13 +80,13 @@ function CaixaCard({
           style={{
             color: tokens.text,
             fontSize: 18,
-            fontWeight: "600",
+            fontWeight: "700",
           }}
           numberOfLines={1}
         >
           {formatBRL(valor)}
         </Text>
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -93,13 +97,18 @@ export function CabecalhoCaixas({
   selecionada,
   onSelect,
 }: CabecalhoCaixasProps) {
+  const caixasOrdenadas = useMemo(
+    () => ordenarCaixasPorSaldo(caixasCatalogo, caixas),
+    [caixasCatalogo, caixas]
+  );
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerClassName="px-4 gap-3"
+      contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
     >
-      {caixasCatalogo.map((caixa) => (
+      {caixasOrdenadas.map((caixa) => (
         <CaixaCard
           key={caixa.id}
           nome={caixa.nome}
