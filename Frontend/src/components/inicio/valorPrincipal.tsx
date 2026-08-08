@@ -22,8 +22,8 @@ export function ValorPrincipal({
   const prefixo = modo === "saida" && valorNum > 0 ? "−" : "";
   const mensagemCaixa =
     modo === "entrada"
-      ? `Adicionando na ${nomeCaixa}:`
-      : `Baixando da ${nomeCaixa}:`;
+      ? `Adicionando saldo na ${nomeCaixa}:`
+      : `Baixando saldo da ${nomeCaixa}:`;
 
   return (
     <View className="items-center justify-center px-4 py-6">
