@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { ordenarCaixasPorSaldo } from "@/shared/catalogoCaixas";
 import type { CaixaId } from "@/shared/estilosCaixa";
 import type { CaixaCatalogoItem } from "@/types/flux";
 import { formatBRL } from "@/utils/helpers";
@@ -12,23 +13,6 @@ interface CabecalhoCaixasProps {
   caixas: Record<string, number>;
   selecionada: CaixaId;
   onSelect: (caixaId: CaixaId) => void;
-}
-
-/** Com saldo: maior → menor à esquerda; zeradas por último (direita). */
-function ordenarCaixasPorSaldo(
-  catalogo: CaixaCatalogoItem[],
-  saldos: Record<string, number>
-): CaixaCatalogoItem[] {
-  return [...catalogo].sort((caixaA, caixaB) => {
-    const saldoA = saldos[caixaA.id] || 0;
-    const saldoB = saldos[caixaB.id] || 0;
-    const zeradaA = saldoA === 0;
-    const zeradaB = saldoB === 0;
-
-    if (zeradaA && !zeradaB) return 1;
-    if (!zeradaA && zeradaB) return -1;
-    return saldoB - saldoA;
-  });
 }
 
 function CaixaCard({

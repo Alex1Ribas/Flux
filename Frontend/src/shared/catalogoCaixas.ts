@@ -49,6 +49,23 @@ export function obterIdsCaixas(catalogo: CaixaCatalogoItem[]): string[] {
   return catalogo.map((item) => item.id);
 }
 
+/** Com saldo: maior → menor à esquerda; zeradas por último (direita). */
+export function ordenarCaixasPorSaldo(
+  catalogo: CaixaCatalogoItem[],
+  saldos: Record<string, number>
+): CaixaCatalogoItem[] {
+  return [...catalogo].sort((caixaA, caixaB) => {
+    const saldoA = saldos[caixaA.id] || 0;
+    const saldoB = saldos[caixaB.id] || 0;
+    const zeradaA = saldoA === 0;
+    const zeradaB = saldoB === 0;
+
+    if (zeradaA && !zeradaB) return 1;
+    if (!zeradaA && zeradaB) return -1;
+    return saldoB - saldoA;
+  });
+}
+
 export function prazoEstimadoMeses(meta: number, aporteMensal: number): number {
   if (meta <= 0 || aporteMensal <= 0) return 0;
   return Math.ceil(meta / aporteMensal);
