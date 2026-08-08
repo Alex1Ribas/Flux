@@ -30,7 +30,7 @@ export interface ILancamento {
   totalParcelas?: number;
   /** Marca lançamento como compromisso recorrente (mesmo documento, sem coleção separada). */
   recorrente: boolean;
-  /** Competência inicial do compromisso recorrente (AAAA-MM). */
+  /** Competência inicial do compromisso recorrente (AAAA-MM ou AAAA-MM-DD). */
   competenciaInicial?: string;
   /** Duração em meses do compromisso recorrente. */
   duracaoMeses?: number;

@@ -2,7 +2,7 @@ import { DomainError } from '../../common/errors/DomainError.js';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode.js';
 import { assertResourceAccess } from '../../common/helpers/access.helper.js';
 import type { ICaixa } from '../../caixa/entity/interfaces/caixa.interface.js';
-import { normalizeCompetencia } from '../../orcamento/service/competencia.helper.js';
+import { normalizeCompetencia, normalizeCompetenciaData } from '../../orcamento/service/competencia.helper.js';
 import { Lancamento } from '../entity/lancamento.entity.js';
 import {
   EHorizonteLancamento,
@@ -165,9 +165,9 @@ export class LancamentoService implements ILancamentoService {
     }
 
     const recorrente = Boolean(params.recorrente);
-    const competencia = normalizeCompetencia(params.competencia);
+    const competencia = normalizeCompetenciaData(params.competencia);
     const competenciaInicial = params.competenciaInicial
-      ? normalizeCompetencia(params.competenciaInicial)
+      ? normalizeCompetenciaData(params.competenciaInicial)
       : recorrente
         ? competencia
         : undefined;
@@ -233,10 +233,10 @@ export class LancamentoService implements ILancamentoService {
         ? Boolean(params.recorrente)
         : existing.recorrente;
     const competencia = params.competencia
-      ? normalizeCompetencia(params.competencia)
+      ? normalizeCompetenciaData(params.competencia)
       : existing.competencia;
     const competenciaInicial = params.competenciaInicial
-      ? normalizeCompetencia(params.competenciaInicial)
+      ? normalizeCompetenciaData(params.competenciaInicial)
       : existing.competenciaInicial ?? (recorrente ? competencia : undefined);
     const duracaoMeses =
       params.duracaoMeses !== undefined
