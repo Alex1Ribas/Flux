@@ -8,15 +8,33 @@ interface ValorPrincipalProps {
   valor: string;
   onChangeValor: (texto: string) => void;
   modo: "entrada" | "saida";
+  nomeCaixa: string;
 }
 
-export function ValorPrincipal({ valor, onChangeValor, modo }: ValorPrincipalProps) {
+export function ValorPrincipal({
+  valor,
+  onChangeValor,
+  modo,
+  nomeCaixa,
+}: ValorPrincipalProps) {
   const tokens = useTokensInicio();
   const valorNum = Number(valor) || 0;
   const prefixo = modo === "saida" && valorNum > 0 ? "−" : "";
+  const mensagemCaixa =
+    modo === "entrada"
+      ? `Adicionando na ${nomeCaixa}:`
+      : `Baixando da ${nomeCaixa}:`;
 
   return (
     <View className="items-center justify-center px-4 py-6">
+      {nomeCaixa ? (
+        <Text
+          className="text-md font-medium text-center mb-2"
+          style={{ color: tokens.textMuted }}
+        >
+          {mensagemCaixa}
+        </Text>
+      ) : null}
       <TextInput
         value={valor}
         onChangeText={(texto) => onChangeValor(texto.replace(/[^0-9.,]/g, "").replace(",", "."))}
