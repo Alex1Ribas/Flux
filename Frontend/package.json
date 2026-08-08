@@ -55,6 +55,7 @@
     "ios": "expo start --ios --clear",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "test:unit": "tsx --tsconfig ./tsconfig.json --test src/utils/helpers.competencia.test.ts src/service/acompanhamento/calculoAcompanhamento.test.ts",
     "lint": "expo lint",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,md}\" \"*.{js,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,css,md}\" \"*.{js,md}\"",
