@@ -43,12 +43,13 @@ export function BarraNavegacao({ telaAtual, setTela }: BarraNavegacaoProps) {
             <Icon
               size={ICON_SIZE}
               color={ativo ? cores.text : cores.textFaint}
-              strokeWidth={ativo ? 2.5 : 2}
+              strokeWidth={ativo ? 2.75 : 2.5}
+              fill={ativo ? cores.text : "none"}
             />
             {ativo ? (
               <View
                 className="w-5 h-0.5 rounded-full mt-1.5"
-                style={{ backgroundColor: cores.text }}
+                style={{ backgroundColor: cores.primary }}
               />
             ) : null}
           </TouchableOpacity>
