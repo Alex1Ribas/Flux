@@ -1,6 +1,4 @@
-import { useCallback } from "react";
-import { Text, type ViewStyle } from "react-native";
-import { MotiPressable } from "moti/interactions";
+import { Pressable, Text, View, type ViewStyle } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 
 import { feedbackTactilLeve } from "@/shared/feedbackTactil";
@@ -72,70 +70,75 @@ export function Botao({
     success: cores.success,
   };
 
-  const iconColor = disabled
-    ? cores.textMuted
-    : variant === "ghost"
-      ? cores.textMuted
-      : variant === "danger"
-        ? cores.error
-        : variant === "success"
-          ? cores.success
-          : variant === "primary"
-            ? cores.white
-            : cores.text;
+  let iconColor = cores.text;
+  if (disabled) {
+    iconColor = cores.textMuted;
+  } else if (variant === "ghost") {
+    iconColor = cores.textMuted;
+  } else if (variant === "danger") {
+    iconColor = cores.error;
+  } else if (variant === "success") {
+    iconColor = cores.success;
+  } else if (variant === "primary") {
+    iconColor = cores.white;
+  }
 
-  const animatePress = useCallback(
-    ({ pressed }: { pressed: boolean }) => {
-      "worklet";
-      return {
-        scale: pressed && !disabled ? 0.95 : 1,
-      };
-    },
-    [disabled]
-  );
+  const corTexto = disabled ? cores.textMuted : variantText[variant];
 
   return (
-    <MotiPressable
+    <Pressable
       onPress={() => {
         if (disabled) return;
         void feedbackTactilLeve();
         onPress();
       }}
       disabled={disabled}
-      animate={animatePress}
-      transition={{ type: "timing", duration: 120 }}
-      style={[
-        {
-          borderRadius: 20,
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      accessibilityLabel={label}
+      style={({ pressed }) => {
+        const scale = pressed && !disabled ? 0.95 : 1;
+
+        return [
+          {
+            borderRadius: 20,
+            backgroundColor: disabled ? cores.surface : variantBg[variant],
+            borderWidth: variant === "ghost" ? 0 : 1,
+            borderColor: disabled ? cores.border : variantBorder[variant],
+            opacity: disabled ? 0.5 : 1,
+            transform: [{ scale }],
+            ...SIZE_PAD[size],
+          },
+          style,
+        ];
+      }}
+    >
+      {/* View interna: evita texto sumir com flex:1 no pressable (bug do MotiPressable). */}
+      <View
+        style={{
+          flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          flexDirection: "row",
           gap: 6,
-          backgroundColor: disabled ? cores.surface : variantBg[variant],
-          borderWidth: variant === "ghost" ? 0 : 1,
-          borderColor: disabled ? cores.border : variantBorder[variant],
-          opacity: disabled ? 0.5 : 1,
-          ...SIZE_PAD[size],
-        },
-        style,
-      ]}
-    >
-      {Icon ? (
-        <Icon
-          size={ICON_SIZE[size]}
-          color={iconColor}
-          strokeWidth={2}
-        />
-      ) : null}
-      <Text
-        style={{
-          fontWeight: "500",
-          fontSize: SIZE_TEXT[size],
-          color: disabled ? cores.textMuted : variantText[variant],
         }}
       >
-        {label}
-      </Text>
-    </MotiPressable>
+        {Icon ? (
+          <Icon
+            size={ICON_SIZE[size]}
+            color={iconColor}
+            strokeWidth={2}
+          />
+        ) : null}
+        <Text
+          style={{
+            fontWeight: "500",
+            fontSize: SIZE_TEXT[size],
+            color: corTexto,
+          }}
+        >
+          {label}
+        </Text>
+      </View>
+    </Pressable>
   );
 }

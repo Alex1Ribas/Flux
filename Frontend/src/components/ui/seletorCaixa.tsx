@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { COLORS } from "@/shared/tokensDesign";
-import { obterEstiloCaixa } from "@/shared/estilosCaixa";
+
 import { CaixaIcon } from "@/shared/icons";
+import { useCores } from "@/shared/tema";
 import type { CaixaCatalogoItem } from "@/types/flux";
 
 interface PropriedadesSeletorCaixa {
@@ -19,31 +19,60 @@ export function SeletorCaixa({
   label,
   excluir,
 }: PropriedadesSeletorCaixa) {
+  const cores = useCores();
   const caixasDisponiveis = caixasCatalogo.filter((caixa) => caixa.id !== excluir);
 
   return (
-    <View className="mb-3.5">
-      {label ? <Text className="text-textMuted text-xs mb-1.5 font-medium">{label}</Text> : null}
-      <View className="flex-row flex-wrap gap-2">
+    <View style={{ marginBottom: 14 }}>
+      {label ? (
+        <Text
+          style={{
+            color: cores.textMuted,
+            fontSize: 12,
+            fontWeight: "600",
+            marginBottom: 6,
+          }}
+        >
+          {label}
+        </Text>
+      ) : null}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {caixasDisponiveis.map((caixa, indice) => {
-          const classesCaixa = obterEstiloCaixa(caixa.id, indice);
           const selecionada = selecionado === caixa.id;
+          const corTexto = selecionada ? cores.text : cores.textMuted;
+
           return (
             <TouchableOpacity
               key={caixa.id}
               onPress={() => onSelect(caixa.id)}
-              className={`rounded-lg px-3 py-2 border flex-row items-center gap-1.5 ${
-                selecionada ? `bg-surface2 ${classesCaixa.border}` : "bg-surface border-border"
-              }`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selecionada }}
+              accessibilityLabel={caixa.nome}
+              style={{
+                backgroundColor: selecionada ? cores.surface2 : cores.surface,
+                borderColor: selecionada ? cores.primary : cores.border,
+                borderWidth: selecionada ? 1.5 : 1,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
             >
               <CaixaIcon
                 id={caixa.id}
                 indice={indice}
                 size={14}
-                color={selecionada ? COLORS.text : COLORS.textMuted}
+                color={corTexto}
               />
               <Text
-                className={`text-xs ${selecionada ? "text-text font-medium" : "text-textMuted"}`}
+                style={{
+                  color: corTexto,
+                  fontSize: 12,
+                  fontWeight: selecionada ? "600" : "400",
+                }}
+                numberOfLines={1}
               >
                 {caixa.nome}
               </Text>
