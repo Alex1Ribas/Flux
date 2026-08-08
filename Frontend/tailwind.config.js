@@ -73,8 +73,9 @@ const themes = {
     border: SLATE[800],
     divider: SLATE[800],
     text: SLATE[50],
-    textMuted: SLATE[400],
-    textFaint: `${SLATE[400]}99`,
+    // Branco com opacidade — contraste AA sobre fundo azul-marinho
+    textMuted: "rgba(255, 255, 255, 0.65)",
+    textFaint: "rgba(255, 255, 255, 0.45)",
     white: "#FFFFFF",
     primary: VIOLET[500],
     primaryHover: VIOLET[600],
