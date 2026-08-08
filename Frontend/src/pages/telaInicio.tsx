@@ -162,20 +162,31 @@ export function TelaInicio({
           </View>
 
           <View
-            className="mt-4 pt-4"
+            className="mt-4 pt-4 flex-row items-center justify-between gap-3"
             style={{ borderTopWidth: 0.5, borderTopColor: tokens.border }}
           >
-            <SlideToggle
-              ativo={home.recorrente}
-              onToggle={() => home.setRecorrente(!home.recorrente)}
-              label="Recorrente"
-              accessibilityLabel="Marcar lançamento como recorrente"
-            />
-            <Text className="text-textFaint text-xs mt-2 leading-4">
+            <Text
+              className="font-semibold"
+              style={{
+                fontSize: 15,
+                color: home.recorrente ? cores.primary : tokens.textMuted,
+              }}
+            >
+              Recorrente
+            </Text>
+            <Text
+              className="flex-1 text-textFaint text-xs leading-4"
+              numberOfLines={2}
+            >
               {home.recorrente
                 ? "Compromisso fixo no planejamento do mês."
                 : "Movimentação do dia a dia, fora do planejado."}
             </Text>
+            <SlideToggle
+              ativo={home.recorrente}
+              onToggle={() => home.setRecorrente(!home.recorrente)}
+              accessibilityLabel="Marcar lançamento como recorrente"
+            />
           </View>
         </View>
 
