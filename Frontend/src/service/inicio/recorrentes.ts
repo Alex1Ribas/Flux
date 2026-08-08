@@ -14,7 +14,7 @@ export function lancamentoParaItemRecorrente(lancamento: Lancamento): ItemRecorr
     tipo: lancamento.tipo,
     valor: Number(lancamento.valor) || 0,
     caixaId: obterCaixaIdDoLancamento(lancamento),
-    competenciaInicial: lancamento.competenciaInicial ?? lancamento.competencia.slice(0, 7),
+    competenciaInicial: lancamento.competenciaInicial ?? lancamento.competencia,
     duracaoMeses: Math.max(1, Number(lancamento.duracaoMeses) || 1),
     ativo: lancamento.ativo !== false,
   };

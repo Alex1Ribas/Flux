@@ -1,5 +1,10 @@
 import type { Horizonte, LancamentoInput, ParcelamentoInput } from "@/types/flux";
-import { formatBRL, getMesAtual, getMesDeCompetencia, getMesesFuturos } from "@/utils/helpers";
+import {
+  formatBRL,
+  getCompetenciasFuturas,
+  getMesAtual,
+  getMesDeCompetencia,
+} from "@/utils/helpers";
 
 export type ModoMovimentacao = "entrada" | "saida";
 export type TipoRecorrenciaMovimentacao = "dividir" | "cheio";
@@ -75,7 +80,7 @@ function camposRecorrencia(input: MovimentacaoHomeInput) {
   if (!input.recorrente) return { recorrente: false as const };
   return {
     recorrente: true as const,
-    competenciaInicial: input.competenciaInicial ?? getMesDeCompetencia(input.competencia),
+    competenciaInicial: input.competenciaInicial ?? input.competencia,
     duracaoMeses: input.duracaoMeses ?? 1,
     ativo: true,
   };
@@ -88,7 +93,7 @@ function registrarParcelamentoDividido(
   acoes.adicionarParcelamento({
     valorTotal: input.valor,
     parcelas: input.parcelas,
-    primeiraCompetencia: getMesDeCompetencia(input.competencia),
+    primeiraCompetencia: input.competencia,
     descricao: input.tipo,
     tipoDescricao: input.tipo,
     caixaOrigem: input.caixaSelecionada,
@@ -100,12 +105,12 @@ function registrarParcelamentoValorCheio(
   input: MovimentacaoHomeInput,
   acoes: AcoesMovimentacao
 ): void {
-  const mesInicio = getMesDeCompetencia(input.competencia);
-  const meses = getMesesFuturos(mesInicio, input.parcelas);
+  const competencias = getCompetenciasFuturas(input.competencia, input.parcelas);
   const mesAtual = getMesAtual();
   const recorrencia = camposRecorrencia(input);
 
-  meses.forEach((mesCompetencia, indice) => {
+  competencias.forEach((competencia, indice) => {
+    const mesCompetencia = getMesDeCompetencia(competencia);
     const horizonteParcela: Horizonte = mesCompetencia <= mesAtual ? "presente" : "futuro";
     acoes.adicionarLancamento({
       tipo: "saida",
@@ -113,7 +118,7 @@ function registrarParcelamentoValorCheio(
       valor: input.valor,
       descricao: input.tipo,
       observacao: `${input.tipo} (${indice + 1}/${input.parcelas})`,
-      competencia: mesCompetencia,
+      competencia,
       caixaOrigem: input.caixaSelecionada,
       ...recorrencia,
     });

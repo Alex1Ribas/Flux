@@ -1,5 +1,5 @@
 import type { ParcelamentoInput } from "@/types/flux";
-import { formatBRL, getMesLabel, getMesesFuturos } from "@/utils/helpers";
+import { formatBRL, getCompetenciaLabel, getCompetenciasFuturas } from "@/utils/helpers";
 
 export interface ParcelamentoFormInput {
   tipo: string;
@@ -64,12 +64,12 @@ export function calcPreviewParcelamento(
 ): PreviewParcelamento | null {
   if (input.valorTotal <= 0 || input.parcelas <= 0) return null;
 
-  const meses = getMesesFuturos(input.primeiraCompetencia, input.parcelas);
+  const competencias = getCompetenciasFuturas(input.primeiraCompetencia, input.parcelas);
   return {
     valorParcela: input.valorTotal / input.parcelas,
     parcelas: input.parcelas,
-    primeiraCompetenciaLabel: getMesLabel(input.primeiraCompetencia),
-    ultimaCompetenciaLabel: getMesLabel(meses[input.parcelas - 1]),
+    primeiraCompetenciaLabel: getCompetenciaLabel(input.primeiraCompetencia),
+    ultimaCompetenciaLabel: getCompetenciaLabel(competencias[input.parcelas - 1]),
   };
 }
 

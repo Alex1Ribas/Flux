@@ -18,6 +18,7 @@ import {
   getDiasNoMes,
   getMesDeCompetencia,
   getMesesFuturos,
+  temDiaNaCompetencia,
 } from "@/utils/helpers";
 
 const ROTULOS_IMPACTO: Record<TipoImpactoRisco, string> = {
@@ -156,14 +157,19 @@ export function calcCompromissosMes(
   lancamentos: Lancamento[]
 ): CompromissoMes[] {
   return listarRecorrentesDoMes(competencia, lancamentos)
-    .map((lancamento) => ({
-      id: lancamento.id,
-      descricao: lancamento.descricao,
-      tipo: lancamento.tipo,
-      valor: Number(lancamento.valor),
-    }))
+    .map((lancamento) => {
+      const referencia = lancamento.competenciaInicial ?? lancamento.competencia;
+      return {
+        id: lancamento.id,
+        descricao: lancamento.descricao,
+        tipo: lancamento.tipo,
+        valor: Number(lancamento.valor),
+        dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
+      };
+    })
     .sort((a, b) => {
       if (a.tipo !== b.tipo) return a.tipo === "entrada" ? -1 : 1;
+      if (a.dia !== null && b.dia !== null && a.dia !== b.dia) return a.dia - b.dia;
       return b.valor - a.valor;
     });
 }

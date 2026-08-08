@@ -1,5 +1,5 @@
 import type { ItemRecorrente } from "@/types/flux";
-import { getMesAtual } from "@/utils/helpers";
+import { getDataAtual } from "@/utils/helpers";
 
 export interface FormularioItemRecorrente {
   nome: string;
@@ -16,6 +16,8 @@ export interface AcoesItensRecorrentes {
   excluirItemRecorrente: (id: string) => void;
 }
 
+const COMPETENCIA_INICIAL_PATTERN = /^\d{4}-\d{2}(?:-\d{2})?$/;
+
 export function montarFormularioItemRecorrente(
   item: ItemRecorrente | null,
   caixaPadrao = ""
@@ -26,7 +28,7 @@ export function montarFormularioItemRecorrente(
       tipo: "saida",
       valorTexto: "",
       caixaId: caixaPadrao,
-      competenciaInicial: getMesAtual(),
+      competenciaInicial: getDataAtual(),
       duracaoMesesTexto: "12",
     };
   }
@@ -70,8 +72,16 @@ export function validarFormularioItemRecorrente(
     return "Informe a duração em meses (mínimo 1)";
   }
 
-  if (!/^\d{4}-\d{2}$/.test(formulario.competenciaInicial)) {
-    return "Competência inicial inválida (use AAAA-MM)";
+  if (!COMPETENCIA_INICIAL_PATTERN.test(formulario.competenciaInicial)) {
+    return "Competência inicial inválida (use AAAA-MM ou AAAA-MM-DD)";
+  }
+
+  const partes = formulario.competenciaInicial.split("-");
+  if (partes.length >= 3) {
+    const dia = Number(partes[2]);
+    if (Number.isNaN(dia) || dia < 1 || dia > 31) {
+      return "Dia inválido na competência inicial";
+    }
   }
 
   return null;

@@ -2,7 +2,12 @@ import type { MovimentacaoHomeInput } from "@/service/inicio/movimentacao";
 import { calcEstouroOrcamento } from "@/service/inicio/movimentacao";
 import { criarLancamentosParcelamento } from "@/service/store/lancamentos";
 import type { LancamentoInput, ParcelamentoInput } from "@/types/flux";
-import { gerarId, getMesAtual, getMesDeCompetencia, getMesesFuturos } from "@/utils/helpers";
+import {
+  gerarId,
+  getCompetenciasFuturas,
+  getMesAtual,
+  getMesDeCompetencia,
+} from "@/utils/helpers";
 
 import { lancamentosApi, type LancamentoPayload } from "./fluxApi";
 
@@ -12,7 +17,7 @@ export function lancamentoInputParaPayload(input: LancamentoInput): LancamentoPa
     horizonte: input.horizonte,
     valor: input.valor,
     descricao: input.descricao,
-    competencia: getMesDeCompetencia(input.competencia),
+    competencia: input.competencia,
     observacao: input.observacao,
     caixaOrigem: input.caixaOrigem,
     caixaCompensacao: input.caixaCompensacao,
@@ -48,12 +53,12 @@ async function enviarParcelamentoValorCheioNaApi(
   token: string,
   input: MovimentacaoHomeInput
 ): Promise<void> {
-  const mesInicio = getMesDeCompetencia(input.competencia);
-  const meses = getMesesFuturos(mesInicio, input.parcelas);
+  const competencias = getCompetenciasFuturas(input.competencia, input.parcelas);
   const mesAtual = getMesAtual();
 
-  for (let indice = 0; indice < meses.length; indice++) {
-    const mesCompetencia = meses[indice];
+  for (let indice = 0; indice < competencias.length; indice++) {
+    const competencia = competencias[indice];
+    const mesCompetencia = getMesDeCompetencia(competencia);
     const horizonte = mesCompetencia <= mesAtual ? "presente" : "futuro";
 
     await criarLancamento(token, {
@@ -62,7 +67,7 @@ async function enviarParcelamentoValorCheioNaApi(
       valor: input.valor,
       descricao: input.tipo,
       observacao: `${input.tipo} (${indice + 1}/${input.parcelas})`,
-      competencia: mesCompetencia,
+      competencia,
       caixaOrigem: input.caixaSelecionada,
       recorrente: Boolean(input.recorrente),
       competenciaInicial: input.competenciaInicial,
@@ -81,7 +86,7 @@ export async function enviarMovimentacaoHomeNaApi(
       await enviarParcelamentoNaApi(token, {
         valorTotal: input.valor,
         parcelas: input.parcelas,
-        primeiraCompetencia: getMesDeCompetencia(input.competencia),
+        primeiraCompetencia: input.competencia,
         descricao: input.tipo,
         tipoDescricao: input.tipo,
         caixaOrigem: input.caixaSelecionada,

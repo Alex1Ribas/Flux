@@ -1,5 +1,5 @@
 import type { Caixas, LancamentoInput, ParcelamentoInput } from "@/types/flux";
-import { getMesAtual, getMesesFuturos } from "@/utils/helpers";
+import { getCompetenciasFuturas, getMesAtual, getMesDeCompetencia } from "@/utils/helpers";
 
 export type OperacaoSaldoLancamento = "adicionar" | "remover";
 
@@ -41,10 +41,11 @@ export function criarLancamentosParcelamento(
   } = dados;
   const totalParcelas = Number(parcelas);
   const valorParcela = Number(valorTotal) / totalParcelas;
-  const meses = getMesesFuturos(primeiraCompetencia, totalParcelas);
+  const competencias = getCompetenciasFuturas(primeiraCompetencia, totalParcelas);
 
-  return meses.map((competencia, indiceParcela) => {
-    const horizonte = competencia <= mesAtual ? "presente" : "futuro";
+  return competencias.map((competencia, indiceParcela) => {
+    const mesCompetencia = getMesDeCompetencia(competencia);
+    const horizonte = mesCompetencia <= mesAtual ? "presente" : "futuro";
     return {
       tipo: "saida" as const,
       horizonte,

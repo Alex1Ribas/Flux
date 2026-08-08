@@ -116,7 +116,7 @@ export function useTelaInicio({
       tipoRecorrencia: tipoRecorrencia === "cheio" ? "cheio" : "dividir",
       parcelas,
       recorrente,
-      competenciaInicial: recorrente ? mesCompetencia : undefined,
+      competenciaInicial: recorrente ? dataLancamento : undefined,
       duracaoMeses: recorrente ? Math.max(1, Number(parcelas) || 12) : undefined,
     });
 
