@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 
 import { Cartao, TituloSecao } from "@/shared/components";
 import { obterRotuloTipoImpacto } from "@/entities/acompanhamento";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import type { ImpactoRisco } from "@/types/flux";
 import { formatBRL, getCompetenciaLabel } from "@/utils/helpers";
 
@@ -12,6 +12,8 @@ interface ListaImpactosRiscoProps {
 
 /** Bloco D: extrato cronológico de recorrente === false. */
 export function ListaImpactosRisco({ impactos }: ListaImpactosRiscoProps) {
+  const cores = useCores();
+
   return (
     <View className="mb-4">
       <TituloSecao title="Impactos no risco" />
@@ -21,7 +23,7 @@ export function ListaImpactosRisco({ impactos }: ListaImpactosRiscoProps) {
         </Text>
       ) : (
         impactos.map((impacto) => {
-          const cor = impacto.direcao === "aumenta" ? COLORS.error : COLORS.success;
+          const cor = impacto.direcao === "aumenta" ? cores.error : cores.success;
           const sinal = impacto.direcao === "aumenta" ? "+" : "";
           const prefixoValor = impacto.tipo === "renda_extra" ? "+" : "−";
 

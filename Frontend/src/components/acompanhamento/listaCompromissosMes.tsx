@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 
 import { Cartao, TituloSecao } from "@/shared/components";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import type { CompromissoMes } from "@/types/flux";
 import { formatBRL } from "@/utils/helpers";
 
@@ -11,6 +11,8 @@ interface ListaCompromissosMesProps {
 
 /** Bloco C: listagem estática de recorrente === true (entradas e saídas). */
 export function ListaCompromissosMes({ compromissos }: ListaCompromissosMesProps) {
+  const cores = useCores();
+
   return (
     <View className="mb-4">
       <TituloSecao title="Compromissos do mês" />
@@ -20,7 +22,7 @@ export function ListaCompromissosMes({ compromissos }: ListaCompromissosMesProps
         </Text>
       ) : (
         compromissos.map((item) => {
-          const cor = item.tipo === "entrada" ? COLORS.success : COLORS.error;
+          const cor = item.tipo === "entrada" ? cores.success : cores.error;
           const prefixo = item.tipo === "entrada" ? "+" : "−";
 
           return (

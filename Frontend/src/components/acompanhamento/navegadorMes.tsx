@@ -1,6 +1,6 @@
 import { TouchableOpacity, View, Text } from "react-native";
 
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { getMesLabel } from "@/utils/helpers";
 import { ChevronLeft, ChevronRight } from "@/shared/icons";
 
@@ -11,6 +11,8 @@ interface NavegadorMesProps {
 }
 
 export function NavegadorMes({ competencia, onAnterior, onSeguinte }: NavegadorMesProps) {
+  const cores = useCores();
+
   return (
     <View className="flex-row gap-2 mb-4 items-center">
       <TouchableOpacity
@@ -20,7 +22,7 @@ export function NavegadorMes({ competencia, onAnterior, onSeguinte }: NavegadorM
       >
         <ChevronLeft
           size={22}
-          color={COLORS.text}
+          color={cores.text}
           strokeWidth={2}
         />
       </TouchableOpacity>
@@ -34,7 +36,7 @@ export function NavegadorMes({ competencia, onAnterior, onSeguinte }: NavegadorM
       >
         <ChevronRight
           size={22}
-          color={COLORS.text}
+          color={cores.text}
           strokeWidth={2}
         />
       </TouchableOpacity>

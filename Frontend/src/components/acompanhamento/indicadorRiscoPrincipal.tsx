@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 
 import { Cartao, BarraProgresso, NumeroAnimado } from "@/shared/components";
 import { getConfigVisualRisco } from "@/entities/painel";
+import { useCores } from "@/shared/tema";
 import type { AcompanhamentoMes } from "@/types/flux";
 import { formatBRL } from "@/utils/helpers";
 
@@ -11,7 +12,8 @@ interface IndicadorRiscoPrincipalProps {
 
 /** Bloco A: risco mensal só com recorrente === true. */
 export function IndicadorRiscoPrincipal({ dados }: IndicadorRiscoPrincipalProps) {
-  const visual = getConfigVisualRisco(dados.status);
+  const cores = useCores();
+  const visual = getConfigVisualRisco(dados.status, cores);
   const IconeStatus = visual.Icon;
 
   return (

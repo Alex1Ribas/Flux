@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import Svg, { Circle, Line, Polyline, Text as SvgText } from "react-native-svg";
 
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import type { PontoEvolucaoRisco } from "@/types/flux";
 
 const ALTURA = 160;
@@ -51,6 +51,7 @@ function rotulosEixoX(diasNoMes: number): number[] {
 
 /** Bloco B: risco atual (fixo) + realidade com avulsos. */
 export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesProps) {
+  const cores = useCores();
   const areaLargura = LARGURA - MARGEM.esquerda - MARGEM.direita;
   const areaAltura = ALTURA - MARGEM.topo - MARGEM.base;
   const diasNoMes = pontos.length > 0 ? pontos[pontos.length - 1].dia : 31;
@@ -86,14 +87,14 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
         <View className="flex-row items-center gap-1.5">
           <View
             className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: COLORS.text }}
+            style={{ backgroundColor: cores.text }}
           />
           <Text className="text-textMuted text-md">Risco atual (fixo)</Text>
         </View>
         <View className="flex-row items-center gap-1.5">
           <View
             className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: COLORS.primary }}
+            style={{ backgroundColor: cores.primary }}
           />
           <Text className="text-textMuted text-md">Com avulsos</Text>
         </View>
@@ -116,7 +117,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
                 y1={y}
                 x2={MARGEM.esquerda + areaLargura}
                 y2={y}
-                stroke={COLORS.border}
+                stroke={cores.border}
                 strokeWidth={1}
               />
             );
@@ -127,7 +128,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
             y1={MARGEM.topo}
             x2={MARGEM.esquerda}
             y2={MARGEM.topo + areaAltura}
-            stroke={COLORS.textMuted}
+            stroke={cores.textMuted}
             strokeWidth={1}
           />
           <Line
@@ -135,7 +136,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
             y1={MARGEM.topo + areaAltura}
             x2={MARGEM.esquerda + areaLargura}
             y2={MARGEM.topo + areaAltura}
-            stroke={COLORS.textMuted}
+            stroke={cores.textMuted}
             strokeWidth={1}
           />
 
@@ -144,7 +145,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
               key={`label-y-${valor}`}
               x={MARGEM.esquerda - 6}
               y={yDoRisco(valor, areaAltura) + 4}
-              fill={COLORS.textMuted}
+              fill={cores.textMuted}
               fontSize={10}
               textAnchor="end"
             >
@@ -155,13 +156,13 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
           <Polyline
             points={coordsPrevisto}
             fill="none"
-            stroke={COLORS.text}
+            stroke={cores.text}
             strokeWidth={2}
           />
           <Polyline
             points={coordsReal}
             fill="none"
-            stroke={COLORS.primary}
+            stroke={cores.primary}
             strokeWidth={2}
           />
 
@@ -171,7 +172,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
               cx={xDoDia(ponto.dia, diasNoMes, areaLargura)}
               cy={yDoRisco(ponto.riscoReal, areaAltura)}
               r={3}
-              fill={COLORS.primary}
+              fill={cores.primary}
             />
           ))}
 
@@ -180,7 +181,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
               key={`label-x-${dia}`}
               x={xDoDia(dia, diasNoMes, areaLargura)}
               y={ALTURA - 6}
-              fill={COLORS.textMuted}
+              fill={cores.textMuted}
               fontSize={10}
               textAnchor="middle"
             >

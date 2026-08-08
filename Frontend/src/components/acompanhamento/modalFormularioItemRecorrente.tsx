@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { Botao, Campo, CampoData, SeletorCaixa, TituloSecao } from "@/shared/components";
+import { useVarsTema } from "@/shared/tema";
 import type { FormularioItemRecorrente } from "@/service/acompanhamento";
 import type { CaixaCatalogoItem } from "@/types/flux";
 
@@ -36,6 +37,8 @@ export function ModalFormularioItemRecorrente({
   onExcluir,
   onAtualizarCampo,
 }: ModalFormularioItemRecorrenteProps) {
+  const varsTema = useVarsTema();
+
   return (
     <Modal
       transparent
@@ -43,11 +46,15 @@ export function ModalFormularioItemRecorrente({
       animationType="slide"
       onRequestClose={onFechar}
     >
-      <KeyboardAvoidingView
+      <View
+        style={[{ flex: 1 }, varsTema]}
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
       >
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
+        >
         <Pressable
           className="flex-1 bg-black/70 justify-end"
           onPress={onFechar}
@@ -147,6 +154,7 @@ export function ModalFormularioItemRecorrente({
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
