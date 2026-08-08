@@ -13,14 +13,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FINANCE_API_BASE_URL } from "@/api";
 import { useAuth } from "@/entities/auth";
 import { Botao, Campo } from "@/shared/components";
-import { useFundoTela } from "@/shared/estiloSuperficie";
-import { COLORS, MARCA } from "@/shared/tokensDesign";
+import { useEstiloSuperficie, useFundoTela } from "@/shared/estiloSuperficie";
+import { useCores } from "@/shared/tema";
+import { MARCA } from "@/shared/tokensDesign";
 
 type ModoAuth = "login" | "cadastro";
 
 export function TelaAuth() {
   const { login, cadastrar, erro, limparErro } = useAuth();
   const fundo = useFundoTela();
+  const cores = useCores();
+  const superficie = useEstiloSuperficie();
   const [modo, setModo] = useState<ModoAuth>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -78,10 +81,13 @@ export function TelaAuth() {
           contentContainerClassName="flex-grow justify-center px-12 py-7"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="bg-surface border border-border rounded-3xl px-3 py-10 min-h-[400px] justify-center shadow-xl shadow-slate-200/50">
+          <View
+            className="border rounded-3xl px-3 py-10 min-h-[400px] justify-center"
+            style={superficie}
+          >
             <Text
               className="text-[40px] font-semibold text-center mb-1"
-              style={{ color: COLORS.primary }}
+              style={{ color: cores.primary }}
             >
               {MARCA}
             </Text>
@@ -143,7 +149,7 @@ export function TelaAuth() {
               <View className="items-center -mt-9 mb-4">
                 <ActivityIndicator
                   size="small"
-                  color={COLORS.text}
+                  color={cores.text}
                 />
               </View>
             ) : null}

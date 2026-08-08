@@ -7,13 +7,14 @@ import {
   CabecalhoTela,
   SeletorCaixa,
 } from "@/shared/components";
-import { COLORS } from "@/shared/tokensDesign";
 import { useTelaParcelamento } from "@/entities/parcelamento";
+import { useCores } from "@/shared/tema";
 import { formatBRL } from "@/utils/helpers";
 import type { TelaProps } from "@/types/navigation";
 
 export function TelaParcelamento({ setTela, voltarPara = "previsao" }: TelaProps) {
   const tela = useTelaParcelamento();
+  const cores = useCores();
 
   const salvar = async () => {
     const mensagem = await tela.salvar();
@@ -75,7 +76,7 @@ export function TelaParcelamento({ setTela, voltarPara = "previsao" }: TelaProps
         {tela.preview && (
           <Cartao
             className="mb-3.5"
-            style={{ backgroundColor: COLORS.surface2, borderColor: COLORS.border }}
+            style={{ backgroundColor: cores.surface2, borderColor: cores.border }}
           >
             <Text className="text-textMuted text-[13px] font-medium">
               {tela.preview.parcelas}× de {formatBRL(tela.preview.valorParcela)}

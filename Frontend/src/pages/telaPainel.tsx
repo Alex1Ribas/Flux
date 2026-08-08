@@ -4,12 +4,14 @@ import { NavegadorMes } from "@/components/acompanhamento";
 import { CartaoCategoriaPainel, ModalExtratoCategoria } from "@/components/painel";
 import { usePainel } from "@/entities/painel";
 import { useFundoTela } from "@/shared/estiloSuperficie";
-import { COLORS, MARCA } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
+import { MARCA } from "@/shared/tokensDesign";
 import type { TelaProps } from "@/types/navigation";
 
 export function TelaPainel(_props: TelaProps) {
   const painel = usePainel();
   const fundo = useFundoTela();
+  const cores = useCores();
 
   return (
     <View
@@ -23,7 +25,7 @@ export function TelaPainel(_props: TelaProps) {
         <View className="mb-4 mt-1">
           <Text
             className="text-sm font-semibold uppercase tracking-wide mb-1"
-            style={{ color: COLORS.primary }}
+            style={{ color: cores.primary }}
           >
             {MARCA}
           </Text>

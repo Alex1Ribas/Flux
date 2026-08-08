@@ -13,7 +13,7 @@ import { ItemLancamento } from "@/components/flux/itemLancamento";
 import { Botao, CampoData, SeletorCaixa } from "@/shared/components";
 import { useTelaInicio } from "@/entities/inicio";
 import { useAuth } from "@/entities/auth";
-import { useFundoTela } from "@/shared/estiloSuperficie";
+import { useFundoTela, useEstiloSuperficie } from "@/shared/estiloSuperficie";
 import { useTema } from "@/shared/tema";
 import { MARCA } from "@/shared/tokensDesign";
 import type { TelaProps } from "@/types/navigation";
@@ -32,6 +32,7 @@ export function TelaInicio({
   const fundo = useFundoTela();
   const { isDark, alternar, cores } = useTema();
   const tokens = useTokensInicio();
+  const superficie = useEstiloSuperficie();
   const [historicoAberto, setHistoricoAberto] = useState(false);
 
   useEffect(() => {
@@ -136,7 +137,10 @@ export function TelaInicio({
         </View>
 
         {/* 4. Classificação — categoria + data + recorrência */}
-        <View className="mx-4 mb-5 rounded-3xl border border-border bg-surface p-4 shadow-xl shadow-slate-200/50">
+        <View
+          className="mx-4 mb-5 rounded-3xl border p-4"
+          style={superficie}
+        >
           <View
             className="flex-row items-start gap-2"
             style={{ marginBottom: 14 }}

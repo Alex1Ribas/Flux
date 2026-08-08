@@ -8,7 +8,7 @@ import {
   CabecalhoTela,
 } from "@/shared/components";
 import { useTelaConfigRecorrentes } from "@/entities/acompanhamento";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { Plus } from "@/shared/icons";
 import { obterNomeCaixa } from "@/shared/catalogoCaixas";
 import { formatBRL, getCompetenciaLabel, getDiaCompetencia, temDiaNaCompetencia } from "@/utils/helpers";
@@ -16,6 +16,7 @@ import type { TelaProps } from "@/types/navigation";
 
 export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps) {
   const config = useTelaConfigRecorrentes();
+  const cores = useCores();
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -67,7 +68,7 @@ export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps)
           >
             <Plus
               size={16}
-              color={COLORS.text}
+              color={cores.text}
             />
             <Text className="text-text text-xs font-medium">Novo item</Text>
           </Pressable>
@@ -106,7 +107,7 @@ export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps)
                   </View>
                   <Text
                     className="text-[10px] uppercase"
-                    style={{ color: item.ativo ? COLORS.success : COLORS.textMuted }}
+                    style={{ color: item.ativo ? cores.success : cores.textMuted }}
                   >
                     {item.ativo ? "Ativo" : "Inativo"}
                   </Text>

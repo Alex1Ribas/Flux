@@ -2,7 +2,7 @@ import { type Dispatch, type SetStateAction } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TextInput } from "react-native";
 import { Botao, Divisor, CabecalhoTela, TituloSecao } from "@/shared/components";
 import { useTelaConfigurarCaixas } from "@/entities/configuracao";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { getMesLabel } from "@/utils/helpers";
 import { CaixaIcon, Check } from "@/shared/icons";
 import type { TelaProps } from "@/types/navigation";
@@ -19,6 +19,7 @@ export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
     erro,
     salvar,
   } = useTelaConfigurarCaixas();
+  const cores = useCores();
 
   const renderCaixaInput = (
     caixaId: string,
@@ -37,7 +38,7 @@ export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
             id={caixaId}
             indice={indice}
             size={18}
-            color={COLORS.textMuted}
+            color={cores.textMuted}
           />
         </View>
         <Text className="text-textMuted text-xs flex-1">{nome}</Text>
@@ -48,7 +49,7 @@ export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
           }
           keyboardType="numeric"
           placeholder="0"
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor={cores.textMuted}
           className="bg-surface border border-border rounded-lg px-3 py-2 text-text text-sm w-[120px] text-right"
         />
       </View>

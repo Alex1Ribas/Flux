@@ -8,14 +8,20 @@ import {
   NavegadorMes,
 } from "@/components/acompanhamento";
 import { useTelaAcompanhamento } from "@/entities/acompanhamento";
-import { useFundoTela } from "@/shared/estiloSuperficie";
-import { COLORS, MARCA } from "@/shared/tokensDesign";
+import { useEstiloSuperficie, useFundoTela } from "@/shared/estiloSuperficie";
+import { MARCA } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { Settings } from "@/shared/icons";
 import type { TelaProps } from "@/types/navigation";
 
 export function TelaPrevisao({ setTela }: TelaProps) {
   const { competencia, dados, irMesAnterior, irMesSeguinte } = useTelaAcompanhamento();
   const fundo = useFundoTela();
+  const cores = useCores();
+  const superficieBotao = useEstiloSuperficie({
+    borderRadius: 16,
+    padding: 8,
+  });
 
   return (
     <View
@@ -30,7 +36,7 @@ export function TelaPrevisao({ setTela }: TelaProps) {
           <View className="flex-1 pr-3">
             <Text
               className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: COLORS.primary }}
+              style={{ color: cores.primary }}
             >
               {MARCA}
             </Text>
@@ -41,12 +47,13 @@ export function TelaPrevisao({ setTela }: TelaProps) {
           </View>
           <Pressable
             onPress={() => setTela("recorrentes", { voltarPara: "previsao" })}
-            className="p-2 bg-surface rounded-2xl border border-border shadow-xl shadow-slate-200/50"
+            className="border"
+            style={superficieBotao}
             accessibilityLabel="Configurar itens recorrentes"
           >
             <Settings
               size={20}
-              color={COLORS.text}
+              color={cores.text}
               strokeWidth={2}
             />
           </Pressable>
