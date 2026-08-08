@@ -11,9 +11,9 @@ import { useCores } from "@/shared/tema";
 
 import { useTokensInicio } from "./tokensInicio";
 
-const LARGURA = 64;
-const ALTURA = 36;
-const KNOB = 30;
+const LARGURA = 52;
+const ALTURA = 30;
+const KNOB = 24;
 const PADDING = 3;
 const DESLOCAMENTO = LARGURA - KNOB - PADDING * 2;
 

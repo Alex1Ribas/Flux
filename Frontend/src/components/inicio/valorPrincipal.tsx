@@ -29,8 +29,8 @@ export function ValorPrincipal({
     <View className="items-center justify-center px-4 py-6">
       {nomeCaixa ? (
         <Text
-          className="text-md font-medium text-center mb-2"
-          style={{ color: tokens.textMuted }}
+          className="text-xl font-bold text-center mb-3"
+          style={{ color: tokens.text }}
         >
           {mensagemCaixa}
         </Text>
