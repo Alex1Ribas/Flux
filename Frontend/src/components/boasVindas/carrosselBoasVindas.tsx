@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { Botao } from "@/shared/components";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { INSTRUCOES_ONBOARDING, PROPORCAO_ONBOARDING } from "@/shared/instrucoesBoasVindas";
 
 const { width: LARGURA_TELA } = Dimensions.get("window");
@@ -23,6 +23,7 @@ interface CarrosselBoasVindasProps {
 }
 
 export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasVindasProps) {
+  const cores = useCores();
   const [indiceAtual, setIndiceAtual] = useState(0);
   const listaRef = useRef<FlatList>(null);
   const ultimoSlide = indiceAtual === SLIDES.length - 1;
@@ -47,7 +48,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
               width: 170,
               height: 170,
               borderWidth: 2,
-              borderColor: COLORS.primary + "55",
+              borderColor: cores.primary + "55",
             }}
           />
           <View
@@ -55,10 +56,10 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
             style={{
               width: 92,
               height: 92,
-              backgroundColor: COLORS.primary,
+              backgroundColor: cores.primary,
             }}
           >
-            <Text style={{ color: COLORS.bg, fontSize: icone, fontWeight: "700" }}>R$</Text>
+            <Text style={{ color: cores.bg, fontSize: icone, fontWeight: "700" }}>R$</Text>
           </View>
         </View>
       );
@@ -79,10 +80,10 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
               style={{
                 width: 75,
                 height: caixa.altura,
-                backgroundColor: COLORS.surface2,
+                backgroundColor: cores.surface2,
               }}
             >
-              <Text style={{ color: COLORS.primary, fontSize: descritivo, fontWeight: "600" }}>
+              <Text style={{ color: cores.primary, fontSize: descritivo, fontWeight: "600" }}>
                 {caixa.label}
               </Text>
             </View>
@@ -102,7 +103,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
               height: 150,
               borderLeftWidth: 2,
               borderBottomWidth: 2,
-              borderColor: COLORS.border,
+              borderColor: cores.border,
             }}
           >
             {barras.map((altura, indice) => (
@@ -112,7 +113,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
                 style={{
                   width: 28,
                   height: altura,
-                  backgroundColor: indice === barras.length - 1 ? COLORS.primary : COLORS.surface3,
+                  backgroundColor: indice === barras.length - 1 ? cores.primary : cores.surface3,
                 }}
               />
             ))}
@@ -129,18 +130,20 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
             <View
               key={card}
               className="rounded-2xl p-4"
-              style={{ width: 132, backgroundColor: COLORS.surface }}
+              style={{ width: 132, backgroundColor: cores.surface }}
             >
-              <Text style={{ color: COLORS.text, fontSize: descritivo, fontWeight: "700" }}>{card}</Text>
+              <Text style={{ color: cores.text, fontSize: descritivo, fontWeight: "700" }}>
+                {card}
+              </Text>
               <View
                 className="mt-4 rounded-full overflow-hidden"
-                style={{ height: 8, backgroundColor: COLORS.surface3 }}
+                style={{ height: 8, backgroundColor: cores.surface3 }}
               >
                 <View
                   style={{
                     height: 8,
                     width: `${[70, 55, 82, 40][indice]}%`,
-                    backgroundColor: COLORS.primary,
+                    backgroundColor: cores.primary,
                   }}
                 />
               </View>
@@ -155,7 +158,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
     <View className="flex-1 bg-bg">
       <View className="items-end px-8 pt-3">
         <Pressable onPress={onConcluir}>
-          <Text style={{ color: COLORS.textMuted, fontSize: descritivo }}>Pular</Text>
+          <Text style={{ color: cores.textMuted, fontSize: descritivo }}>Pular</Text>
         </Pressable>
       </View>
 
@@ -201,7 +204,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
               className="h-2 rounded-full"
               style={{
                 width: indice === indiceAtual ? 30 : 8,
-                backgroundColor: indice === indiceAtual ? COLORS.primary : COLORS.border,
+                backgroundColor: indice === indiceAtual ? cores.primary : cores.border,
               }}
             />
           ))}
