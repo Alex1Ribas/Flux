@@ -41,7 +41,7 @@ export interface ItemRecorrente {
   valor: number;
   /** Caixa planejada de destino (entrada) ou origem (saída) */
   caixaId: string;
-  /** Competência inicial no formato AAAA-MM */
+  /** Competência inicial no formato AAAA-MM ou AAAA-MM-DD */
   competenciaInicial: string;
   duracaoMeses: number;
   ativo: boolean;
@@ -106,6 +106,8 @@ export interface CompromissoMes {
   descricao: string;
   tipo: TipoLancamento;
   valor: number;
+  /** Dia do mês do compromisso (1–31); null se só houver mês. */
+  dia: number | null;
 }
 
 export interface AcompanhamentoMes {

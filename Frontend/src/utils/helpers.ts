@@ -123,8 +123,30 @@ export const getDiasNoMes = (competencia: string): number => {
   return new Date(ano, mes, 0).getDate();
 };
 
+export const temDiaNaCompetencia = (competencia: string): boolean =>
+  Boolean(competencia) && competencia.split("-").length >= 3;
+
 export const getDiaCompetencia = (competencia: string): number => {
   const partes = competencia.split("-");
   if (partes.length >= 3) return parseInt(partes[2], 10);
   return getDiasNoMes(getMesDeCompetencia(competencia));
+};
+
+/** Monta AAAA-MM-DD no mês alvo, limitando o dia ao último dia válido do mês. */
+export const montarCompetenciaComDia = (mes: string, dia: number): string => {
+  const mesNorm = getMesDeCompetencia(mes);
+  const diasNoMes = getDiasNoMes(mesNorm);
+  const diaValido = Math.min(Math.max(1, Math.floor(dia)), diasNoMes);
+  return `${mesNorm}-${String(diaValido).padStart(2, "0")}`;
+};
+
+/**
+ * Gera competências mensais a partir de `inicio`.
+ * Se `inicio` tiver dia (AAAA-MM-DD), cada item preserva esse dia no respectivo mês.
+ */
+export const getCompetenciasFuturas = (inicio: string, qtd: number): string[] => {
+  const meses = getMesesFuturos(inicio, qtd);
+  if (!temDiaNaCompetencia(inicio)) return meses;
+  const dia = getDiaCompetencia(inicio);
+  return meses.map((mes) => montarCompetenciaComDia(mes, dia));
 };
