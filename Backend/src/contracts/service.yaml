@@ -249,6 +249,27 @@ components:
             type: string
         limitesRisco:
           $ref: '#/components/schemas/ConfigLimitesRiscoRequest'
+    CategoriaCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [tipo, categoria]
+      properties:
+        tipo:
+          type: string
+          enum: [entrada, saida]
+        categoria:
+          type: string
+          minLength: 1
+    CategoriaCreateResponse:
+      type: object
+      additionalProperties: false
+      required: [tipo, categoria]
+      properties:
+        tipo:
+          type: string
+          enum: [entrada, saida]
+        categoria:
+          type: string
 paths:
   /api/health:
     get:
@@ -717,6 +738,59 @@ paths:
       responses:
         '200':
           description: OK
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+  /api/categorias:
+    get:
+      summary: Search category suggestions by type
+      operationId: buscarCategorias
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tipo
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [entrada, saida]
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+    post:
+      summary: Ensure category exists in user preferences
+      operationId: adicionarCategoria
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaCreateResponse'
         '400':
           description: Bad Request
         '401':
