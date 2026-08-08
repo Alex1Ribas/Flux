@@ -6,13 +6,19 @@ export function listarUltimosLancamentosPresentes(
   competencia: string,
   limite = 5
 ): Lancamento[] {
-  return lancamentos
+  return [...lancamentos]
     .filter(
       (lancamento) =>
         competenciaNoMes(lancamento.competencia, competencia) &&
         lancamento.horizonte === "presente" &&
         !lancamento.parcelaRef
     )
-    .slice(-limite)
-    .reverse();
+    .sort((lancamentoA, lancamentoB) => {
+      const porData = lancamentoB.competencia.localeCompare(lancamentoA.competencia);
+      if (porData !== 0) {
+        return porData;
+      }
+      return lancamentoB.id.localeCompare(lancamentoA.id);
+    })
+    .slice(0, limite);
 }
