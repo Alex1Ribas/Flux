@@ -5,9 +5,10 @@ import {
   GraficoAcompanhamentoMes,
   ListaCompromissosMes,
   ListaImpactosRisco,
+  ModalFormularioLancamentoAvulso,
   NavegadorMes,
 } from "@/components/acompanhamento";
-import { useTelaAcompanhamento } from "@/entities/acompanhamento";
+import { useEditarLancamentoAvulso, useTelaAcompanhamento } from "@/entities/acompanhamento";
 import { useEstiloSuperficie, useFundoTela } from "@/shared/estiloSuperficie";
 import { MARCA } from "@/shared/tokensDesign";
 import { useCores } from "@/shared/tema";
@@ -16,6 +17,7 @@ import type { TelaProps } from "@/types/navigation";
 
 export function TelaPrevisao({ setTela }: TelaProps) {
   const { competencia, dados, irMesAnterior, irMesSeguinte } = useTelaAcompanhamento();
+  const editarAvulso = useEditarLancamentoAvulso();
   const fundo = useFundoTela();
   const cores = useCores();
   const superficieBotao = useEstiloSuperficie({
@@ -71,10 +73,26 @@ export function TelaPrevisao({ setTela }: TelaProps) {
 
         <ListaCompromissosMes compromissos={dados.compromissos} />
 
-        <ListaImpactosRisco impactos={dados.impactos} />
+        <ListaImpactosRisco
+          impactos={dados.impactos}
+          onPressImpacto={editarAvulso.abrirEditar}
+        />
 
         <View className="h-10" />
       </ScrollView>
+
+      <ModalFormularioLancamentoAvulso
+        visivel={editarAvulso.modalAberto}
+        formulario={editarAvulso.formulario}
+        caixasCatalogo={editarAvulso.caixasCatalogo}
+        erro={editarAvulso.erro}
+        salvando={editarAvulso.salvando}
+        onFechar={editarAvulso.fecharModal}
+        onSalvar={() => {
+          void editarAvulso.salvar();
+        }}
+        onAtualizarCampo={editarAvulso.atualizarCampo}
+      />
     </View>
   );
 }
