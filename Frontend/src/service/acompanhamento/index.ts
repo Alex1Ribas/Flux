@@ -18,3 +18,9 @@ export {
   type AcoesItensRecorrentes,
   type FormularioItemRecorrente,
 } from "./itensRecorrentes";
+export {
+  montarFormularioLancamentoAvulso,
+  montarPayloadAtualizacaoAvulso,
+  validarFormularioLancamentoAvulso,
+  type FormularioLancamentoAvulso,
+} from "./editarLancamentoAvulso";
