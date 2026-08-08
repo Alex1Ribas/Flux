@@ -1,6 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
+
 import { Selo } from "@/shared/components";
-import { CAIXAS_CORES, COLORS } from "@/shared/tokensDesign";
+import { useEstiloSuperficie } from "@/shared/estiloSuperficie";
+import { useCores } from "@/shared/tema";
 import { obterNomeCaixa } from "@/shared/catalogoCaixas";
 import { ArrowDown, ArrowUp, X } from "@/shared/icons";
 import { formatBRL, getCompetenciaLabel } from "@/utils/helpers";
@@ -19,8 +21,10 @@ export function ItemLancamento({
   onExcluir,
   somenteLeitura = false,
 }: ItemLancamentoProps) {
+  const cores = useCores();
+  const superficie = useEstiloSuperficie();
   const isEntrada = lancamento.tipo === "entrada";
-  const corIcone = isEntrada ? COLORS.success : COLORS.error;
+  const corIcone = isEntrada ? cores.success : cores.error;
   const caixasDestino = lancamento.distribuicao ?? [];
   const caixaId = isEntrada ? caixasDestino[0]?.caixa : lancamento.caixaOrigem;
   const caixaLabel =
@@ -29,11 +33,13 @@ export function ItemLancamento({
       : caixaId
         ? obterNomeCaixa(caixasCatalogo, caixaId)
         : null;
-  const caixaCor = caixaId ? CAIXAS_CORES[caixaId as keyof typeof CAIXAS_CORES] : null;
   const DirectionIcon = isEntrada ? ArrowUp : ArrowDown;
 
   return (
-    <View className="bg-surface rounded-3xl p-4 mb-3 border border-border flex-row items-center gap-3 shadow-xl shadow-slate-200/50">
+    <View
+      className="rounded-3xl p-4 mb-3 border flex-row items-center gap-3"
+      style={superficie}
+    >
       <View className="rounded-2xl p-2 items-center justify-center bg-surface2 border border-border">
         <DirectionIcon
           size={20}
@@ -51,23 +57,25 @@ export function ItemLancamento({
         <View className="flex-row items-center gap-1.5 mt-0.5">
           <Selo
             label={lancamento.horizonte === "presente" ? "Presente" : "Futuro"}
-            color={lancamento.horizonte === "presente" ? COLORS.text : COLORS.textMuted}
-            bg={COLORS.surface2}
+            color={
+              lancamento.horizonte === "presente" ? cores.text : cores.textMuted
+            }
+            bg={cores.surface2}
           />
-          {caixaId && (
+          {caixaId ? (
             <Selo
               label={caixaLabel ?? caixaId}
-              color={COLORS.textMuted}
-              bg={caixaCor?.bg ?? COLORS.surface2}
+              color={cores.textMuted}
+              bg={cores.surface2}
             />
-          )}
-          {lancamento.parcelaNum && (
+          ) : null}
+          {lancamento.parcelaNum ? (
             <Selo
               label={`${lancamento.parcelaNum}/${lancamento.totalParcelas}`}
-              color={COLORS.textMuted}
-              bg={COLORS.surface2}
+              color={cores.textMuted}
+              bg={cores.surface2}
             />
-          )}
+          ) : null}
         </View>
       </View>
       <View className="items-end">
@@ -87,7 +95,7 @@ export function ItemLancamento({
       >
         <X
           size={22}
-          color={COLORS.textFaint}
+          color={cores.textFaint}
           strokeWidth={2}
         />
       </TouchableOpacity>

@@ -1,11 +1,12 @@
 import { View, Text } from "react-native";
+
 import { Cartao, BarraProgresso } from "@/shared/components";
 import {
   limiteDiarioOrcamento,
   limiteSemanalOrcamento,
   prazoEstimadoMeses,
 } from "@/shared/catalogoCaixas";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { CaixaIcon } from "@/shared/icons";
 import { formatBRL } from "@/utils/helpers";
 import type { CaixaId } from "@/shared/estilosCaixa";
@@ -34,9 +35,12 @@ export function CartaoCaixa({
   orcamentoMensal = 0,
   diasNoMes = 30,
 }: CartaoCaixaProps) {
+  const cores = useCores();
   const isObjetivo = tipo === "objetivo";
-  const faltam = isObjetivo ? Math.max(0, meta - saldo) : 0;
-  const prazo = isObjetivo ? prazoEstimadoMeses(meta, aporteMensal) : 0;
+  const metaValor = Number(meta) || 0;
+  const orcamentoValor = Number(orcamentoMensal) || 0;
+  const faltam = isObjetivo ? Math.max(0, metaValor - saldo) : 0;
+  const prazo = isObjetivo ? prazoEstimadoMeses(metaValor, aporteMensal) : 0;
 
   return (
     <Cartao>
@@ -47,7 +51,7 @@ export function CartaoCaixa({
               id={id}
               indice={indice}
               size={18}
-              color={COLORS.textMuted}
+              color={cores.textMuted}
             />
           </View>
           <View className="flex-1">
@@ -65,15 +69,15 @@ export function CartaoCaixa({
         <Text className="text-text text-2xl font-medium">{formatBRL(saldo)}</Text>
       </View>
 
-      {isObjetivo && meta > 0 ? (
+      {isObjetivo && metaValor > 0 ? (
         <>
           <BarraProgresso
             valor={saldo}
-            max={meta}
-            color={COLORS.text}
+            max={metaValor}
+            color={cores.primary}
           />
           <Text className="text-textMuted text-md mt-1">
-            Meta {formatBRL(meta)} · aporte {formatBRL(aporteMensal)}/mês
+            Meta {formatBRL(metaValor)} · aporte {formatBRL(aporteMensal)}/mês
           </Text>
           <Text className="text-textMuted text-md mt-1">
             {faltam > 0
@@ -83,19 +87,19 @@ export function CartaoCaixa({
         </>
       ) : null}
 
-      {!isObjetivo && orcamentoMensal > 0 ? (
+      {!isObjetivo && orcamentoValor > 0 ? (
         <>
           <BarraProgresso
             valor={saldo}
-            max={orcamentoMensal}
-            color={COLORS.text}
+            max={orcamentoValor}
+            color={cores.primary}
           />
           <Text className="text-textMuted text-md mt-1">
-            Orçamento mensal {formatBRL(orcamentoMensal)}
+            Orçamento mensal {formatBRL(orcamentoValor)}
           </Text>
           <Text className="text-textMuted text-md mt-1">
-            Diário {formatBRL(limiteDiarioOrcamento(orcamentoMensal, diasNoMes))} · semanal{" "}
-            {formatBRL(limiteSemanalOrcamento(orcamentoMensal))}
+            Diário {formatBRL(limiteDiarioOrcamento(orcamentoValor, diasNoMes))} · semanal{" "}
+            {formatBRL(limiteSemanalOrcamento(orcamentoValor))}
           </Text>
         </>
       ) : null}
