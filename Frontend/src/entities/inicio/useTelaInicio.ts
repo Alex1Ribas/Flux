@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { enviarMovimentacaoHomeNaApi } from "@/api";
 import { useSincronizarRemoto } from "@/entities/sincronizacao";
@@ -10,8 +10,9 @@ import {
   montarMovimentacaoHome,
   validarMovimentacaoHome,
 } from "@/service/inicio";
+import { obterNomeCaixa, ordenarCaixasPorSaldo } from "@/shared/catalogoCaixas";
 import type { CaixaId } from "@/shared/estilosCaixa";
-import type { TipoRecorrencia } from "@/types/flux";
+import type { CaixaCatalogoItem, Caixas, TipoRecorrencia } from "@/types/flux";
 import { getDataAtual, getMesAtual, getMesDeCompetencia } from "@/utils/helpers";
 
 export interface ParametrosHome {
@@ -20,10 +21,22 @@ export interface ParametrosHome {
   caixaInicial?: CaixaId;
 }
 
+function obterCaixaPadrao(
+  caixasCatalogo: CaixaCatalogoItem[],
+  caixas: Caixas,
+  caixaInicial?: CaixaId
+): CaixaId {
+  if (caixaInicial && caixasCatalogo.some((caixa) => caixa.id === caixaInicial)) {
+    return caixaInicial;
+  }
+  const ordenadas = ordenarCaixasPorSaldo(caixasCatalogo, caixas);
+  return ordenadas[0]?.id ?? "";
+}
+
 export function useTelaInicio({
   modoInicial = "entrada",
   horizonteInicial = "presente",
-  caixaInicial = "saldo_atual",
+  caixaInicial,
 }: ParametrosHome) {
   const { token, sincronizar } = useSincronizarRemoto();
   const {
@@ -32,11 +45,6 @@ export function useTelaInicio({
     lancamentos,
     orcamentos,
   } = useStore();
-
-  const caixaPadrao =
-    caixasCatalogo.find((caixa) => caixa.id === caixaInicial)?.id ??
-    caixasCatalogo[0]?.id ??
-    "saldo_atual";
 
   const hoje = getDataAtual();
   const dataInicial =
@@ -48,7 +56,9 @@ export function useTelaInicio({
         })()
       : hoje;
 
-  const [caixaSelecionada, setCaixaSelecionada] = useState<CaixaId>(caixaPadrao);
+  const [caixaSelecionada, setCaixaSelecionada] = useState<CaixaId>(() =>
+    obterCaixaPadrao(caixasCatalogo, caixas, caixaInicial)
+  );
   const [modo, setModo] = useState<"entrada" | "saida">(modoInicial);
   const [dataLancamento, setDataLancamento] = useState(dataInicial);
   const [valor, setValor] = useState("");
@@ -60,6 +70,13 @@ export function useTelaInicio({
   const [caixaCompensacao, setCaixaCompensacao] = useState("");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (caixasCatalogo.length === 0) return;
+    const existeSelecionada = caixasCatalogo.some((caixa) => caixa.id === caixaSelecionada);
+    if (existeSelecionada) return;
+    setCaixaSelecionada(obterCaixaPadrao(caixasCatalogo, caixas, caixaInicial));
+  }, [caixasCatalogo, caixas, caixaInicial, caixaSelecionada]);
 
   const horizonte = derivarHorizonteDaData(dataLancamento, hoje);
   const valorNum = Number(valor) || 0;
@@ -132,11 +149,14 @@ export function useTelaInicio({
     setErro("");
   };
 
+  const nomeCaixaSelecionada = obterNomeCaixa(caixasCatalogo, caixaSelecionada);
+
   return {
     caixas,
     caixasCatalogo,
     caixaSelecionada,
     setCaixaSelecionada,
+    nomeCaixaSelecionada,
     modo,
     setModo,
     horizonte,
