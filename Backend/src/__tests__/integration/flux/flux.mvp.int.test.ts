@@ -140,4 +140,25 @@ describe('flux MVP API', () => {
     expect(acompanhamento.body.diferencialValor).toBe(-1100);
     expect(typeof acompanhamento.body.diferencial).toBe('number');
   });
+
+  describe('when category is added via POST /categorias', () => {
+    it('should appear as suggestion on GET /categorias', async () => {
+      const app = getTestApp();
+      const token = await registerAndGetToken(app);
+
+      await request(app)
+        .post('/api/categorias')
+        .set(authHeader(token))
+        .send({ tipo: 'saida', categoria: 'Conveniencia' })
+        .expect(201);
+
+      const resposta = await request(app)
+        .get('/api/categorias')
+        .query({ tipo: 'saida', q: 'conv' })
+        .set(authHeader(token))
+        .expect(200);
+
+      expect(resposta.body).toEqual(expect.arrayContaining(['Conveniencia']));
+    });
+  });
 });
