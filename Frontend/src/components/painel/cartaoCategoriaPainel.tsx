@@ -10,19 +10,19 @@ interface CartaoCategoriaPainelProps {
   onPress: () => void;
 }
 
-function formatarDeltaPct(valor: number): string {
-  const abs = Math.abs(valor);
-  if (valor > 0) return `↑ ${abs.toFixed(0)}% vs mês passado`;
-  if (valor < 0) return `↓ ${abs.toFixed(0)}% vs mês passado`;
-  return `→ ${abs.toFixed(0)}% vs mês passado`;
-}
+function formatarTendenciaUnificada(deltaPercentual: number, deltaQuantidade: number): string {
+  const absPct = Math.abs(deltaPercentual).toFixed(0);
+  const absQtd = Math.abs(deltaQuantidade);
+  const label = absQtd === 1 ? "item" : "itens";
 
-function formatarDeltaQtd(valor: number): string {
-  const abs = Math.abs(valor);
-  const label = abs === 1 ? "item" : "itens";
-  if (valor === 0) return `→ 0 ${label} vs mês passado`;
-  if (valor > 0) return `↑ ${abs} ${label} vs mês passado`;
-  return `↓ ${abs} ${label} vs mês passado`;
+  let seta = "→";
+  if (deltaPercentual > 0 || (Math.abs(deltaPercentual) < 0.5 && deltaQuantidade > 0)) {
+    seta = "↑";
+  } else if (deltaPercentual < 0 || deltaQuantidade < 0) {
+    seta = "↓";
+  }
+
+  return `${seta} ${absPct}% (${absQtd} ${label})`;
 }
 
 export function CartaoCategoriaPainel({ categoria, onPress }: CartaoCategoriaPainelProps) {
@@ -65,6 +65,19 @@ export function CartaoCategoriaPainel({ categoria, onPress }: CartaoCategoriaPai
             </Text>
             <Text
               style={{
+                color: corTrend,
+                fontSize: 12,
+                marginTop: 4,
+                fontWeight: "500",
+              }}
+            >
+              {formatarTendenciaUnificada(
+                categoria.deltaPercentual,
+                categoria.deltaQuantidade
+              )}
+            </Text>
+            <Text
+              style={{
                 color: cores.textMuted,
                 fontSize: 12,
                 marginTop: 4,
@@ -80,37 +93,6 @@ export function CartaoCategoriaPainel({ categoria, onPress }: CartaoCategoriaPai
             prefixo={prefixo}
             style={{ color: corTipo, fontSize: 18, fontWeight: "600" }}
           />
-        </View>
-
-        <View className="flex-row flex-wrap gap-2 mt-3">
-          <View
-            className="rounded-full px-2.5 py-1 border"
-            style={{ borderColor: corTrend + "55", backgroundColor: corTrend + "18" }}
-          >
-            <Text
-              style={{
-                color: corTrend,
-                fontSize: 11,
-                fontWeight: "600",
-              }}
-            >
-              {formatarDeltaPct(categoria.deltaPercentual)}
-            </Text>
-          </View>
-          <View
-            className="rounded-full px-2.5 py-1 border"
-            style={{ borderColor: corTrend + "55", backgroundColor: corTrend + "18" }}
-          >
-            <Text
-              style={{
-                color: corTrend,
-                fontSize: 11,
-                fontWeight: "600",
-              }}
-            >
-              {formatarDeltaQtd(categoria.deltaQuantidade)}
-            </Text>
-          </View>
         </View>
       </Cartao>
     </Pressable>
