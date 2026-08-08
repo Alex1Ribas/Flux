@@ -56,17 +56,17 @@ export function CartaoCaixa({
           </View>
           <View className="flex-1">
             <Text
-              className="text-textMuted text-md font-medium uppercase tracking-wide"
+              className="text-textMuted text-sm font-medium uppercase tracking-wide"
               numberOfLines={1}
             >
               {nome}
             </Text>
-            <Text className="text-textMuted text-md mt-0.5">
+            <Text className="text-textMuted text-xs mt-0.5">
               {isObjetivo ? "Objetivo" : "Orçamento"}
             </Text>
           </View>
         </View>
-        <Text className="text-text text-2xl font-medium">{formatBRL(saldo)}</Text>
+        <Text className="text-text text-3xl font-semibold">{formatBRL(saldo)}</Text>
       </View>
 
       {isObjetivo && metaValor > 0 ? (
