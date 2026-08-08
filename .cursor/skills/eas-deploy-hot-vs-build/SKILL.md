@@ -22,6 +22,10 @@ nem hot update sem dizer o veredito ao usuário.
 
 Git push / commit **não** atualiza o APK. Só `yarn hot` ou `eas build`.
 
+Na **main**, o workflow `.github/workflows/eas-hot-update.yml` classifica o
+diff e roda `yarn hot` automaticamente quando for HOT. Em BUILD/MISTO só
+avisa (job não falha). Requer secret `EXPO_TOKEN` no GitHub.
+
 ## Quando basta HOT (OTA)
 
 Mudanças só em JS/TS/UI/assets do bundle:

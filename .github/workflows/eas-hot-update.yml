@@ -1,0 +1,71 @@
+name: EAS Hot Update
+
+# Em push na main: publica OTA (yarn hot) quando a mudança se encaixa.
+# Se precisar de APK novo (BUILD/MISTO), só avisa — job verde, push não é bloqueado.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Frontend/**'
+      - '.github/scripts/classify-eas-deploy.mjs'
+      - '.github/workflows/eas-hot-update.yml'
+
+concurrency:
+  group: eas-hot-update-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  hot-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify HOT vs BUILD
+        id: classify
+        run: node .github/scripts/classify-eas-deploy.mjs "${{ github.event.before }}" "${{ github.sha }}"
+
+      - name: Notice when hot update does not apply
+        if: steps.classify.outputs.verdict != 'HOT'
+        run: |
+          echo "::warning title=EAS Hot Update — ${{ steps.classify.outputs.verdict }}::${{ steps.classify.outputs.summary }}"
+          echo "Veredito: ${{ steps.classify.outputs.verdict }}"
+          echo "${{ steps.classify.outputs.summary }}"
+          echo ""
+          echo "${{ steps.classify.outputs.reasons }}"
+
+      - name: Setup Node
+        if: steps.classify.outputs.verdict == 'HOT'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        if: steps.classify.outputs.verdict == 'HOT'
+        run: yarn install --frozen-lockfile
+
+      - name: Install EAS CLI
+        if: steps.classify.outputs.verdict == 'HOT'
+        run: npm install -g eas-cli
+
+      - name: Publish hot update (production)
+        if: steps.classify.outputs.verdict == 'HOT'
+        working-directory: Frontend
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error title=EXPO_TOKEN ausente::Configure o secret EXPO_TOKEN no repositório (Expo → Access Token)."
+            exit 1
+          fi
+
+          MESSAGE=$(git log -1 --pretty=%s "${{ github.sha }}")
+          echo "Publicando hot update: $MESSAGE"
+          yarn hot -- --message "$MESSAGE"
