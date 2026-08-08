@@ -84,61 +84,66 @@ export function Botao({
   }
 
   const corTexto = disabled ? cores.textMuted : variantText[variant];
+  const raio = size === "lg" ? 999 : 20;
 
   return (
-    <Pressable
-      onPress={() => {
-        if (disabled) return;
-        void feedbackTactilLeve();
-        onPress();
-      }}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      accessibilityLabel={label}
-      style={({ pressed }) => {
-        const scale = pressed && !disabled ? 0.95 : 1;
+    <View style={style}>
+      <Pressable
+        onPress={() => {
+          if (disabled) return;
+          void feedbackTactilLeve();
+          onPress();
+        }}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        accessibilityLabel={label}
+        style={({ pressed }) => {
+          const scale = pressed && !disabled ? 0.95 : 1;
 
-        return [
-          {
-            borderRadius: size === "lg" ? 999 : 20,
+          return {
+            opacity: disabled ? 0.5 : 1,
+            transform: [{ scale }],
+          };
+        }}
+      >
+        {/*
+          Fundo/borda no View: Pressable com flex:1 frequentemente não pinta
+          backgroundColor (só o texto aparece), sobretudo em modais.
+        */}
+        <View
+          collapsable={false}
+          style={{
+            borderRadius: raio,
             backgroundColor: disabled ? cores.surface : variantBg[variant],
             borderWidth: variant === "ghost" ? 0 : 1,
             borderColor: disabled ? cores.border : variantBorder[variant],
-            opacity: disabled ? 0.5 : 1,
-            transform: [{ scale }],
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            width: "100%",
             ...SIZE_PAD[size],
-          },
-          style,
-        ];
-      }}
-    >
-      {/* View interna: evita texto sumir com flex:1 no pressable (bug do MotiPressable). */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 6,
-        }}
-      >
-        {Icon ? (
-          <Icon
-            size={ICON_SIZE[size]}
-            color={iconColor}
-            strokeWidth={2}
-          />
-        ) : null}
-        <Text
-          style={{
-            fontWeight: "500",
-            fontSize: SIZE_TEXT[size],
-            color: corTexto,
           }}
         >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
+          {Icon ? (
+            <Icon
+              size={ICON_SIZE[size]}
+              color={iconColor}
+              strokeWidth={2}
+            />
+          ) : null}
+          <Text
+            style={{
+              fontWeight: "500",
+              fontSize: SIZE_TEXT[size],
+              color: corTexto,
+            }}
+          >
+            {label}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }

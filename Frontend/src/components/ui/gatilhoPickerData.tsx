@@ -4,7 +4,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores, useTema, useVarsTema } from "@/shared/tema";
 import { dataParaCompetencia, parseCompetencia } from "@/utils/helpers";
 
 interface GatilhoPickerDataProps {
@@ -27,6 +27,9 @@ export function GatilhoPickerData({
   tituloModal = "Data",
   children,
 }: GatilhoPickerDataProps) {
+  const cores = useCores();
+  const { isDark } = useTema();
+  const varsTema = useVarsTema();
   const [aberto, setAberto] = useState(false);
   const valorData = value?.trim() ? parseCompetencia(value) : new Date();
 
@@ -64,38 +67,43 @@ export function GatilhoPickerData({
           animationType="slide"
           onRequestClose={() => setAberto(false)}
         >
-          <Pressable
-            className="flex-1 justify-end bg-black/70"
-            onPress={() => setAberto(false)}
+          <View
+            style={[{ flex: 1 }, varsTema]}
+            className="flex-1"
           >
             <Pressable
-              onPress={(evento) => evento.stopPropagation()}
-              className="bg-surface rounded-t-3xl border border-border pb-6"
+              className="flex-1 justify-end bg-black/70"
+              onPress={() => setAberto(false)}
             >
-              <View className="flex-row justify-between items-center px-4 pt-4 pb-2">
-                <Text className="text-textMuted text-md font-medium">{tituloModal}</Text>
-                <Pressable
-                  onPress={() => setAberto(false)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Confirmar data"
-                >
-                  <Text
-                    className="text-xl font-semibold"
-                    style={{ color: COLORS.primary }}
+              <Pressable
+                onPress={(evento) => evento.stopPropagation()}
+                className="bg-surface rounded-t-3xl border border-border pb-6"
+              >
+                <View className="flex-row justify-between items-center px-4 pt-4 pb-2">
+                  <Text className="text-textMuted text-md font-medium">{tituloModal}</Text>
+                  <Pressable
+                    onPress={() => setAberto(false)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Confirmar data"
                   >
-                    OK
-                  </Text>
-                </Pressable>
-              </View>
-              <DateTimePicker
-                value={valorData}
-                mode="date"
-                display="spinner"
-                onChange={aoMudar}
-                themeVariant="dark"
-              />
+                    <Text
+                      className="text-xl font-semibold"
+                      style={{ color: cores.primary }}
+                    >
+                      OK
+                    </Text>
+                  </Pressable>
+                </View>
+                <DateTimePicker
+                  value={valorData}
+                  mode="date"
+                  display="spinner"
+                  onChange={aoMudar}
+                  themeVariant={isDark ? "dark" : "light"}
+                />
+              </Pressable>
             </Pressable>
-          </Pressable>
+          </View>
         </Modal>
       ) : null}
     </>

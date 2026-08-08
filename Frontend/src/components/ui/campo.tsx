@@ -1,6 +1,6 @@
 import { View, Text, TextInput, type KeyboardTypeOptions } from "react-native";
 
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 
 interface CampoProps {
   label?: string;
@@ -23,6 +23,8 @@ export function Campo({
   multiline = false,
   error,
 }: CampoProps) {
+  const cores = useCores();
+
   return (
     <View className="mb-3.5">
       {label ? <Text className="text-textMuted text-2xl mb-1 font-medium">{label}</Text> : null}
@@ -30,7 +32,7 @@ export function Campo({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder || ""}
-        placeholderTextColor={COLORS.textMuted}
+        placeholderTextColor={cores.textMuted}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
         multiline={multiline}

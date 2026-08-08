@@ -1,5 +1,6 @@
 import { View } from "react-native";
-import { COLORS } from "@/shared/tokensDesign";
+
+import { useCores } from "@/shared/tema";
 
 interface PropriedadesBarraProgresso {
   valor: number;
@@ -7,14 +8,28 @@ interface PropriedadesBarraProgresso {
   color?: string;
 }
 
-export function BarraProgresso({ valor, max, color = COLORS.text }: PropriedadesBarraProgresso) {
+export function BarraProgresso({ valor, max, color }: PropriedadesBarraProgresso) {
+  const cores = useCores();
   const pct = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
+  const corPreenchimento = color ?? cores.text;
 
   return (
-    <View className="h-1.5 bg-surface2 rounded-full overflow-hidden">
+    <View
+      style={{
+        height: 6,
+        backgroundColor: cores.surface3,
+        borderRadius: 999,
+        overflow: "hidden",
+        width: "100%",
+      }}
+    >
       <View
-        className="h-full rounded-full"
-        style={{ width: `${pct}%`, backgroundColor: color }}
+        style={{
+          height: "100%",
+          width: `${pct}%`,
+          backgroundColor: corPreenchimento,
+          borderRadius: 999,
+        }}
       />
     </View>
   );

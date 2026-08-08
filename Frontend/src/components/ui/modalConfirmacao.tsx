@@ -1,4 +1,7 @@
 import { Modal, View, Text } from "react-native";
+
+import { useVarsTema } from "@/shared/tema";
+
 import { Botao } from "./botao";
 
 interface PropriedadesModalConfirmacao {
@@ -16,13 +19,18 @@ export function ModalConfirmacao({
   onConfirm,
   onCancelar,
 }: PropriedadesModalConfirmacao) {
+  const varsTema = useVarsTema();
+
   return (
     <Modal
       transparent
       visible={visivel}
       animationType="fade"
     >
-      <View className="flex-1 bg-black/70 justify-center items-center p-6">
+      <View
+        style={[{ flex: 1 }, varsTema]}
+        className="flex-1 bg-black/70 justify-center items-center p-6"
+      >
         <View className="bg-surface rounded-2xl p-5 w-full max-w-[360px] border border-border">
           <Text className="text-text text-base font-medium mb-2">{titulo}</Text>
           <Text className="text-textMuted text-[13px] mb-5">{mensagem}</Text>

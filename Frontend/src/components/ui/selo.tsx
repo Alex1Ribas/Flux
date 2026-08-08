@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
-import { COLORS } from "@/shared/tokensDesign";
+
+import { useCores } from "@/shared/tema";
 
 interface PropriedadesSelo {
   label: string;
@@ -8,15 +9,17 @@ interface PropriedadesSelo {
   className?: string;
 }
 
-export function Selo({ label, color = COLORS.textMuted, bg, className = "" }: PropriedadesSelo) {
+export function Selo({ label, color, bg, className = "" }: PropriedadesSelo) {
+  const cores = useCores();
+
   return (
     <View
       className={`rounded-full px-2 py-0.5 ${className}`}
-      style={{ backgroundColor: bg || COLORS.surface2 }}
+      style={{ backgroundColor: bg || cores.surface2 }}
     >
       <Text
         className="text-[11px] font-semibold"
-        style={{ color }}
+        style={{ color: color || cores.textMuted }}
       >
         {label}
       </Text>

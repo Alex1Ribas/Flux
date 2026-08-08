@@ -1,7 +1,7 @@
 import { Pressable, Text, View, type ViewStyle } from "react-native";
 
 import { Calendar } from "@/shared/icons";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { formatarCompetencia } from "@/utils/helpers";
 
 import { GatilhoPickerData } from "./gatilhoPickerData";
@@ -35,18 +35,21 @@ export function CampoData({
   accessibilityLabel,
   somenteIcone = false,
 }: CampoDataProps) {
+  const cores = useCores();
   const temValor = Boolean(value?.trim());
   const textoExibido = temValor ? formatarCompetencia(value) : placeholder;
-  const corTexto = disabled
-    ? COLORS.textMuted
-    : temValor
-      ? COLORS.text
-      : COLORS.textMuted;
-  const corIcone = disabled
-    ? COLORS.textMuted
-    : error
-      ? COLORS.error
-      : COLORS.primary;
+
+  let corTexto = cores.textMuted;
+  if (!disabled && temValor) {
+    corTexto = cores.text;
+  }
+
+  let corIcone = cores.primary;
+  if (disabled) {
+    corIcone = cores.textMuted;
+  } else if (error) {
+    corIcone = cores.error;
+  }
 
   const rotuloAcessivel =
     accessibilityLabel ?? (temValor ? `Data: ${textoExibido}` : placeholder);

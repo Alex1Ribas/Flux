@@ -1,5 +1,5 @@
 import { View, TouchableOpacity, Text } from "react-native";
-import { COLORS } from "@/shared/tokensDesign";
+import { useCores } from "@/shared/tema";
 import { ArrowLeft } from "@/shared/icons";
 import type { SetTela, TelaId } from "@/types/navigation";
 
@@ -10,6 +10,8 @@ interface PropriedadesCabecalhoTela {
 }
 
 export function CabecalhoTela({ title, setTela, backTo = "inicio" }: PropriedadesCabecalhoTela) {
+  const cores = useCores();
+
   return (
     <View className="flex-row items-center mb-5 gap-3">
       <TouchableOpacity
@@ -18,7 +20,7 @@ export function CabecalhoTela({ title, setTela, backTo = "inicio" }: Propriedade
       >
         <ArrowLeft
           size={22}
-          color={COLORS.text}
+          color={cores.text}
           strokeWidth={2}
         />
       </TouchableOpacity>
