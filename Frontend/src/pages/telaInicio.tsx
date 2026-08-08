@@ -135,22 +135,27 @@ export function TelaInicio({
           </View>
         </View>
 
-        {/* 4. Classificação — data + categoria + recorrência */}
+        {/* 4. Classificação — categoria + data + recorrência */}
         <View className="mx-4 mb-5 rounded-3xl border border-border bg-surface p-4 shadow-xl shadow-slate-200/50">
-          <CampoData
-            label="Data"
-            value={home.dataLancamento}
-            onChange={home.setDataLancamento}
-            placeholder="Selecionar data"
+          <View
+            className="flex-row items-start gap-2"
             style={{ marginBottom: 14 }}
-          />
-
-          <AutocompleteCategoria
-            token={home.token}
-            modo={home.modo}
-            valor={home.tipo}
-            onChange={home.selecionarMotivo}
-          />
+          >
+            <View className="flex-1">
+              <AutocompleteCategoria
+                token={home.token}
+                modo={home.modo}
+                valor={home.tipo}
+                onChange={home.selecionarMotivo}
+              />
+            </View>
+            <CampoData
+              value={home.dataLancamento}
+              onChange={home.setDataLancamento}
+              somenteIcone
+              accessibilityLabel="Selecionar data"
+            />
+          </View>
 
           <View
             className="mt-4 pt-4"
@@ -211,6 +216,7 @@ export function TelaInicio({
             label="Registrar"
             onPress={home.registrar}
             size="lg"
+            variant="success"
           />
         </View>
       </ScrollView>
