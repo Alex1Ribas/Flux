@@ -1,5 +1,6 @@
 export { useTelaAcompanhamento } from "./useTelaAcompanhamento";
 export { useTelaConfigRecorrentes } from "./useTelaConfigRecorrentes";
+export { useEditarLancamentoAvulso } from "./useEditarLancamentoAvulso";
 export {
   executarSalvarItemRecorrente,
   montarFormularioItemRecorrente,
