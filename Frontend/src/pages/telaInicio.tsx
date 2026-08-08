@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Keyboard, Pressable, ScrollView, Text, View } from "react-native";
 
 import {
@@ -18,20 +18,21 @@ import { useTema } from "@/shared/tema";
 import { MARCA } from "@/shared/tokensDesign";
 import type { TelaProps } from "@/types/navigation";
 import { formatBRL } from "@/utils/helpers";
-import { AlertTriangle, Moon, Sun, Wallet } from "@/shared/icons";
+import { AlertTriangle, ChevronDown, ChevronUp, Moon, Sun, Wallet } from "@/shared/icons";
 import { ArrowRightIcon } from "lucide-react-native";
 
 export function TelaInicio({
   setTela,
   modoInicial = "entrada",
   horizonteInicial = "presente",
-  caixaInicial = "saldo_atual",
+  caixaInicial,
 }: TelaProps) {
   const { logout, sessao } = useAuth();
   const home = useTelaInicio({ modoInicial, horizonteInicial, caixaInicial });
   const fundo = useFundoTela();
   const { isDark, alternar, cores } = useTema();
   const tokens = useTokensInicio();
+  const [historicoAberto, setHistoricoAberto] = useState(false);
 
   useEffect(() => {
     Keyboard.dismiss();
@@ -117,6 +118,7 @@ export function TelaInicio({
             valor={home.valor}
             onChangeValor={home.setValor}
             modo={home.modo}
+            nomeCaixa={home.nomeCaixaSelecionada}
           />
         </View>
 
@@ -157,8 +159,8 @@ export function TelaInicio({
             <SlideToggle
               ativo={home.recorrente}
               onToggle={() => home.setRecorrente(!home.recorrente)}
-              label={home.recorrente ? "Recorrente" : "Avulso"}
-              accessibilityLabel="Marcar lançamento como recorrente ou avulso"
+              label="Recorrente"
+              accessibilityLabel="Marcar lançamento como recorrente"
             />
             <Text className="text-textFaint text-xs mt-2 leading-4">
               {home.recorrente
@@ -213,7 +215,7 @@ export function TelaInicio({
         </View>
       </ScrollView>
 
-      {/* 6. Histórico compacto — 2 últimos */}
+      {/* 6. Histórico compacto — retrátil */}
       <View
         className="px-4 pt-3 pb-3"
         style={{
@@ -222,32 +224,62 @@ export function TelaInicio({
           backgroundColor: fundo,
         }}
       >
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-textMuted text-md font-semibold">Últimos lançamentos</Text>
+        <View className="flex-row justify-between items-center">
+          <Pressable
+            onPress={() => setHistoricoAberto((aberto) => !aberto)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: historicoAberto }}
+            accessibilityLabel={
+              historicoAberto ? "Recolher últimos lançamentos" : "Expandir últimos lançamentos"
+            }
+            className="flex-row items-center gap-1.5 flex-1 mr-3"
+            hitSlop={8}
+          >
+            <Text className="text-textMuted text-md font-semibold">Últimos lançamentos</Text>
+            {historicoAberto ? (
+              <ChevronUp
+                size={16}
+                color={tokens.textMuted}
+                strokeWidth={2}
+              />
+            ) : (
+              <ChevronDown
+                size={16}
+                color={tokens.textMuted}
+                strokeWidth={2}
+              />
+            )}
+          </Pressable>
           <Pressable onPress={() => setTela("painel")}>
             <Text className="text-text text-sm font-medium">Ver painel</Text>
           </Pressable>
         </View>
 
-        {home.ultimosLancamentos.length === 0 ? (
-          <View className="items-center justify-center py-3 gap-1">
-            <Wallet
-              size={22}
-              color={tokens.textMuted}
-              strokeWidth={1.75}
-            />
-            <Text className="text-textMuted text-sm text-center">Nenhum lançamento neste mês</Text>
+        {historicoAberto ? (
+          <View className="mt-2">
+            {home.ultimosLancamentos.length === 0 ? (
+              <View className="items-center justify-center py-3 gap-1">
+                <Wallet
+                  size={22}
+                  color={tokens.textMuted}
+                  strokeWidth={1.75}
+                />
+                <Text className="text-textMuted text-sm text-center">
+                  Nenhum lançamento neste mês
+                </Text>
+              </View>
+            ) : (
+              home.ultimosLancamentos.slice(0, 2).map((lancamento) => (
+                <ItemLancamento
+                  key={lancamento.id}
+                  caixasCatalogo={home.caixasCatalogo}
+                  lancamento={lancamento}
+                  somenteLeitura
+                />
+              ))
+            )}
           </View>
-        ) : (
-          home.ultimosLancamentos.slice(0, 2).map((lancamento) => (
-            <ItemLancamento
-              key={lancamento.id}
-              caixasCatalogo={home.caixasCatalogo}
-              lancamento={lancamento}
-              somenteLeitura
-            />
-          ))
-        )}
+        ) : null}
       </View>
     </View>
   );
