@@ -1,5 +1,14 @@
 import { View, Text } from "react-native";
-import Svg, { Circle, Line, Polyline, Text as SvgText } from "react-native-svg";
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  LinearGradient,
+  Path,
+  Polyline,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg";
 
 import { useCores } from "@/shared/tema";
 import type { PontoEvolucaoRisco } from "@/types/flux";
@@ -40,6 +49,32 @@ function montarCoordenadas(
     .join(" ");
 }
 
+function montarPathArea(
+  pontos: PontoEvolucaoRisco[],
+  chave: "riscoEsperado" | "riscoReal",
+  diasNoMes: number,
+  areaLargura: number,
+  areaAltura: number
+): string {
+  if (pontos.length === 0) return "";
+
+  const baseY = MARGEM.topo + areaAltura;
+  const primeiro = pontos[0];
+  const ultimo = pontos[pontos.length - 1];
+  const xInicio = xDoDia(primeiro.dia, diasNoMes, areaLargura);
+  const xFim = xDoDia(ultimo.dia, diasNoMes, areaLargura);
+
+  const segmentos = pontos
+    .map((ponto) => {
+      const x = xDoDia(ponto.dia, diasNoMes, areaLargura);
+      const y = yDoRisco(ponto[chave], areaAltura);
+      return `L ${x} ${y}`;
+    })
+    .join(" ");
+
+  return `M ${xInicio} ${baseY} ${segmentos} L ${xFim} ${baseY} Z`;
+}
+
 function rotulosEixoX(diasNoMes: number): number[] {
   const candidatos = [1, 5, 10, 15, 20, 25, diasNoMes];
   const unicos = new Set<number>();
@@ -72,6 +107,13 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
     areaLargura,
     areaAltura
   );
+  const pathAreaReal = montarPathArea(
+    pontos,
+    "riscoReal",
+    diasNoMes,
+    areaLargura,
+    areaAltura
+  );
 
   const pontosMudanca = pontos.filter((ponto, indice) => {
     if (indice === 0) return false;
@@ -79,7 +121,7 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
   });
 
   return (
-    <View className="bg-surface rounded-2xl p-4 border border-border mb-4">
+    <View className="bg-surface rounded-2xl p-4 mb-4">
       <Text className="text-textMuted text-md mb-3 uppercase tracking-wide">
         Evolução do risco
       </Text>
@@ -108,20 +150,26 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
           height={ALTURA}
           viewBox={`0 0 ${LARGURA} ${ALTURA}`}
         >
-          {labelsY.map((valor) => {
-            const y = yDoRisco(valor, areaAltura);
-            return (
-              <Line
-                key={`grid-y-${valor}`}
-                x1={MARGEM.esquerda}
-                y1={y}
-                x2={MARGEM.esquerda + areaLargura}
-                y2={y}
-                stroke={cores.border}
-                strokeWidth={1}
+          <Defs>
+            <LinearGradient
+              id="gradienteRiscoReal"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <Stop
+                offset="0%"
+                stopColor={cores.primary}
+                stopOpacity={0.45}
               />
-            );
-          })}
+              <Stop
+                offset="100%"
+                stopColor={cores.primary}
+                stopOpacity={0}
+              />
+            </LinearGradient>
+          </Defs>
 
           <Line
             x1={MARGEM.esquerda}
@@ -152,6 +200,11 @@ export function GraficoAcompanhamentoMes({ pontos }: GraficoAcompanhamentoMesPro
               {valor}
             </SvgText>
           ))}
+
+          <Path
+            d={pathAreaReal}
+            fill="url(#gradienteRiscoReal)"
+          />
 
           <Polyline
             points={coordsPrevisto}
