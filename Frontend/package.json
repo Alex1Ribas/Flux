@@ -50,6 +50,7 @@
     "postinstall": "node scripts/patch-moti-safe-area.mjs",
     "dev": "expo start",
     "doctor": "npx expo-doctor",
+    "hot": "eas update --channel production --environment production --non-interactive",
     "android": "expo start --android --clear",
     "ios": "expo start --ios --clear",
     "web": "expo start --web",

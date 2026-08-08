@@ -11,6 +11,7 @@
     "dev:app": "yarn workspace flux-app dev",
     "dev:app:clear": "yarn workspace flux-app exec expo start --clear",
     "doctor:app": "yarn workspace flux-app doctor",
+    "hot": "yarn workspace flux-app hot",
     "dev:api": "yarn workspace flux-api dev",
     "dev:web": "yarn workspace flux-app web",
     "build:app": "yarn workspace flux-app build",
