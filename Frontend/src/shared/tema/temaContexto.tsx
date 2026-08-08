@@ -141,4 +141,13 @@ export function useCores(): CoresTema {
   return useTema().cores;
 }
 
+/**
+ * Vars CSS do tema atual — use na raiz de `Modal`/portais,
+ * que ficam fora da árvore nativa do `TemaProvider`.
+ */
+export function useVarsTema() {
+  const { modo } = useTema();
+  return varsPorModo[modo];
+}
+
 export { themes, themeClasses, colorsFlat, colorsFlatDark };

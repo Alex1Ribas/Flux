@@ -2,6 +2,7 @@ export {
   TemaProvider,
   useTema,
   useCores,
+  useVarsTema,
   themes,
   themeClasses,
   colorsFlat,
