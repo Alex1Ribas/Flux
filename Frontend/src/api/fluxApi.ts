@@ -260,6 +260,10 @@ export const contasApi = {
       payload,
       { headers: authHeaders(token) }
     ),
+  sincronizarRecorrentes: (token: string) =>
+    cliente.post<void, Record<string, never>>("/contas/sincronizar-recorrentes", {}, {
+      headers: authHeaders(token),
+    }),
 };
 
 export const lancamentosApi = {
