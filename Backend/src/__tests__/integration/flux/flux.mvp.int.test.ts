@@ -148,6 +148,105 @@ describe('flux MVP API', () => {
     );
   });
 
+  describe('when simulating a new installment commitment', () => {
+    it('should return calculated impacts without persisting scenario', async () => {
+      const app = getTestApp();
+      const token = await registerAndGetToken(app);
+
+      const caixaOrcamento = await request(app)
+        .post('/api/caixas')
+        .set(authHeader(token))
+        .send({
+          nome: 'Qualidade de Vida',
+          saldo: 0,
+          tipo: 'orcamento',
+          orcamentoMensal: 1000,
+        })
+        .expect(201);
+
+      const caixaObjetivo = await request(app)
+        .post('/api/caixas')
+        .set(authHeader(token))
+        .send({
+          nome: 'Casa',
+          saldo: 2000,
+          tipo: 'objetivo',
+          meta: 12000,
+          aporteMensal: 1000,
+        })
+        .expect(201);
+
+      const caixaOrcamentoId = caixaOrcamento.body._id as string;
+      const caixaObjetivoId = caixaObjetivo.body._id as string;
+
+      await request(app)
+        .post('/api/lancamentos')
+        .set(authHeader(token))
+        .send({
+          tipo: 'entrada',
+          horizonte: 'futuro',
+          valor: 2500,
+          descricao: 'Salario',
+          competencia: '2026-09',
+          recorrente: true,
+          competenciaInicial: '2026-09',
+          duracaoMeses: 12,
+          ativo: true,
+          distribuicao: [{ caixa: caixaOrcamentoId, valor: 2500 }],
+        })
+        .expect(201);
+
+      await request(app)
+        .post('/api/lancamentos')
+        .set(authHeader(token))
+        .send({
+          tipo: 'saida',
+          horizonte: 'futuro',
+          valor: 800,
+          descricao: 'Custos fixos',
+          competencia: '2026-09',
+          recorrente: true,
+          competenciaInicial: '2026-09',
+          duracaoMeses: 12,
+          ativo: true,
+          caixaOrigem: caixaOrcamentoId,
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .post('/api/acompanhamento/simulacao-impacto')
+        .set(authHeader(token))
+        .send({
+          valorTotal: 4800,
+          duracaoMeses: 12,
+          dataPrimeiroPagamento: '2026-09-10',
+          modoCompensacao: 'declarada',
+          fontesDeCompensacao: [
+            {
+              id: 'fonte-orcamento',
+              tipoOrigem: 'orcamento',
+              origemId: caixaOrcamentoId,
+              valorMensalDestinado: 200,
+            },
+            {
+              id: 'fonte-objetivo',
+              tipoOrigem: 'objetivo',
+              origemId: caixaObjetivoId,
+              valorMensalDestinado: 200,
+            },
+          ],
+        })
+        .expect(200);
+
+      expect(response.body.parcelaMensal).toEqual(400);
+      expect(response.body.mesesAfetados).toHaveLength(12);
+      expect(response.body.budgetImpacts[0].novoValorMensal).toEqual(800);
+      expect(response.body.goalImpacts[0].novoAporteMensal).toEqual(800);
+      expect(response.body.resumoImpacto.totalFontesDeclaradas).toEqual(400);
+      expect(Array.isArray(response.body.monthlyImpacts)).toEqual(true);
+    });
+  });
+
   describe('when category is added via POST /categorias', () => {
     it('should appear as suggestion on GET /categorias', async () => {
       const app = getTestApp();
