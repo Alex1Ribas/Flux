@@ -9,6 +9,7 @@ interface ModalExtratoCategoriaProps {
   titulo: string;
   lancamentos: Lancamento[];
   onFechar: () => void;
+  onPressLancamento?: (lancamentoId: string) => void;
 }
 
 export function ModalExtratoCategoria({
@@ -16,6 +17,7 @@ export function ModalExtratoCategoria({
   titulo,
   lancamentos,
   onFechar,
+  onPressLancamento,
 }: ModalExtratoCategoriaProps) {
   const cores = useCores();
   const varsTema = useVarsTema();
@@ -70,12 +72,10 @@ export function ModalExtratoCategoria({
                   const cor =
                     lancamento.tipo === "entrada" ? cores.success : cores.error;
                   const prefixo = lancamento.tipo === "entrada" ? "+" : "−";
+                  const editavel = !lancamento.recorrente && Boolean(onPressLancamento);
 
-                  return (
-                    <View
-                      key={lancamento.id}
-                      className="bg-surface border border-border rounded-2xl px-3 py-3 mb-2 flex-row justify-between items-center gap-3"
-                    >
+                  const conteudo = (
+                    <>
                       <View className="flex-1">
                         <Text
                           className="text-text text-md font-medium"
@@ -86,6 +86,7 @@ export function ModalExtratoCategoria({
                         <Text className="text-textMuted text-sm mt-1">
                           {getCompetenciaLabel(lancamento.competencia)}
                           {lancamento.observacao ? ` · ${lancamento.observacao}` : ""}
+                          {lancamento.recorrente ? " · recorrente" : ""}
                         </Text>
                       </View>
                       <Text
@@ -95,7 +96,30 @@ export function ModalExtratoCategoria({
                         {prefixo}
                         {formatBRL(lancamento.valor)}
                       </Text>
-                    </View>
+                    </>
+                  );
+
+                  if (!editavel) {
+                    return (
+                      <View
+                        key={lancamento.id}
+                        className="bg-surface border border-border rounded-2xl px-3 py-3 mb-2 flex-row justify-between items-center gap-3"
+                      >
+                        {conteudo}
+                      </View>
+                    );
+                  }
+
+                  return (
+                    <Pressable
+                      key={lancamento.id}
+                      onPress={() => onPressLancamento?.(lancamento.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Editar lançamento ${lancamento.descricao}`}
+                      className="bg-surface border border-border rounded-2xl px-3 py-3 mb-2 flex-row justify-between items-center gap-3"
+                    >
+                      {conteudo}
+                    </Pressable>
                   );
                 })
               )}

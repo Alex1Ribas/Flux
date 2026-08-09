@@ -1,22 +1,54 @@
-import { View, Text } from "react-native";
+import { Pressable, View, Text } from "react-native";
 
 import { Cartao, TituloSecao } from "@/shared/components";
+import { ChevronDown, ChevronRight } from "@/shared/icons";
 import { useCores } from "@/shared/tema";
 import type { CompromissoMes } from "@/types/flux";
 import { formatBRL } from "@/utils/helpers";
 
 interface ListaCompromissosMesProps {
   compromissos: CompromissoMes[];
+  expandido: boolean;
+  onToggle: () => void;
 }
 
 /** Bloco C: listagem estática de recorrente === true (entradas e saídas). */
-export function ListaCompromissosMes({ compromissos }: ListaCompromissosMesProps) {
+export function ListaCompromissosMes({
+  compromissos,
+  expandido,
+  onToggle,
+}: ListaCompromissosMesProps) {
   const cores = useCores();
+  const Chevron = expandido ? ChevronDown : ChevronRight;
 
   return (
     <View className="mb-4">
-      <TituloSecao title="Compromissos do mês" />
-      {compromissos.length === 0 ? (
+      <Pressable
+        onPress={onToggle}
+        accessibilityRole="button"
+        accessibilityLabel={
+          expandido
+            ? "Ocultar compromissos do mês"
+            : "Mostrar compromissos do mês"
+        }
+        accessibilityState={{ expanded: expandido }}
+      >
+        <TituloSecao
+          title="Compromissos do mês"
+          right={
+            <View className="flex-row items-center gap-1">
+              <Text className="text-textMuted text-sm">{compromissos.length}</Text>
+              <Chevron
+                size={18}
+                color={cores.textMuted}
+                strokeWidth={2}
+              />
+            </View>
+          }
+        />
+      </Pressable>
+
+      {!expandido ? null : compromissos.length === 0 ? (
         <Text className="text-textMuted text-md mb-2">
           Nenhum compromisso recorrente neste mês
         </Text>
