@@ -139,6 +139,13 @@ describe('flux MVP API', () => {
     expect(acompanhamento.body.riscoReal.comprometido).toBe(0);
     expect(acompanhamento.body.diferencialValor).toBe(-1100);
     expect(typeof acompanhamento.body.diferencial).toBe('number');
+    expect(Array.isArray(acompanhamento.body.evolucao)).toBe(true);
+    expect(acompanhamento.body.evolucao.length).toBeGreaterThan(0);
+    expect(Array.isArray(acompanhamento.body.compromissos)).toBe(true);
+    expect(Array.isArray(acompanhamento.body.impactos)).toBe(true);
+    expect(acompanhamento.body.limites).toEqual(
+      expect.objectContaining({ saudavel: 30, atencao: 50 }),
+    );
   });
 
   describe('when category is added via POST /categorias', () => {
@@ -159,6 +166,62 @@ describe('flux MVP API', () => {
         .expect(200);
 
       expect(resposta.body).toEqual(expect.arrayContaining(['Conveniencia']));
+    });
+  });
+
+  describe('when present saida uses full-date competencia', () => {
+    it('should apply monthly orcamento for compensation limit', async () => {
+      const app = getTestApp();
+      const token = await registerAndGetToken(app);
+
+      const caixaPrincipal = await request(app)
+        .post('/api/caixas')
+        .set(authHeader(token))
+        .send({ nome: 'Essencial', saldo: 1000, tipo: 'orcamento', orcamentoMensal: 5000 });
+      const caixaCompensacao = await request(app)
+        .post('/api/caixas')
+        .set(authHeader(token))
+        .send({ nome: 'Reserva', saldo: 500, tipo: 'objetivo', meta: 10000, aporteMensal: 500 });
+
+      const principalId = caixaPrincipal.body._id as string;
+      const compensacaoId = caixaCompensacao.body._id as string;
+
+      await request(app)
+        .put('/api/orcamentos/2026-08')
+        .set(authHeader(token))
+        .send({ orcamentos: [{ caixa: principalId, valor: 100 }] })
+        .expect(200);
+
+      await request(app)
+        .post('/api/lancamentos')
+        .set(authHeader(token))
+        .send({
+          tipo: 'saida',
+          horizonte: 'presente',
+          valor: 250,
+          descricao: 'Compra com data cheia',
+          competencia: '2026-08-09',
+          caixaOrigem: principalId,
+        })
+        .expect(400);
+
+      const compensada = await request(app)
+        .post('/api/lancamentos')
+        .set(authHeader(token))
+        .send({
+          tipo: 'saida',
+          horizonte: 'presente',
+          valor: 250,
+          descricao: 'Compra com data cheia',
+          competencia: '2026-08-09',
+          caixaOrigem: principalId,
+          caixaCompensacao: compensacaoId,
+        })
+        .expect(201);
+
+      expect(compensada.body).toHaveLength(2);
+      expect(compensada.body[0].valor).toEqual(100);
+      expect(compensada.body[1].valor).toEqual(150);
     });
   });
 });
