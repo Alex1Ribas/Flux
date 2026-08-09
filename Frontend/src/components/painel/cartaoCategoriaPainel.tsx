@@ -45,7 +45,7 @@ export function CartaoCategoriaPainel({ categoria, onPress }: CartaoCategoriaPai
         onPress();
       }}
       accessibilityRole="button"
-      accessibilityLabel={`Detalhar categoria ${categoria.nome}`}
+      accessibilityLabel={`Detalhar ${categoria.nome}`}
       style={({ pressed }) => ({
         transform: [{ scale: pressed ? 0.95 : 1 }],
       })}
