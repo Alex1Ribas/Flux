@@ -25,8 +25,7 @@ async function listarTodasContas(token: string): Promise<ContaApi[]> {
   return items;
 }
 
-export async function carregarDadosFinanceApi(token: string) {
-  const competencia = getMesAtual();
+async function garantirCaixas(token: string) {
   let caixas = await caixasApi.listar(token);
 
   if (caixas.length === 0) {
@@ -43,6 +42,17 @@ export async function carregarDadosFinanceApi(token: string) {
       )
     );
   }
+
+  return caixas;
+}
+
+export async function carregarDadosFinanceApi(token: string) {
+  const competencia = getMesAtual();
+
+  const [caixas] = await Promise.all([
+    garantirCaixas(token),
+    contasApi.sincronizarRecorrentes(token),
+  ]);
 
   const [lancamentos, orcamentos, preferencias, contas] = await Promise.all([
     lancamentosApi.listar(token),
