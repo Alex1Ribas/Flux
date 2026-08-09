@@ -4,8 +4,12 @@ import { assertResourceAccess } from '../../common/helpers/access.helper.js';
 import {
   EHorizonteLancamento,
   ETipoLancamento,
+  type ILancamento,
 } from '../../lancamento/entity/interfaces/lancamento.interface.js';
-import { normalizeCompetencia, normalizeCompetenciaData } from '../../orcamento/service/competencia.helper.js';
+import {
+  normalizeCompetencia,
+  normalizeCompetenciaData,
+} from '../../orcamento/service/competencia.helper.js';
 import type { EUserRole } from '../../user/entity/interfaces/user.interface.js';
 import { Conta } from '../entity/conta.entity.js';
 import {
@@ -22,6 +26,13 @@ import type {
   IParamsUpdateConta,
   IResultadoLiquidacaoConta,
 } from '../entity/interfaces/conta.service.interface.js';
+import {
+  caixaIdDoRecorrente,
+  diaVencimentoDoRecorrente,
+  listarMesesDoRecorrente,
+  montarVencimentoOcorrencia,
+  tipoContaDoRecorrente,
+} from './ocorrencia.helper.js';
 
 function dataHojeIso(): string {
   const agora = new Date();
@@ -36,17 +47,20 @@ export class ContaService implements IContaService {
   private readonly contaRepositoryWrite: IParamsContaService['contaRepositoryWrite'];
   private readonly caixaRepositoryRead: IParamsContaService['caixaRepositoryRead'];
   private readonly lancamentoService: IParamsContaService['lancamentoService'];
+  private readonly lancamentoRepositoryRead: IParamsContaService['lancamentoRepositoryRead'];
 
   constructor({
     contaRepositoryRead,
     contaRepositoryWrite,
     caixaRepositoryRead,
     lancamentoService,
+    lancamentoRepositoryRead,
   }: IParamsContaService) {
     this.contaRepositoryRead = contaRepositoryRead;
     this.contaRepositoryWrite = contaRepositoryWrite;
     this.caixaRepositoryRead = caixaRepositoryRead;
     this.lancamentoService = lancamentoService;
+    this.lancamentoRepositoryRead = lancamentoRepositoryRead;
   }
 
   async createConta(
@@ -61,8 +75,12 @@ export class ContaService implements IContaService {
     if (vencimento.length !== 10) {
       throw new DomainError(EErrorCode.CONTA_VENCIMENTO_INVALID, 400);
     }
+    const competencia = normalizeCompetencia(
+      params.competencia ?? vencimento,
+    );
     const caixaId = this.validateCaixaId(params.caixaId);
     await this.findOwnedCaixa(caixaId, requestUserId);
+    const recorrenteId = params.recorrenteId?.trim() || undefined;
 
     return this.contaRepositoryWrite.createConta(
       new Conta(
@@ -71,9 +89,11 @@ export class ContaService implements IContaService {
         tipo,
         descricao,
         valor,
+        competencia,
         vencimento,
         caixaId,
         EStatusConta.ABERTA,
+        recorrenteId,
       ),
     );
   }
@@ -128,6 +148,10 @@ export class ContaService implements IContaService {
         throw new DomainError(EErrorCode.CONTA_VENCIMENTO_INVALID, 400);
       }
       cleaned.vencimento = vencimento;
+      cleaned.competencia = normalizeCompetencia(vencimento);
+    }
+    if (params.competencia !== undefined) {
+      cleaned.competencia = normalizeCompetencia(params.competencia);
     }
     if (params.caixaId !== undefined) {
       cleaned.caixaId = this.validateCaixaId(params.caixaId);
@@ -222,6 +246,126 @@ export class ContaService implements IContaService {
     }
 
     return { conta, lancamentos };
+  }
+
+  async sincronizarOcorrenciasDoRecorrente(
+    requestUserId: string,
+    recorrente: ILancamento,
+  ): Promise<IConta[]> {
+    this.ensureUserId(requestUserId);
+    if (!recorrente.recorrente) {
+      return [];
+    }
+    if (recorrente.user !== requestUserId) {
+      throw new DomainError(EErrorCode.ACCESS_DENIED, 403);
+    }
+
+    if (recorrente.ativo === false) {
+      await this.removerOcorrenciasAbertasDoRecorrente(requestUserId, recorrente._id);
+      return [];
+    }
+
+    const caixaId = caixaIdDoRecorrente(recorrente);
+    if (!caixaId) {
+      throw new DomainError(EErrorCode.CONTA_CAIXA_REQUIRED, 400);
+    }
+    await this.findOwnedCaixa(caixaId, requestUserId);
+
+    const tipo = tipoContaDoRecorrente(recorrente);
+    const descricao = this.validateDescricao(recorrente.descricao);
+    const valor = this.validateValor(Number(recorrente.valor));
+    const dia = diaVencimentoDoRecorrente(recorrente);
+    const meses = listarMesesDoRecorrente(recorrente);
+    const existentes = await this.contaRepositoryRead.listContasByRecorrente(
+      requestUserId,
+      recorrente._id,
+    );
+    const porCompetencia = new Map(
+      existentes.map((conta) => [conta.competencia, conta]),
+    );
+    const resultado: IConta[] = [];
+
+    for (const competencia of meses) {
+      const vencimento = montarVencimentoOcorrencia(competencia, dia);
+      const existente = porCompetencia.get(competencia);
+
+      if (!existente) {
+        const criada = await this.contaRepositoryWrite.createConta(
+          new Conta(
+            '',
+            requestUserId,
+            tipo,
+            descricao,
+            valor,
+            competencia,
+            vencimento,
+            caixaId,
+            EStatusConta.ABERTA,
+            recorrente._id,
+          ),
+        );
+        resultado.push(criada);
+        continue;
+      }
+
+      porCompetencia.delete(competencia);
+
+      if (existente.status !== EStatusConta.ABERTA) {
+        resultado.push(existente);
+        continue;
+      }
+
+      const atualizada = await this.contaRepositoryWrite.updateContaById(
+        existente._id,
+        {
+          tipo,
+          descricao,
+          valor,
+          competencia,
+          vencimento,
+          caixaId,
+        },
+      );
+      resultado.push(atualizada ?? existente);
+    }
+
+    for (const sobra of porCompetencia.values()) {
+      if (sobra.status !== EStatusConta.ABERTA) continue;
+      await this.contaRepositoryWrite.deleteContaById(sobra._id);
+    }
+
+    return resultado;
+  }
+
+  async removerOcorrenciasAbertasDoRecorrente(
+    requestUserId: string,
+    recorrenteId: string,
+  ): Promise<number> {
+    this.ensureUserId(requestUserId);
+    const contas = await this.contaRepositoryRead.listContasByRecorrente(
+      requestUserId,
+      recorrenteId,
+    );
+    let removidas = 0;
+    for (const conta of contas) {
+      if (conta.status !== EStatusConta.ABERTA) continue;
+      await this.contaRepositoryWrite.deleteContaById(conta._id);
+      removidas += 1;
+    }
+    return removidas;
+  }
+
+  async sincronizarOcorrenciasDosRecorrentesDoUsuario(
+    requestUserId: string,
+  ): Promise<void> {
+    this.ensureUserId(requestUserId);
+    const recorrentes = await this.lancamentoRepositoryRead.listLancamentosByUser(
+      requestUserId,
+      { recorrente: true },
+    );
+    for (const recorrente of recorrentes) {
+      await this.sincronizarOcorrenciasDoRecorrente(requestUserId, recorrente);
+    }
   }
 
   private async findAndAssertAccess(

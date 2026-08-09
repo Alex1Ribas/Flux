@@ -15,11 +15,15 @@ export interface IConta {
   tipo: ETipoConta;
   descricao: string;
   valor: number;
+  /** Competência da ocorrência (AAAA-MM). */
+  competencia: string;
   /** Vencimento planejado (AAAA-MM-DD). */
   vencimento: string;
   /** Caixa de origem (a pagar) ou destino (a receber). */
   caixaId: string;
   status: EStatusConta;
+  /** Template recorrente (lançamento) que originou esta ocorrência. */
+  recorrenteId?: string;
   /** Data efetiva do pagamento/recebimento (AAAA-MM-DD). */
   liquidadoEm?: string;
   /** Lançamento presente gerado na liquidação. */
@@ -33,7 +37,9 @@ export interface IParamsCreateConta {
   tipo: ETipoConta;
   descricao: string;
   valor: number;
+  competencia: string;
   vencimento: string;
   caixaId: string;
   status?: EStatusConta;
+  recorrenteId?: string;
 }

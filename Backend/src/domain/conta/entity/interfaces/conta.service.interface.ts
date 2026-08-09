@@ -10,6 +10,7 @@ import type { IContaRepositoryRead } from '../../repository/conta.repository.rea
 import type { IContaRepositoryWrite } from '../../repository/conta.repository.write.js';
 import type { ICaixaRepositoryRead } from '../../../caixa/repository/caixa.repository.read.js';
 import type { ILancamentoService } from '../../../lancamento/entity/interfaces/lancamento.service.interface.js';
+import type { ILancamentoRepositoryRead } from '../../../lancamento/repository/lancamento.repository.read.js';
 
 export interface IParamsCreateContaInput extends Omit<IParamsCreateConta, 'user'> {
   userId?: string;
@@ -19,9 +20,11 @@ export interface IParamsUpdateConta {
   tipo?: ETipoConta;
   descricao?: string;
   valor?: number;
+  competencia?: string;
   vencimento?: string;
   caixaId?: string;
   status?: EStatusConta;
+  recorrenteId?: string;
 }
 
 export interface IParamsLiquidarConta {
@@ -41,8 +44,9 @@ export interface IResultadoLiquidacaoConta {
 export interface IListContasFiltro {
   status?: EStatusConta;
   tipo?: ETipoConta;
-  /** Filtra por vencimento no mês AAAA-MM. */
+  /** Filtra por competência da ocorrência (AAAA-MM). */
   competencia?: string;
+  recorrenteId?: string;
 }
 
 export interface IParamsContaService {
@@ -50,6 +54,7 @@ export interface IParamsContaService {
   contaRepositoryWrite: IContaRepositoryWrite;
   caixaRepositoryRead: ICaixaRepositoryRead;
   lancamentoService: ILancamentoService;
+  lancamentoRepositoryRead: ILancamentoRepositoryRead;
 }
 
 export interface IContaService {
@@ -77,4 +82,18 @@ export interface IContaService {
     requestRole: EUserRole,
     params?: IParamsLiquidarConta,
   ): Promise<IResultadoLiquidacaoConta>;
+  /** Gera/atualiza ocorrências abertas a partir da regra recorrente. */
+  sincronizarOcorrenciasDoRecorrente(
+    requestUserId: string,
+    recorrente: ILancamento,
+  ): Promise<IConta[]>;
+  /** Remove ocorrências abertas fora da regra (ex.: exclusão do template). */
+  removerOcorrenciasAbertasDoRecorrente(
+    requestUserId: string,
+    recorrenteId: string,
+  ): Promise<number>;
+  /** Garante ocorrências para todos os templates recorrentes do usuário. */
+  sincronizarOcorrenciasDosRecorrentesDoUsuario(
+    requestUserId: string,
+  ): Promise<void>;
 }

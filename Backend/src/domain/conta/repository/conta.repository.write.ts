@@ -7,6 +7,7 @@ export interface IContaRepositoryWrite {
   updateContaById(id: string, params: IParamsUpdateConta & {
     liquidadoEm?: string;
     lancamentoId?: string;
+    recorrenteId?: string;
   }): Promise<IConta | null>;
   deleteContaById(id: string): Promise<IConta | null>;
 }
