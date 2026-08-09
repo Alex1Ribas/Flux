@@ -1,6 +1,12 @@
 import { DomainError } from '../../common/errors/DomainError.js';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode.js';
 import {
+  EStatusConta,
+  ETipoConta,
+  type IConta,
+} from '../../conta/entity/interfaces/conta.interface.js';
+import type { IContaService } from '../../conta/entity/interfaces/conta.service.interface.js';
+import {
   ETipoLancamento,
   type ILancamento,
 } from '../../lancamento/entity/interfaces/lancamento.interface.js';
@@ -19,67 +25,37 @@ const LIMITES_RISCO_PADRAO = {
   atencao: 50,
 };
 
-type LinhaRecorrente = {
+type LinhaPrevisto = {
   id: string;
   nome: string;
-  tipo: ETipoLancamento | string;
+  tipo: 'entrada' | 'saida';
   valor: number;
 };
-
-function getMesesFuturos(inicio: string, qtd: number): string[] {
-  const resultado: string[] = [];
-  const [ano, mes] = inicio.split('-').map(Number);
-  for (let i = 0; i < qtd; i++) {
-    let novoMes = mes + i;
-    let novoAno = ano + Math.floor((novoMes - 1) / 12);
-    novoMes = ((novoMes - 1) % 12) + 1;
-    resultado.push(`${novoAno}-${String(novoMes).padStart(2, '0')}`);
-  }
-  return resultado;
-}
-
-function recorrenteAtivoNoMes(lancamento: ILancamento, mes: string): boolean {
-  if (!lancamento.recorrente) return false;
-  if (lancamento.ativo === false) return false;
-
-  const inicio = normalizeCompetencia(
-    lancamento.competenciaInicial ?? lancamento.competencia,
-  );
-  const duracao = Math.max(1, Number(lancamento.duracaoMeses) || 1);
-  return getMesesFuturos(inicio, duracao).includes(mes);
-}
 
 function montarRisco(entradaPrevista: number, comprometido: number): IRiscoPrevisto {
   const risco = entradaPrevista > 0 ? (comprometido / entradaPrevista) * 100 : 0;
   return { entradaPrevista, comprometido, risco };
 }
 
-function listarRecorrentesParaRiscoMes(
-  mes: string,
-  lancamentos: ILancamento[],
-): LinhaRecorrente[] {
-  const porChave = new Map<string, LinhaRecorrente>();
-
-  lancamentos.forEach((lancamento) => {
-    if (!recorrenteAtivoNoMes(lancamento, mes)) return;
-
-    const chave = `${lancamento.descricao}|${lancamento.tipo}`;
-    porChave.set(chave, {
-      id: lancamento._id,
-      nome: lancamento.descricao,
-      tipo: lancamento.tipo,
-      valor: Number(lancamento.valor),
-    });
-  });
-
-  return [...porChave.values()];
+function linhasDasContasAbertas(contas: IConta[]): LinhaPrevisto[] {
+  return contas.map((conta) => ({
+    id: conta._id,
+    nome: conta.descricao,
+    tipo: conta.tipo === ETipoConta.A_RECEBER ? 'entrada' : 'saida',
+    valor: Number(conta.valor),
+  }));
 }
 
 export class AcompanhamentoService implements IAcompanhamentoService {
   private readonly lancamentoRepositoryRead: IParamsAcompanhamentoService['lancamentoRepositoryRead'];
+  private readonly contaService: IContaService;
 
-  constructor({ lancamentoRepositoryRead }: IParamsAcompanhamentoService) {
+  constructor({
+    lancamentoRepositoryRead,
+    contaService,
+  }: IParamsAcompanhamentoService) {
     this.lancamentoRepositoryRead = lancamentoRepositoryRead;
+    this.contaService = contaService;
   }
 
   async montarAcompanhamentoMes(
@@ -91,17 +67,22 @@ export class AcompanhamentoService implements IAcompanhamentoService {
     }
 
     const mes = normalizeCompetencia(competencia);
-    const [lancamentosMes, recorrentes] = await Promise.all([
+    await this.contaService.sincronizarOcorrenciasDosRecorrentesDoUsuario(
+      requestUserId,
+    );
+
+    const [lancamentosMes, contasAbertas] = await Promise.all([
       this.lancamentoRepositoryRead.listLancamentosByUserCompetencia(
         requestUserId,
         mes,
       ),
-      this.lancamentoRepositoryRead.listLancamentosByUser(requestUserId, {
-        recorrente: true,
+      this.contaService.listContas(requestUserId, {
+        status: EStatusConta.ABERTA,
+        competencia: mes,
       }),
     ]);
 
-    const linhas = listarRecorrentesParaRiscoMes(mes, recorrentes);
+    const linhas = linhasDasContasAbertas(contasAbertas);
     const risco = this.calcRiscoPrevisto(linhas);
     const { saidasAvulsas, entradasAvulsas } = this.somarAvulsos(lancamentosMes);
     const diferencialValor = saidasAvulsas - entradasAvulsas;
@@ -126,12 +107,12 @@ export class AcompanhamentoService implements IAcompanhamentoService {
     };
   }
 
-  private calcRiscoPrevisto(linhas: LinhaRecorrente[]): IRiscoPrevisto {
+  private calcRiscoPrevisto(linhas: LinhaPrevisto[]): IRiscoPrevisto {
     let entradaPrevista = 0;
     let comprometido = 0;
 
     linhas.forEach((linha) => {
-      if (linha.tipo === ETipoLancamento.ENTRADA) {
+      if (linha.tipo === 'entrada') {
         entradaPrevista += linha.valor;
       } else {
         comprometido += linha.valor;
@@ -166,14 +147,14 @@ export class AcompanhamentoService implements IAcompanhamentoService {
   }
 
   private calcComposicaoRisco(
-    linhas: LinhaRecorrente[],
+    linhas: LinhaPrevisto[],
     comprometido: number,
   ): IComposicaoRisco[] {
     if (comprometido <= 0) return [];
     const totais = new Map<string, number>();
 
     linhas
-      .filter((linha) => linha.tipo === ETipoLancamento.SAIDA)
+      .filter((linha) => linha.tipo === 'saida')
       .forEach((linha) => {
         totais.set(linha.nome, (totais.get(linha.nome) ?? 0) + linha.valor);
       });

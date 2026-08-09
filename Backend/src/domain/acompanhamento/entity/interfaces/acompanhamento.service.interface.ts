@@ -1,4 +1,5 @@
 import type { ILancamentoRepositoryRead } from '../../../lancamento/repository/lancamento.repository.read.js';
+import type { IContaService } from '../../../conta/entity/interfaces/conta.service.interface.js';
 
 export type StatusRiscoMensal = 'saudavel' | 'atencao' | 'critico';
 
@@ -31,6 +32,7 @@ export interface IAcompanhamentoMes {
 
 export interface IParamsAcompanhamentoService {
   lancamentoRepositoryRead: ILancamentoRepositoryRead;
+  contaService: IContaService;
 }
 
 export interface IAcompanhamentoService {
