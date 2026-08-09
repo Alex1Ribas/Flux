@@ -17,23 +17,23 @@ export const PROPORCAO_ONBOARDING = {
 
 export const INSTRUCOES_ONBOARDING: InstrucaoOnboarding[] = [
   {
-    titulo: "Orgazinando seu dinheiro.",
+    titulo: "Organizando seu dinheiro.",
     descricao:
-      "Organize seu dinheiro em reservas e saiba o que pode usar hoje e o que já pertence aos seus objetivos.",
+      "O Flux organiza o dinheiro em caixas: você vê onde ele está, o que pode usar e o que já pertence aos seus objetivos.",
     ilustracao: "dinheiro",
     cor: COLORS.primary,
   },
   {
-    titulo: "O Flux organiza por você.",
+    titulo: "Caixas são a alocação.",
     descricao:
-      "Ao receber dinheiro, escolha para quais caixas ele vai e acompanhe quanto cada reserva deve manter protegido.",
+      "Ao receber, escolha para onde o dinheiro vai. Ao gastar, escolha de onde ele sai. A caixa é a reserva — não só um rótulo.",
     ilustracao: "caixas",
     cor: COLORS.primary,
   },
   {
-    titulo: "Acompanhe sua saúde financeira.",
+    titulo: "Acompanhe a saúde do mês.",
     descricao:
-      "Veja como seus lançamentos afetam o risco do mês e onde estão os maiores impactos.",
+      "Planeje compromissos recorrentes e veja se o mês está saudável — e, depois, onde você está gastando.",
     ilustracao: "grafico",
     cor: COLORS.primary,
   },
