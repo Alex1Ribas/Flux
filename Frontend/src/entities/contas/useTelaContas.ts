@@ -18,7 +18,7 @@ import type { Conta, StatusConta, TipoConta } from "@/types/flux";
 import { mapearContaApi } from "./mapearContaApi";
 
 export function useTelaContas() {
-  const { token, sincronizar } = useSincronizarRemoto();
+  const { token, sincronizar, sincronizarSeExpirado } = useSincronizarRemoto();
   const { caixasCatalogo, orcamentos } = useStore();
   const caixaPadrao = caixasCatalogo[0]?.id ?? "";
 
@@ -30,6 +30,7 @@ export function useTelaContas() {
   const [total, setTotal] = useState(0);
   const [carregandoLista, setCarregandoLista] = useState(false);
   const [carregandoMais, setCarregandoMais] = useState(false);
+  const [atualizando, setAtualizando] = useState(false);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [modalLiquidarAberto, setModalLiquidarAberto] = useState(false);
@@ -115,6 +116,10 @@ export function useTelaContas() {
   );
 
   useEffect(() => {
+    void sincronizarSeExpirado();
+  }, [sincronizarSeExpirado]);
+
+  useEffect(() => {
     void carregarPagina(undefined, false);
   }, [carregarPagina]);
 
@@ -126,6 +131,20 @@ export function useTelaContas() {
   const recarregarLista = async () => {
     await sincronizar({ force: true });
     await carregarPagina(undefined, false);
+  };
+
+  /** Pull-to-refresh: leitura + materialização sob demanda do usuário. */
+  const atualizarPorGesto = async () => {
+    if (atualizando) return;
+    setAtualizando(true);
+    try {
+      await sincronizar({ force: true, materializarRecorrentes: true });
+      await carregarPagina(undefined, false);
+    } catch {
+      setErro("Não foi possível atualizar as contas.");
+    } finally {
+      setAtualizando(false);
+    }
   };
 
   const fecharModal = () => {
@@ -272,7 +291,9 @@ export function useTelaContas() {
     total,
     carregandoLista,
     carregandoMais,
+    atualizando,
     carregarMais,
+    atualizarPorGesto,
     modalAberto,
     modalLiquidarAberto,
     contaEditando,
