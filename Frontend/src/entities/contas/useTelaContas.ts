@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { contasApi } from "@/api";
+import { CONTAS_PAGE_SIZE, contasApi } from "@/api";
 import { useSincronizarRemoto } from "@/entities/sincronizacao";
 import { useStore } from "@/entities/store";
 import {
-  filtrarContasPorStatus,
   montarFormularioConta,
   montarFormularioLiquidacao,
   montarPayloadConta,
@@ -13,19 +12,23 @@ import {
   type FormularioConta,
   type FormularioLiquidacaoConta,
 } from "@/service/contas";
-import type { Conta, StatusConta } from "@/types/flux";
+import type { Conta, StatusConta, TipoConta } from "@/types/flux";
+import { mapearContaApi } from "./mapearContaApi";
 
 export function useTelaContas() {
   const { token, sincronizar } = useSincronizarRemoto();
-  const { caixasCatalogo, contas } = useStore();
+  const { caixasCatalogo } = useStore();
   const caixaPadrao = caixasCatalogo[0]?.id ?? "";
 
-  useEffect(() => {
-    if (!token) return;
-    void sincronizar();
-  }, [sincronizar, token]);
-
+  const [filtroTipo, setFiltroTipo] = useState<TipoConta>("a_pagar");
   const [filtroStatus, setFiltroStatus] = useState<StatusConta | "todas">("aberta");
+  const [contasFiltradas, setContasFiltradas] = useState<Conta[]>([]);
+  const [lastItemId, setLastItemId] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [carregandoLista, setCarregandoLista] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+
   const [modalAberto, setModalAberto] = useState(false);
   const [modalLiquidarAberto, setModalLiquidarAberto] = useState(false);
   const [contaEditando, setContaEditando] = useState<string | null>(null);
@@ -42,10 +45,58 @@ export function useTelaContas() {
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  const contasFiltradas = useMemo(
-    () => filtrarContasPorStatus(contas, filtroStatus),
-    [contas, filtroStatus]
+  const carregarPagina = useCallback(
+    async (cursor: string | undefined, acumular: boolean) => {
+      if (!token) return;
+
+      if (acumular) setCarregandoMais(true);
+      else setCarregandoLista(true);
+
+      try {
+        let statusFiltro: StatusConta | undefined;
+        if (filtroStatus !== "todas") {
+          statusFiltro = filtroStatus;
+        }
+
+        const resposta = await contasApi.listar(token, {
+          tipo: filtroTipo,
+          status: statusFiltro,
+          pageSize: CONTAS_PAGE_SIZE,
+          lastItemId: cursor,
+        });
+        const mapeadas = resposta.items.map(mapearContaApi);
+        setContasFiltradas((anteriores) => {
+          if (acumular) {
+            return [...anteriores, ...mapeadas];
+          }
+          return mapeadas;
+        });
+        setLastItemId(resposta.lastItemId);
+        setHasMore(resposta.hasMore);
+        setTotal(resposta.total);
+      } catch {
+        setErro("Não foi possível carregar as contas.");
+      } finally {
+        setCarregandoLista(false);
+        setCarregandoMais(false);
+      }
+    },
+    [filtroStatus, filtroTipo, token]
   );
+
+  useEffect(() => {
+    void carregarPagina(undefined, false);
+  }, [carregarPagina]);
+
+  const carregarMais = () => {
+    if (!hasMore || !lastItemId || carregandoMais || carregandoLista) return;
+    void carregarPagina(lastItemId, true);
+  };
+
+  const recarregarLista = async () => {
+    await sincronizar();
+    await carregarPagina(undefined, false);
+  };
 
   const fecharModal = () => {
     setModalAberto(false);
@@ -62,13 +113,16 @@ export function useTelaContas() {
 
   const abrirCriar = () => {
     setContaEditando(null);
-    setFormulario(montarFormularioConta(null, caixaPadrao));
+    setFormulario({
+      ...montarFormularioConta(null, caixaPadrao),
+      tipo: filtroTipo,
+    });
     setErro("");
     setModalAberto(true);
   };
 
   const abrirEditar = (contaId: string) => {
-    const conta = contas.find((item) => item.id === contaId);
+    const conta = contasFiltradas.find((item) => item.id === contaId);
     if (!conta || conta.status !== "aberta") return;
     setContaEditando(contaId);
     setFormulario(montarFormularioConta(conta, caixaPadrao));
@@ -77,7 +131,7 @@ export function useTelaContas() {
   };
 
   const abrirLiquidar = (contaId: string) => {
-    const conta = contas.find((item) => item.id === contaId);
+    const conta = contasFiltradas.find((item) => item.id === contaId);
     if (!conta || conta.status !== "aberta") return;
     setContaLiquidando(conta);
     setFormularioLiquidacao(montarFormularioLiquidacao(conta));
@@ -104,7 +158,7 @@ export function useTelaContas() {
       } else {
         await contasApi.criar(token, payload);
       }
-      await sincronizar();
+      await recarregarLista();
       fecharModal();
       return true;
     } catch {
@@ -133,7 +187,7 @@ export function useTelaContas() {
         liquidadoEm: formularioLiquidacao.liquidadoEm,
         caixaId: formularioLiquidacao.caixaId,
       });
-      await sincronizar();
+      await recarregarLista();
       fecharModalLiquidar();
       return true;
     } catch {
@@ -149,7 +203,7 @@ export function useTelaContas() {
     setSalvando(true);
     try {
       await contasApi.excluir(token, contaEditando);
-      await sincronizar();
+      await recarregarLista();
       fecharModal();
     } catch {
       setErro("Não foi possível excluir a conta.");
@@ -174,8 +228,15 @@ export function useTelaContas() {
   return {
     caixasCatalogo,
     contasFiltradas,
+    filtroTipo,
+    setFiltroTipo,
     filtroStatus,
     setFiltroStatus,
+    hasMore,
+    total,
+    carregandoLista,
+    carregandoMais,
+    carregarMais,
     modalAberto,
     modalLiquidarAberto,
     contaEditando,
