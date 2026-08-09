@@ -1,0 +1,1 @@
+export { useTelaContas } from "./useTelaContas";

@@ -151,6 +151,44 @@ export type PreferenciasUpdatePayload = Partial<
   Pick<PreferenciasApi, "tiposEntrada" | "tiposSaida" | "limitesRisco">
 >;
 
+export interface ContaApi {
+  _id: string;
+  user: string;
+  tipo: "a_pagar" | "a_receber";
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  caixaId: string;
+  status: "aberta" | "liquidada" | "cancelada";
+  liquidadoEm?: string;
+  lancamentoId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type ContaPayload = {
+  tipo: ContaApi["tipo"];
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  caixaId: string;
+};
+
+export type ContaUpdatePayload = Partial<
+  ContaPayload & { status: "aberta" | "cancelada" }
+>;
+
+export type ContaLiquidarPayload = {
+  liquidadoEm?: string;
+  caixaId?: string;
+  caixaCompensacao?: string;
+};
+
+export type ContaLiquidacaoResposta = {
+  conta: ContaApi;
+  lancamentos: LancamentoApi[];
+};
+
 export const authApi = {
   cadastrar: (payload: CadastroUsuarioPayload) =>
     cliente.post<CadastroUsuarioResposta, CadastroUsuarioPayload>("/users/register", payload),
@@ -170,6 +208,34 @@ export const caixasApi = {
     }),
   excluir: (token: string, id: string) =>
     cliente.delete<CaixaApi>(`/caixas/${id}`, { headers: authHeaders(token) }),
+};
+
+export const contasApi = {
+  listar: (
+    token: string,
+    filtro?: { status?: ContaApi["status"]; tipo?: ContaApi["tipo"]; competencia?: string }
+  ) => {
+    const params = new URLSearchParams();
+    if (filtro?.status) params.set("status", filtro.status);
+    if (filtro?.tipo) params.set("tipo", filtro.tipo);
+    if (filtro?.competencia) params.set("competencia", filtro.competencia);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return cliente.get<ContaApi[]>(`/contas${query}`, { headers: authHeaders(token) });
+  },
+  criar: (token: string, payload: ContaPayload) =>
+    cliente.post<ContaApi, ContaPayload>("/contas", payload, { headers: authHeaders(token) }),
+  atualizar: (token: string, id: string, payload: ContaUpdatePayload) =>
+    cliente.put<ContaApi, ContaUpdatePayload>(`/contas/${id}`, payload, {
+      headers: authHeaders(token),
+    }),
+  excluir: (token: string, id: string) =>
+    cliente.delete<ContaApi>(`/contas/${id}`, { headers: authHeaders(token) }),
+  liquidar: (token: string, id: string, payload: ContaLiquidarPayload = {}) =>
+    cliente.post<ContaLiquidacaoResposta, ContaLiquidarPayload>(
+      `/contas/${id}/liquidar`,
+      payload,
+      { headers: authHeaders(token) }
+    ),
 };
 
 export const lancamentosApi = {

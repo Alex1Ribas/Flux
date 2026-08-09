@@ -2,7 +2,14 @@ import type { Horizonte } from "@/types/flux";
 import type { CaixaId } from "@/shared/estilosCaixa";
 
 export type TelaId =
-  "inicio" | "previsao" | "caixas" | "painel" | "parcelamento" | "configurar" | "recorrentes";
+  | "inicio"
+  | "previsao"
+  | "caixas"
+  | "painel"
+  | "parcelamento"
+  | "configurar"
+  | "recorrentes"
+  | "contas";
 
 export interface NavParams {
   horizonteInicial?: Horizonte;

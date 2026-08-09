@@ -1,4 +1,4 @@
-import { caixasApi, lancamentosApi, orcamentosApi, preferenciasApi } from "@/api";
+import { caixasApi, contasApi, lancamentosApi, orcamentosApi, preferenciasApi } from "@/api";
 import { CAIXAS_PADRAO } from "@/shared/catalogoCaixas";
 import { getMesAtual } from "@/utils/helpers";
 
@@ -21,11 +21,12 @@ export async function carregarDadosFinanceApi(token: string) {
     );
   }
 
-  const [lancamentos, orcamentos, preferencias] = await Promise.all([
+  const [lancamentos, orcamentos, preferencias, contas] = await Promise.all([
     lancamentosApi.listar(token),
     orcamentosApi.listar(token, competencia),
     preferenciasApi.obter(token),
+    contasApi.listar(token),
   ]);
 
-  return { caixas, lancamentos, orcamentos, preferencias };
+  return { caixas, lancamentos, orcamentos, preferencias, contas };
 }

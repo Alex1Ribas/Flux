@@ -29,6 +29,30 @@ export interface LancamentoInput {
   mesesAbatidos?: number;
 }
 
+export type TipoConta = "a_pagar" | "a_receber";
+export type StatusConta = "aberta" | "liquidada" | "cancelada";
+
+export interface Conta {
+  id: string;
+  tipo: TipoConta;
+  descricao: string;
+  valor: number;
+  /** Vencimento planejado (AAAA-MM-DD). */
+  vencimento: string;
+  caixaId: string;
+  status: StatusConta;
+  liquidadoEm?: string;
+  lancamentoId?: string;
+}
+
+export interface ContaInput {
+  tipo: TipoConta;
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  caixaId: string;
+}
+
 export interface Lancamento extends LancamentoInput {
   id: string;
 }

@@ -4,6 +4,7 @@ import type {
   CaixaCatalogoItem,
   Caixas,
   ConfigLimitesRisco,
+  Conta,
   ItemRecorrente,
   Lancamento,
   LancamentoInput,
@@ -20,16 +21,32 @@ import {
 import { getMesAtual, gerarId } from "@/utils/helpers";
 import type {
   CaixaApi,
+  ContaApi,
   LancamentoApi,
   OrcamentoApi,
   PreferenciasApi,
 } from "@/api";
 import { filtrarItensRecorrentes } from "@/service/inicio/recorrentes";
 
+function mapearContaApi(conta: ContaApi): Conta {
+  return {
+    id: conta._id,
+    tipo: conta.tipo,
+    descricao: conta.descricao,
+    valor: Number(conta.valor) || 0,
+    vencimento: conta.vencimento,
+    caixaId: conta.caixaId,
+    status: conta.status,
+    liquidadoEm: conta.liquidadoEm,
+    lancamentoId: conta.lancamentoId,
+  };
+}
+
 export interface StoreState {
   caixasCatalogo: CaixaCatalogoItem[];
   caixas: Caixas;
   lancamentos: Lancamento[];
+  contas: Conta[];
   orcamentos: Orcamentos;
   itensRecorrentes: ItemRecorrente[];
   tiposEntrada: string[];
@@ -40,6 +57,7 @@ export interface StoreState {
     lancamentos: LancamentoApi[];
     orcamentos: OrcamentoApi[];
     preferencias: PreferenciasApi;
+    contas: ContaApi[];
   }) => void;
   criarCaixa: (dados: { nome: string; saldo?: number; orcamentoPrevisto?: number }) => string;
   atualizarCaixaConfig: (
@@ -71,6 +89,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   lancamentos: [],
+  contas: [],
   orcamentos: {},
   itensRecorrentes: [],
   tiposEntrada: ["Salário", "Renda extra", "Venda", "Transferência", "Reembolso", "Rendimento"],
@@ -90,7 +109,7 @@ export const useStore = create<StoreState>((set, get) => ({
     porCaixa: {},
   },
 
-  hidratarDadosRemotos: ({ caixas, lancamentos, orcamentos, preferencias }) => {
+  hidratarDadosRemotos: ({ caixas, lancamentos, orcamentos, preferencias, contas }) => {
     const lancamentosLocais = lancamentos.map((lancamento) => ({
       ...lancamento,
       id: lancamento._id,
@@ -108,6 +127,7 @@ export const useStore = create<StoreState>((set, get) => ({
       })),
       caixas: Object.fromEntries(caixas.map((caixa) => [caixa._id, Number(caixa.saldo) || 0])),
       lancamentos: lancamentosLocais,
+      contas: contas.map(mapearContaApi),
       orcamentos: orcamentos.reduce<Orcamentos>((acc, orcamento) => {
         acc[orcamento.competencia] = {
           ...(acc[orcamento.competencia] || {}),
