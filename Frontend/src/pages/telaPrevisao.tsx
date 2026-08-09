@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
 import {
   IndicadorRiscoPrincipal,
@@ -16,7 +16,15 @@ import { Settings } from "@/shared/icons";
 import type { TelaProps } from "@/types/navigation";
 
 export function TelaPrevisao({ setTela }: TelaProps) {
-  const { competencia, dados, irMesAnterior, irMesSeguinte } = useTelaAcompanhamento();
+  const {
+    competencia,
+    dados,
+    carregando,
+    erro,
+    recarregar,
+    irMesAnterior,
+    irMesSeguinte,
+  } = useTelaAcompanhamento();
   const editarAvulso = useEditarLancamentoAvulso();
   const fundo = useFundoTela();
   const cores = useCores();
@@ -69,16 +77,42 @@ export function TelaPrevisao({ setTela }: TelaProps) {
           onSeguinte={irMesSeguinte}
         />
 
-        <IndicadorRiscoPrincipal dados={dados} />
+        {carregando ? (
+          <View className="items-center py-10">
+            <ActivityIndicator color={cores.primary} />
+          </View>
+        ) : null}
 
-        <GraficoAcompanhamentoMes pontos={dados.evolucao} />
+        {erro ? (
+          <Pressable
+            onPress={recarregar}
+            className="mb-4 py-3"
+            accessibilityRole="button"
+            accessibilityLabel="Tentar carregar acompanhamento novamente"
+          >
+            <Text
+              className="text-sm text-center"
+              style={{ color: cores.danger }}
+            >
+              {erro} Toque para tentar de novo.
+            </Text>
+          </Pressable>
+        ) : null}
 
-        <ListaCompromissosMes compromissos={dados.compromissos} />
+        {!carregando && !erro ? (
+          <>
+            <IndicadorRiscoPrincipal dados={dados} />
 
-        <ListaImpactosRisco
-          impactos={dados.impactos}
-          onPressImpacto={editarAvulso.abrirEditar}
-        />
+            <GraficoAcompanhamentoMes pontos={dados.evolucao} />
+
+            <ListaCompromissosMes compromissos={dados.compromissos} />
+
+            <ListaImpactosRisco
+              impactos={dados.impactos}
+              onPressImpacto={editarAvulso.abrirEditar}
+            />
+          </>
+        ) : null}
 
         <View className="h-10" />
       </ScrollView>
@@ -91,7 +125,12 @@ export function TelaPrevisao({ setTela }: TelaProps) {
         salvando={editarAvulso.salvando}
         onFechar={editarAvulso.fecharModal}
         onSalvar={() => {
-          void editarAvulso.salvar();
+          void (async () => {
+            const salvou = await editarAvulso.salvar();
+            if (salvou) {
+              recarregar();
+            }
+          })();
         }}
         onAtualizarCampo={editarAvulso.atualizarCampo}
       />
