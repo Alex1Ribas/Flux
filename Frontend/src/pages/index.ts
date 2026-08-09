@@ -7,3 +7,4 @@ export { TelaAuth } from "./telaAuth";
 export { TelaParcelamento } from "./telaParcelamento";
 export { TelaConfigurar } from "./telaConfigurar";
 export { TelaRecorrentes } from "./telaRecorrentes";
+export { TelaContas } from "./telaContas";

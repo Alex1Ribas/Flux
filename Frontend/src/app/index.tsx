@@ -6,6 +6,7 @@ import { BarraNavegacao } from "@/components/navegacao/barraNavegacao";
 import {
   TelaCaixas,
   TelaConfigurar,
+  TelaContas,
   TelaInicio,
   TelaAuth,
   TelaBoasVindas,
@@ -57,6 +58,8 @@ export default function App() {
         return <TelaConfigurar {...propsTela} />;
       case "recorrentes":
         return <TelaRecorrentes {...propsTela} />;
+      case "contas":
+        return <TelaContas {...propsTela} />;
       default:
         return <TelaInicio {...propsTela} />;
     }

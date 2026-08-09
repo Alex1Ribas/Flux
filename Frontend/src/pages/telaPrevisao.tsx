@@ -44,21 +44,36 @@ export function TelaPrevisao({ setTela }: TelaProps) {
             </Text>
             <Text className="text-4xl font-medium text-text py-3">Acompanhamento</Text>
             <Text className="text-textMuted text-md mt-1 leading-4">
-              Risco mensal com base nos compromissos recorrentes e nos avulsos do dia a dia.
+              Risco mensal com base nos compromissos, contas abertas e avulsos do dia a dia.
             </Text>
           </View>
-          <Pressable
-            onPress={() => setTela("recorrentes", { voltarPara: "previsao" })}
-            className="border"
-            style={superficieBotao}
-            accessibilityLabel="Configurar itens recorrentes"
-          >
-            <Settings
-              size={20}
-              color={cores.text}
-              strokeWidth={2}
-            />
-          </Pressable>
+          <View className="gap-2">
+            <Pressable
+              onPress={() => setTela("contas", { voltarPara: "previsao" })}
+              className="border"
+              style={superficieBotao}
+              accessibilityLabel="Abrir contas a pagar e a receber"
+            >
+              <Text
+                className="text-xs font-medium"
+                style={{ color: cores.text }}
+              >
+                Contas
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setTela("recorrentes", { voltarPara: "previsao" })}
+              className="border"
+              style={superficieBotao}
+              accessibilityLabel="Configurar itens recorrentes"
+            >
+              <Settings
+                size={20}
+                color={cores.text}
+                strokeWidth={2}
+              />
+            </Pressable>
+          </View>
         </View>
 
         <NavegadorMes
