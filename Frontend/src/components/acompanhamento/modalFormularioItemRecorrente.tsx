@@ -19,6 +19,7 @@ interface ModalFormularioItemRecorrenteProps {
   formulario: FormularioItemRecorrente;
   caixasCatalogo: CaixaCatalogoItem[];
   erro: string;
+  salvando: boolean;
   onFechar: () => void;
   onSalvar: () => void;
   onExcluir?: () => void;
@@ -32,6 +33,7 @@ export function ModalFormularioItemRecorrente({
   formulario,
   caixasCatalogo,
   erro,
+  salvando,
   onFechar,
   onSalvar,
   onExcluir,
@@ -142,12 +144,14 @@ export function ModalFormularioItemRecorrente({
                   onPress={onFechar}
                   variant="secondary"
                   style={{ flex: 1 }}
+                  disabled={salvando}
                 />
                 <Botao
-                  label="Salvar"
+                  label={salvando ? "Salvando..." : "Salvar"}
                   onPress={onSalvar}
                   variant="primary"
                   style={{ flex: 1 }}
+                  disabled={salvando}
                 />
               </View>
             </ScrollView>

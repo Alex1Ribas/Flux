@@ -126,6 +126,7 @@ export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps)
         formulario={config.formulario}
         caixasCatalogo={config.caixasCatalogo}
         erro={config.erro}
+        salvando={config.salvando}
         onFechar={config.fecharModal}
         onSalvar={() => {
           void config.salvar();

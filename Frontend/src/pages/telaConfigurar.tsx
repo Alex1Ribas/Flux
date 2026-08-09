@@ -7,6 +7,12 @@ import { getMesLabel } from "@/utils/helpers";
 import { CaixaIcon, Check } from "@/shared/icons";
 import type { TelaProps } from "@/types/navigation";
 
+function rotuloBotaoConfigurar(salvo: boolean, salvando: boolean): string {
+  if (salvo) return "Salvo!";
+  if (salvando) return "Salvando...";
+  return "Salvar Configurações";
+}
+
 export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
   const {
     mes,
@@ -16,6 +22,7 @@ export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
     valoresOrc,
     setValoresOrc,
     salvo,
+    salvando,
     erro,
     salvar,
   } = useTelaConfigurarCaixas();
@@ -86,12 +93,13 @@ export function TelaConfigurar({ setTela, voltarPara = "caixas" }: TelaProps) {
         {erro ? <Text className="text-error text-xs text-center mt-2">{erro}</Text> : null}
 
         <Botao
-          label={salvo ? "Salvo!" : "Salvar Configurações"}
+          label={rotuloBotaoConfigurar(salvo, salvando)}
           icon={salvo ? Check : undefined}
           onPress={salvar}
           size="lg"
           variant={salvo ? "success" : "primary"}
           style={{ marginTop: 12 }}
+          disabled={salvando}
         />
         <View className="h-10" />
       </ScrollView>
