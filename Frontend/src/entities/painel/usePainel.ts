@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { useSincronizarRemoto } from "@/entities/sincronizacao";
 import { useStore } from "@/entities/store";
 import { useCompetenciaNavegavel } from "@/hooks";
 import { montarAcompanhamentoMes } from "@/service/acompanhamento";
@@ -12,17 +11,11 @@ import type { AcompanhamentoMes, Lancamento } from "@/types/flux";
 import { somarCaixas } from "@/utils/helpers";
 
 export function usePainel() {
-  const { token, sincronizar } = useSincronizarRemoto();
   const { lancamentos, caixas, caixasCatalogo, limitesRisco, contas } = useStore();
   const { competencia, irMesAnterior, irMesSeguinte } = useCompetenciaNavegavel();
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<ResumoCategoriaMes | null>(
     null
   );
-
-  useEffect(() => {
-    if (!token) return;
-    void sincronizar();
-  }, [competencia, sincronizar, token]);
 
   const categorias = useMemo(
     () => montarResumoCategoriasMes(lancamentos, competencia),
