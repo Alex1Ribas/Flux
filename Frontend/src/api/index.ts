@@ -37,6 +37,5 @@ export {
   type OrcamentoPayload,
   type PapelUsuarioApi,
   type PreferenciasApi,
-  type PreferenciasUpdatePayload,
   type UsuarioApi,
 } from "./fluxApi";

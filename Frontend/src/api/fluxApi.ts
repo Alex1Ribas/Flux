@@ -137,7 +137,7 @@ export interface OrcamentoPayload {
   valor: number;
 }
 
-export interface PreferenciasApi {
+export type PreferenciasApi = {
   _id: string;
   user: string;
   tiposEntrada: string[];
@@ -145,11 +145,7 @@ export interface PreferenciasApi {
   limitesRisco: ConfigLimitesRisco;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export type PreferenciasUpdatePayload = Partial<
-  Pick<PreferenciasApi, "tiposEntrada" | "tiposSaida" | "limitesRisco">
->;
+};
 
 export interface ContaApi {
   _id: string;
@@ -319,10 +315,6 @@ export interface CategoriaCreateResposta {
 export const preferenciasApi = {
   obter: (token: string) =>
     cliente.get<PreferenciasApi>("/preferencias", { headers: authHeaders(token) }),
-  salvar: (token: string, payload: PreferenciasUpdatePayload) =>
-    cliente.put<PreferenciasApi, PreferenciasUpdatePayload>("/preferencias", payload, {
-      headers: authHeaders(token),
-    }),
   buscarCategorias: (
     token: string,
     filtro: { q?: string; tipo: TipoLancamento }
