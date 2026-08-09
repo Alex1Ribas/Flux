@@ -87,23 +87,17 @@ export function listarAvulsosDoMes(
     );
 }
 
-function aplicarContasAbertasNoRisco(
-  riscoBase: RiscoPrevisto,
+function recorrenteTemOcorrenciaNoMes(
+  recorrenteId: string,
   competencia: string,
   contas: Conta[]
-): RiscoPrevisto {
-  let entradaPrevista = riscoBase.entradaPrevista;
-  let comprometido = riscoBase.comprometido;
-
-  listarContasAbertasDoMes(competencia, contas).forEach((conta) => {
-    if (conta.tipo === "a_receber") {
-      entradaPrevista += Number(conta.valor);
-    } else {
-      comprometido += Number(conta.valor);
-    }
-  });
-
-  return montarRisco(entradaPrevista, comprometido);
+): boolean {
+  const mes = getMesDeCompetencia(competencia);
+  return contas.some(
+    (conta) =>
+      conta.recorrenteId === recorrenteId &&
+      getMesDeCompetencia(conta.competencia || conta.vencimento) === mes
+  );
 }
 
 export function calcRiscoPrevistoDaColecao(
@@ -114,17 +108,23 @@ export function calcRiscoPrevistoDaColecao(
   let entradaPrevista = 0;
   let comprometido = 0;
 
+  listarContasAbertasDoMes(competencia, contas).forEach((conta) => {
+    const valor = Number(conta.valor);
+    if (conta.tipo === "a_receber") entradaPrevista += valor;
+    else comprometido += valor;
+  });
+
+  // Fallback só para templates sem ocorrência materializada neste mês.
   listarRecorrentesDoMes(competencia, lancamentos).forEach((lancamento) => {
+    if (recorrenteTemOcorrenciaNoMes(lancamento.id, competencia, contas)) {
+      return;
+    }
     const valor = Number(lancamento.valor);
     if (lancamento.tipo === "entrada") entradaPrevista += valor;
     else comprometido += valor;
   });
 
-  return aplicarContasAbertasNoRisco(
-    montarRisco(entradaPrevista, comprometido),
-    competencia,
-    contas
-  );
+  return montarRisco(entradaPrevista, comprometido);
 }
 
 function comprometidoAvulsoAteDia(
@@ -184,19 +184,6 @@ export function calcCompromissosMes(
   lancamentos: Lancamento[],
   contas: Conta[] = []
 ): CompromissoMes[] {
-  const recorrentes = listarRecorrentesDoMes(competencia, lancamentos).map(
-    (lancamento) => {
-      const referencia = lancamento.competenciaInicial ?? lancamento.competencia;
-      return {
-        id: lancamento.id,
-        descricao: lancamento.descricao,
-        tipo: lancamento.tipo,
-        valor: Number(lancamento.valor),
-        dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
-      };
-    }
-  );
-
   const contasDoMes = listarContasAbertasDoMes(competencia, contas).map((conta) => ({
     id: conta.id,
     descricao: conta.descricao,
@@ -205,7 +192,20 @@ export function calcCompromissosMes(
     dia: getDiaCompetencia(conta.vencimento),
   }));
 
-  return [...recorrentes, ...contasDoMes].sort((a, b) => {
+  const recorrentesSemOcorrencia = listarRecorrentesDoMes(competencia, lancamentos)
+    .filter((lancamento) => !recorrenteTemOcorrenciaNoMes(lancamento.id, competencia, contas))
+    .map((lancamento) => {
+      const referencia = lancamento.competenciaInicial ?? lancamento.competencia;
+      return {
+        id: lancamento.id,
+        descricao: lancamento.descricao,
+        tipo: lancamento.tipo,
+        valor: Number(lancamento.valor),
+        dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
+      };
+    });
+
+  return [...contasDoMes, ...recorrentesSemOcorrencia].sort((a, b) => {
     if (a.tipo !== b.tipo) return a.tipo === "entrada" ? -1 : 1;
     if (a.dia !== null && b.dia !== null && a.dia !== b.dia) return a.dia - b.dia;
     return b.valor - a.valor;
@@ -221,21 +221,22 @@ export function calcComposicaoRisco(
   if (previsto.comprometido <= 0) return [];
 
   const totais = new Map<string, number>();
-  listarRecorrentesDoMes(competencia, lancamentos)
-    .filter((lancamento) => lancamento.tipo === "saida")
-    .forEach((lancamento) => {
-      totais.set(
-        lancamento.descricao,
-        (totais.get(lancamento.descricao) ?? 0) + Number(lancamento.valor)
-      );
-    });
-
   listarContasAbertasDoMes(competencia, contas)
     .filter((conta) => conta.tipo === "a_pagar")
     .forEach((conta) => {
       totais.set(
         conta.descricao,
         (totais.get(conta.descricao) ?? 0) + Number(conta.valor)
+      );
+    });
+
+  listarRecorrentesDoMes(competencia, lancamentos)
+    .filter((lancamento) => lancamento.tipo === "saida")
+    .filter((lancamento) => !recorrenteTemOcorrenciaNoMes(lancamento.id, competencia, contas))
+    .forEach((lancamento) => {
+      totais.set(
+        lancamento.descricao,
+        (totais.get(lancamento.descricao) ?? 0) + Number(lancamento.valor)
       );
     });
 
