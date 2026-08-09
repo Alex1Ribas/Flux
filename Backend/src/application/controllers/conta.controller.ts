@@ -109,6 +109,12 @@ export class ContaController implements IController {
       if (typeof req.query.recorrenteId === 'string') {
         filtro.recorrenteId = req.query.recorrenteId;
       }
+      if (typeof req.query.lastItemId === 'string') {
+        filtro.lastItemId = req.query.lastItemId;
+      }
+      if (typeof req.query.pageSize === 'string') {
+        filtro.pageSize = Number(req.query.pageSize);
+      }
       const result = await this.contaService.listContas(this.userId(req), filtro);
       res.status(200).json(result);
     } catch (error) {
