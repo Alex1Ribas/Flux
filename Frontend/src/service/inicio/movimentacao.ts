@@ -1,13 +1,7 @@
 import type { Horizonte, LancamentoInput, ParcelamentoInput } from "@/types/flux";
-import {
-  formatBRL,
-  getCompetenciasFuturas,
-  getMesAtual,
-  getMesDeCompetencia,
-} from "@/utils/helpers";
+import { formatBRL } from "@/utils/helpers";
 
 export type ModoMovimentacao = "entrada" | "saida";
-export type TipoRecorrenciaMovimentacao = "dividir" | "cheio";
 
 export interface MovimentacaoHomeInput {
   modo: ModoMovimentacao;
@@ -18,9 +12,6 @@ export interface MovimentacaoHomeInput {
   caixaSelecionada: string;
   caixaCompensacao?: string;
   orcamentoCaixa: number;
-  parcelamentoAtivo: boolean;
-  tipoRecorrencia: TipoRecorrenciaMovimentacao;
-  parcelas: number;
   /** Quando true, o lançamento entra no planejamento de risco como recorrente. */
   recorrente?: boolean;
   competenciaInicial?: string;
@@ -70,9 +61,6 @@ export function validarMovimentacaoHome(
   if (estouro.precisaCompensacao && !input.caixaCompensacao) {
     return `Estouro de ${formatBRL(estouro.estouro)}: escolha a caixa de compensação`;
   }
-  if (input.parcelamentoAtivo && input.modo === "saida" && input.parcelas <= 0) {
-    return "Informe o número de parcelas";
-  }
   return null;
 }
 
@@ -81,48 +69,9 @@ function camposRecorrencia(input: MovimentacaoHomeInput) {
   return {
     recorrente: true as const,
     competenciaInicial: input.competenciaInicial ?? input.competencia,
-    duracaoMeses: input.duracaoMeses ?? 1,
+    duracaoMeses: input.duracaoMeses ?? 12,
     ativo: true,
   };
-}
-
-function registrarParcelamentoDividido(
-  input: MovimentacaoHomeInput,
-  acoes: AcoesMovimentacao
-): void {
-  acoes.adicionarParcelamento({
-    valorTotal: input.valor,
-    parcelas: input.parcelas,
-    primeiraCompetencia: input.competencia,
-    descricao: input.tipo,
-    tipoDescricao: input.tipo,
-    caixaOrigem: input.caixaSelecionada,
-    recorrente: input.recorrente,
-  });
-}
-
-function registrarParcelamentoValorCheio(
-  input: MovimentacaoHomeInput,
-  acoes: AcoesMovimentacao
-): void {
-  const competencias = getCompetenciasFuturas(input.competencia, input.parcelas);
-  const mesAtual = getMesAtual();
-  const recorrencia = camposRecorrencia(input);
-
-  competencias.forEach((competencia, indice) => {
-    const mesCompetencia = getMesDeCompetencia(competencia);
-    const horizonteParcela: Horizonte = mesCompetencia <= mesAtual ? "presente" : "futuro";
-    acoes.adicionarLancamento({
-      tipo: "saida",
-      horizonte: horizonteParcela,
-      valor: input.valor,
-      descricao: input.tipo,
-      observacao: `${input.tipo} (${indice + 1}/${input.parcelas})`,
-      competencia,
-      caixaOrigem: input.caixaSelecionada,
-      ...recorrencia,
-    });
-  });
 }
 
 function registrarEntrada(input: MovimentacaoHomeInput, acoes: AcoesMovimentacao): void {
@@ -175,15 +124,6 @@ export function executarMovimentacaoHome(
   input: MovimentacaoHomeInput,
   acoes: AcoesMovimentacao
 ): void {
-  if (input.parcelamentoAtivo && input.modo === "saida") {
-    if (input.tipoRecorrencia === "dividir") {
-      registrarParcelamentoDividido(input, acoes);
-    } else {
-      registrarParcelamentoValorCheio(input, acoes);
-    }
-    return;
-  }
-
   if (input.modo === "entrada") {
     registrarEntrada(input, acoes);
     return;
@@ -207,9 +147,6 @@ export function montarMovimentacaoHome(params: {
   caixaSelecionada: string;
   caixaCompensacao: string;
   orcamentoCaixa: number;
-  parcelamentoAtivo: boolean;
-  tipoRecorrencia: MovimentacaoHomeInput["tipoRecorrencia"];
-  parcelas: string;
   recorrente?: boolean;
   competenciaInicial?: string;
   duracaoMeses?: number;
@@ -224,9 +161,6 @@ export function montarMovimentacaoHome(params: {
     caixaSelecionada: params.caixaSelecionada,
     caixaCompensacao: params.caixaCompensacao || undefined,
     orcamentoCaixa: params.orcamentoCaixa,
-    parcelamentoAtivo: params.parcelamentoAtivo,
-    tipoRecorrencia: params.tipoRecorrencia,
-    parcelas: Number(params.parcelas) || 0,
     recorrente: Boolean(params.recorrente),
     competenciaInicial: params.competenciaInicial,
     duracaoMeses: params.duracaoMeses,

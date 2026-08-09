@@ -8,7 +8,6 @@ export {
   type EstouroOrcamento,
   type ModoMovimentacao,
   type MovimentacaoHomeInput,
-  type TipoRecorrenciaMovimentacao,
 } from "./movimentacao";
 
 export { listarUltimosLancamentosPresentes } from "./ultimosLancamentos";
