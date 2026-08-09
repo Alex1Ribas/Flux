@@ -1,61 +1,32 @@
 import { DomainError } from '../../common/errors/DomainError.js';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode.js';
-import {
-  EStatusConta,
-  ETipoConta,
-  type IConta,
-} from '../../conta/entity/interfaces/conta.interface.js';
+import { EStatusConta } from '../../conta/entity/interfaces/conta.interface.js';
 import type { IContaService } from '../../conta/entity/interfaces/conta.service.interface.js';
-import {
-  ETipoLancamento,
-  type ILancamento,
-} from '../../lancamento/entity/interfaces/lancamento.interface.js';
+import type { IPreferenciasService } from '../../preferencias/entity/interfaces/preferencias.service.interface.js';
 import { normalizeCompetencia } from '../../orcamento/service/competencia.helper.js';
 import type {
   IAcompanhamentoMes,
   IAcompanhamentoService,
-  IComposicaoRisco,
   IParamsAcompanhamentoService,
-  IRiscoPrevisto,
-  StatusRiscoMensal,
 } from '../entity/interfaces/acompanhamento.service.interface.js';
-
-const LIMITES_RISCO_PADRAO = {
-  saudavel: 30,
-  atencao: 50,
-};
-
-type LinhaPrevisto = {
-  id: string;
-  nome: string;
-  tipo: 'entrada' | 'saida';
-  valor: number;
-};
-
-function montarRisco(entradaPrevista: number, comprometido: number): IRiscoPrevisto {
-  const risco = entradaPrevista > 0 ? (comprometido / entradaPrevista) * 100 : 0;
-  return { entradaPrevista, comprometido, risco };
-}
-
-function linhasDasContasAbertas(contas: IConta[]): LinhaPrevisto[] {
-  return contas.map((conta) => ({
-    id: conta._id,
-    nome: conta.descricao,
-    tipo: conta.tipo === ETipoConta.A_RECEBER ? 'entrada' : 'saida',
-    valor: Number(conta.valor),
-  }));
-}
+import {
+  LIMITES_RISCO_PADRAO,
+  montarAcompanhamentoMesCalculo,
+} from './calculo-acompanhamento.helper.js';
 
 export class AcompanhamentoService implements IAcompanhamentoService {
   private readonly lancamentoRepositoryRead: IParamsAcompanhamentoService['lancamentoRepositoryRead'];
   private readonly contaService: IContaService;
+  private readonly preferenciasService: IPreferenciasService;
 
   constructor({
     lancamentoRepositoryRead,
     contaService,
+    preferenciasService,
   }: IParamsAcompanhamentoService) {
     this.lancamentoRepositoryRead = lancamentoRepositoryRead;
     this.contaService = contaService;
+    this.preferenciasService = preferenciasService;
   }
 
   async montarAcompanhamentoMes(
@@ -71,100 +42,39 @@ export class AcompanhamentoService implements IAcompanhamentoService {
       requestUserId,
     );
 
-    const [lancamentosMes, contasAbertas] = await Promise.all([
-      this.lancamentoRepositoryRead.listLancamentosByUserCompetencia(
-        requestUserId,
-        mes,
-      ),
-      this.contaService.listTodasContas(requestUserId, {
-        status: EStatusConta.ABERTA,
-        competencia: mes,
-      }),
-    ]);
+    const [lancamentosMes, recorrentes, contasAbertas, preferencias] =
+      await Promise.all([
+        this.lancamentoRepositoryRead.listLancamentosByUserCompetencia(
+          requestUserId,
+          mes,
+        ),
+        this.lancamentoRepositoryRead.listLancamentosByUser(requestUserId, {
+          recorrente: true,
+        }),
+        this.contaService.listTodasContas(requestUserId, {
+          status: EStatusConta.ABERTA,
+          competencia: mes,
+        }),
+        this.preferenciasService.getPreferencias(requestUserId),
+      ]);
 
-    const linhas = linhasDasContasAbertas(contasAbertas);
-    const risco = this.calcRiscoPrevisto(linhas);
-    const { saidasAvulsas, entradasAvulsas } = this.somarAvulsos(lancamentosMes);
-    const diferencialValor = saidasAvulsas - entradasAvulsas;
-    const diferencial =
-      risco.entradaPrevista > 0 ? (diferencialValor / risco.entradaPrevista) * 100 : 0;
-    const riscoReal = montarRisco(
-      risco.entradaPrevista,
-      Math.max(0, risco.comprometido + diferencialValor),
-    );
-    const status = this.classificarStatus(risco.risco);
-
-    return {
-      competencia: mes,
-      risco,
-      riscoReal,
-      diferencial,
-      diferencialValor,
-      status,
-      dentroPlanejado: status === 'saudavel',
-      limites: LIMITES_RISCO_PADRAO,
-      composicao: this.calcComposicaoRisco(linhas, risco.comprometido),
-    };
-  }
-
-  private calcRiscoPrevisto(linhas: LinhaPrevisto[]): IRiscoPrevisto {
-    let entradaPrevista = 0;
-    let comprometido = 0;
-
-    linhas.forEach((linha) => {
-      if (linha.tipo === 'entrada') {
-        entradaPrevista += linha.valor;
-      } else {
-        comprometido += linha.valor;
-      }
+    const porId = new Map<string, (typeof lancamentosMes)[number]>();
+    [...lancamentosMes, ...recorrentes].forEach((lancamento) => {
+      porId.set(lancamento._id, lancamento);
     });
+    const lancamentos = [...porId.values()];
 
-    return montarRisco(entradaPrevista, comprometido);
-  }
+    const limites =
+      preferencias.limitesRisco?.global ?? LIMITES_RISCO_PADRAO;
 
-  private somarAvulsos(lancamentos: ILancamento[]) {
-    let saidasAvulsas = 0;
-    let entradasAvulsas = 0;
-
-    lancamentos
-      .filter((lancamento) => !lancamento.recorrente)
-      .forEach((lancamento) => {
-        const valor = Number(lancamento.valor);
-        if (lancamento.tipo === ETipoLancamento.SAIDA) {
-          saidasAvulsas += valor;
-        } else {
-          entradasAvulsas += valor;
-        }
-      });
-
-    return { saidasAvulsas, entradasAvulsas };
-  }
-
-  private classificarStatus(risco: number): StatusRiscoMensal {
-    if (risco <= LIMITES_RISCO_PADRAO.saudavel) return 'saudavel';
-    if (risco <= LIMITES_RISCO_PADRAO.atencao) return 'atencao';
-    return 'critico';
-  }
-
-  private calcComposicaoRisco(
-    linhas: LinhaPrevisto[],
-    comprometido: number,
-  ): IComposicaoRisco[] {
-    if (comprometido <= 0) return [];
-    const totais = new Map<string, number>();
-
-    linhas
-      .filter((linha) => linha.tipo === 'saida')
-      .forEach((linha) => {
-        totais.set(linha.nome, (totais.get(linha.nome) ?? 0) + linha.valor);
-      });
-
-    return [...totais.entries()]
-      .map(([descricao, valor]) => ({
-        descricao,
-        valor,
-        percentual: (valor / comprometido) * 100,
-      }))
-      .sort((itemA, itemB) => itemB.valor - itemA.valor);
+    return montarAcompanhamentoMesCalculo(
+      mes,
+      lancamentos,
+      contasAbertas,
+      {
+        saudavel: Number(limites.saudavel) || LIMITES_RISCO_PADRAO.saudavel,
+        atencao: Number(limites.atencao) || LIMITES_RISCO_PADRAO.atencao,
+      },
+    );
   }
 }
