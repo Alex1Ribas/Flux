@@ -6,18 +6,20 @@ import { useTelaContas } from "@/entities/contas";
 import {
   Cartao,
   ModalConfirmacao,
-  CabecalhoTela,
 } from "@/shared/components";
 import { obterNomeCaixa } from "@/shared/catalogoCaixas";
 import { Plus } from "@/shared/icons";
+import { useFundoTela } from "@/shared/estiloSuperficie";
 import { useCores } from "@/shared/tema";
+import { MARCA } from "@/shared/tokensDesign";
 import { rotuloStatusConta, rotuloTipoConta } from "@/service/contas";
 import type { TelaProps } from "@/types/navigation";
 import { formatBRL, formatarCompetencia } from "@/utils/helpers";
 
-export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
+export function TelaContas(_props: TelaProps) {
   const contas = useTelaContas();
   const cores = useCores();
+  const fundo = useFundoTela();
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -33,73 +35,113 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
         contas.fecharModal();
         return true;
       }
-      setTela(voltarPara);
-      return true;
+      return false;
     });
 
     return () => subscription.remove();
-  }, [contas, setTela, voltarPara]);
+  }, [contas]);
 
   return (
     <>
-      <ScrollView
-        className="flex-1 bg-bg"
-        contentContainerClassName="p-4"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <View
+        className="flex-1"
+        style={{ backgroundColor: fundo }}
       >
-        <CabecalhoTela
-          title="Contas"
-          setTela={setTela}
-          backTo={voltarPara}
-        />
-
-        <Text className="text-textMuted text-[11px] mb-4 leading-4">
-          Ocorrências concretas do mês: a pagar e a receber. Recorrentes são a regra; cada Conta
-          pode ser liquidada independentemente — inclusive antecipada — sem alterar o template.
-        </Text>
-
-        <View className="flex-row gap-2 mb-3">
-          {(
-            [
-              { id: "aberta", label: "Abertas" },
-              { id: "liquidada", label: "Liquidadas" },
-              { id: "todas", label: "Todas" },
-            ] as const
-          ).map((filtro) => (
-            <Pressable
-              key={filtro.id}
-              onPress={() => contas.setFiltroStatus(filtro.id)}
-              className="px-3 py-2 rounded-xl border border-border"
-              style={{
-                backgroundColor:
-                  contas.filtroStatus === filtro.id ? cores.primaryHighlight : cores.surface,
-              }}
+        <ScrollView
+          contentContainerClassName="p-4"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="mb-4 mt-1">
+            <Text
+              className="text-sm font-semibold uppercase tracking-wide mb-1"
+              style={{ color: cores.primary }}
             >
-              <Text className="text-text text-xs font-medium">{filtro.label}</Text>
+              {MARCA}
+            </Text>
+            <Text className="text-text text-4xl font-medium">Contas</Text>
+            <Text className="text-textMuted text-md mt-1 leading-4">
+              Ocorrências a pagar e a receber. Recorrentes são a regra; cada Conta liquida
+              sozinha — inclusive antecipada.
+            </Text>
+          </View>
+
+          <View className="flex-row gap-2 mb-3">
+            {(
+              [
+                { id: "a_pagar" as const, label: "A pagar" },
+                { id: "a_receber" as const, label: "A receber" },
+              ]
+            ).map((filtro) => {
+              let backgroundColor = cores.surface;
+              if (contas.filtroTipo === filtro.id) {
+                backgroundColor = cores.primaryHighlight;
+              }
+              return (
+                <Pressable
+                  key={filtro.id}
+                  onPress={() => contas.setFiltroTipo(filtro.id)}
+                  className="flex-1 px-3 py-2.5 rounded-xl border border-border items-center"
+                  style={{ backgroundColor }}
+                >
+                  <Text className="text-text text-xs font-semibold">{filtro.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View className="flex-row gap-2 mb-3">
+            {(
+              [
+                { id: "aberta", label: "Abertas" },
+                { id: "liquidada", label: "Liquidadas" },
+                { id: "todas", label: "Todas" },
+              ] as const
+            ).map((filtro) => {
+              let backgroundColor = cores.surface;
+              if (contas.filtroStatus === filtro.id) {
+                backgroundColor = cores.primaryHighlight;
+              }
+              return (
+                <Pressable
+                  key={filtro.id}
+                  onPress={() => contas.setFiltroStatus(filtro.id)}
+                  className="px-3 py-2 rounded-xl border border-border"
+                  style={{ backgroundColor }}
+                >
+                  <Text className="text-text text-xs font-medium">{filtro.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-textMuted text-[11px]">
+              {textoContagemLista(contas.carregandoLista, contas.contasFiltradas.length, contas.total)}
+            </Text>
+            <Pressable
+              onPress={contas.abrirCriar}
+              className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface"
+            >
+              <Plus
+                size={16}
+                color={cores.text}
+              />
+              <Text className="text-text text-xs font-medium">Nova conta</Text>
             </Pressable>
-          ))}
-        </View>
+          </View>
 
-        <View className="flex-row justify-end mb-3">
-          <Pressable
-            onPress={contas.abrirCriar}
-            className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface"
-          >
-            <Plus
-              size={16}
-              color={cores.text}
-            />
-            <Text className="text-text text-xs font-medium">Nova conta</Text>
-          </Pressable>
-        </View>
+          {contas.carregandoLista && contas.contasFiltradas.length === 0 ? (
+            <Text className="text-textMuted text-sm text-center py-10">Carregando contas…</Text>
+          ) : null}
 
-        {contas.contasFiltradas.length === 0 ? (
-          <Text className="text-textMuted text-sm text-center py-10">
-            Nenhuma conta neste filtro
-          </Text>
-        ) : (
-          contas.contasFiltradas.map((conta) => (
+          {!contas.carregandoLista && contas.contasFiltradas.length === 0 ? (
+            <Text className="text-textMuted text-sm text-center py-10">
+              Nenhuma conta neste filtro
+            </Text>
+          ) : null}
+
+          {contas.contasFiltradas.map((conta) => (
             <Cartao
               key={conta.id}
               className="mb-2"
@@ -125,7 +167,7 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
                     ) : null}
                     {conta.liquidadoEm ? (
                       <Text className="text-textFaint text-[10px] mt-0.5">
-                        {conta.tipo === "a_pagar" ? "Pago" : "Recebido"} em{" "}
+                        {rotuloLiquidacao(conta.tipo)} em{" "}
                         {formatarCompetencia(conta.liquidadoEm)}
                       </Text>
                     ) : null}
@@ -143,9 +185,22 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
                 />
               ) : null}
             </Cartao>
-          ))
-        )}
-      </ScrollView>
+          ))}
+
+          {contas.hasMore ? (
+            <Pressable
+              onPress={contas.carregarMais}
+              disabled={contas.carregandoMais}
+              className="mt-2 mb-4 px-3 py-3 rounded-xl border border-border items-center"
+              style={{ backgroundColor: cores.surface }}
+            >
+              <Text className="text-text text-xs font-medium">
+                {textoCarregarMais(contas.carregandoMais)}
+              </Text>
+            </Pressable>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <ModalFormularioConta
         visivel={contas.modalAberto}
@@ -187,6 +242,34 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
   );
 }
 
+function textoContagemLista(carregando: boolean, carregadas: number, total: number): string {
+  if (carregando) {
+    return "Carregando…";
+  }
+  return `${carregadas} de ${total}`;
+}
+
+function textoCarregarMais(carregandoMais: boolean): string {
+  if (carregandoMais) {
+    return "Carregando…";
+  }
+  return "Carregar mais";
+}
+
+function rotuloLiquidacao(tipo: "a_pagar" | "a_receber"): string {
+  if (tipo === "a_pagar") {
+    return "Pago";
+  }
+  return "Recebido";
+}
+
+function rotuloBotaoLiquidar(tipo: "a_pagar" | "a_receber"): string {
+  if (tipo === "a_pagar") {
+    return "Registrar pagamento";
+  }
+  return "Registrar recebimento";
+}
+
 function BotaoLiquidar({
   tipo,
   onPress,
@@ -201,9 +284,7 @@ function BotaoLiquidar({
       className="mt-3 px-3 py-2 rounded-xl border border-border self-start"
       style={{ backgroundColor: cores.primaryHighlight }}
     >
-      <Text className="text-text text-xs font-medium">
-        {tipo === "a_pagar" ? "Registrar pagamento" : "Registrar recebimento"}
-      </Text>
+      <Text className="text-text text-xs font-medium">{rotuloBotaoLiquidar(tipo)}</Text>
     </Pressable>
   );
 }
