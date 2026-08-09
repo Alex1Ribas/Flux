@@ -37,10 +37,14 @@ export interface Conta {
   tipo: TipoConta;
   descricao: string;
   valor: number;
+  /** Competência da ocorrência (AAAA-MM). */
+  competencia: string;
   /** Vencimento planejado (AAAA-MM-DD). */
   vencimento: string;
   caixaId: string;
   status: StatusConta;
+  /** Template recorrente que originou esta ocorrência. */
+  recorrenteId?: string;
   liquidadoEm?: string;
   lancamentoId?: string;
 }
@@ -49,8 +53,10 @@ export interface ContaInput {
   tipo: TipoConta;
   descricao: string;
   valor: number;
+  competencia?: string;
   vencimento: string;
   caixaId: string;
+  recorrenteId?: string;
 }
 
 export interface Lancamento extends LancamentoInput {

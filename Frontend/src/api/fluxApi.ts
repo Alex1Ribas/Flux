@@ -157,9 +157,11 @@ export interface ContaApi {
   tipo: "a_pagar" | "a_receber";
   descricao: string;
   valor: number;
+  competencia: string;
   vencimento: string;
   caixaId: string;
   status: "aberta" | "liquidada" | "cancelada";
+  recorrenteId?: string;
   liquidadoEm?: string;
   lancamentoId?: string;
   createdAt?: string;
@@ -170,8 +172,10 @@ export type ContaPayload = {
   tipo: ContaApi["tipo"];
   descricao: string;
   valor: number;
+  competencia?: string;
   vencimento: string;
   caixaId: string;
+  recorrenteId?: string;
 };
 
 export type ContaUpdatePayload = Partial<
