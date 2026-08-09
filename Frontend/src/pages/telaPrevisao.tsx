@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 
 import {
   IndicadorRiscoPrincipal,
@@ -20,6 +20,7 @@ export function TelaPrevisao({ setTela }: TelaProps) {
     competencia,
     dados,
     carregando,
+    atualizando,
     erro,
     recarregar,
     irMesAnterior,
@@ -41,6 +42,14 @@ export function TelaPrevisao({ setTela }: TelaProps) {
       <ScrollView
         contentContainerClassName="p-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={atualizando}
+            onRefresh={recarregar}
+            tintColor={cores.primary}
+            colors={[cores.primary]}
+          />
+        }
       >
         <View className="flex-row justify-between items-start mb-4 mt-1">
           <View className="flex-1 pr-3">
