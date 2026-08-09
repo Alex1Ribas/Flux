@@ -91,6 +91,8 @@ interface AppAutenticadoProps {
 function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
   const { sessao, carregando } = useAuth();
   const { isDark, cores } = useTema();
+  const erroSincronizacao = useEstadoSincronizacaoFinance((state) => state.erro);
+  const tentarSincronizar = useRetrySincronizacaoFinance();
   const [onboardingPronto, setOnboardingPronto] = useState(false);
   const [onboardingConcluido, setOnboardingConcluido] = useState(false);
 
@@ -157,8 +159,6 @@ function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
   }
 
   const showNav = TELAS_COM_NAV.includes(tela as (typeof TELAS_COM_NAV)[number]);
-  const erroSincronizacao = useEstadoSincronizacaoFinance((state) => state.erro);
-  const tentarSincronizar = useRetrySincronizacaoFinance();
 
   return (
     <SafeAreaView
