@@ -56,6 +56,10 @@ export function ListaCompromissosMes({
         compromissos.map((item) => {
           const cor = item.tipo === "entrada" ? cores.success : cores.error;
           const prefixo = item.tipo === "entrada" ? "+" : "−";
+          const parcelaLabel =
+            item.parcelaNum != null && item.totalParcelas != null
+              ? `${item.parcelaNum}/${item.totalParcelas}`
+              : null;
 
           return (
             <Cartao
@@ -68,6 +72,7 @@ export function ListaCompromissosMes({
                   <Text className="text-textFaint text-md mt-0.5">
                     {item.tipo === "entrada" ? "Entrada recorrente" : "Saída recorrente"}
                     {item.dia !== null ? ` · dia ${item.dia}` : ""}
+                    {parcelaLabel ? ` · ${parcelaLabel}` : ""}
                   </Text>
                 </View>
                 <Text
