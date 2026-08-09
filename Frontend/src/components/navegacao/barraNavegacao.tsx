@@ -10,6 +10,7 @@ const ICON_SIZE = 25;
 const NAV_ITEMS: { id: keyof typeof NAV_ICONS; accessibilityLabel: string }[] = [
   { id: "inicio", accessibilityLabel: "Movimentar" },
   { id: "previsao", accessibilityLabel: "Acompanhamento" },
+  { id: "contas", accessibilityLabel: "Contas" },
   { id: "caixas", accessibilityLabel: "Caixas" },
   { id: "painel", accessibilityLabel: "Painel" },
 ];

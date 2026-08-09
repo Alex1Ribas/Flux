@@ -47,20 +47,7 @@ export function TelaPrevisao({ setTela }: TelaProps) {
               Risco mensal com base nos compromissos, contas abertas e avulsos do dia a dia.
             </Text>
           </View>
-          <View className="gap-2">
-            <Pressable
-              onPress={() => setTela("contas", { voltarPara: "previsao" })}
-              className="border"
-              style={superficieBotao}
-              accessibilityLabel="Abrir contas a pagar e a receber"
-            >
-              <Text
-                className="text-xs font-medium"
-                style={{ color: cores.text }}
-              >
-                Contas
-              </Text>
-            </Pressable>
+          <View>
             <Pressable
               onPress={() => setTela("recorrentes", { voltarPara: "previsao" })}
               className="border"

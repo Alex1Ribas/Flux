@@ -72,11 +72,12 @@ export function CaixaIcon({
 }
 
 export const NAV_ICONS: Record<
-  Extract<TelaId, "inicio" | "previsao" | "caixas" | "painel">,
+  Extract<TelaId, "inicio" | "previsao" | "contas" | "caixas" | "painel">,
   LucideIcon
 > = {
   inicio: Landmark,
   previsao: ChartNoAxesColumn,
+  contas: ClipboardList,
   caixas: LayoutGrid,
   painel: Notebook,
 };

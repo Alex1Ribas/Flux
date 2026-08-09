@@ -28,4 +28,4 @@ export interface TelaProps {
   voltarPara?: TelaId;
 }
 
-export const TELAS_COM_NAV = ["inicio", "previsao", "caixas", "painel"] as const;
+export const TELAS_COM_NAV = ["inicio", "previsao", "contas", "caixas", "painel"] as const;
