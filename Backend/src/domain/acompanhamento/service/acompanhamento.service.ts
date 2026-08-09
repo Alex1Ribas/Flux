@@ -59,10 +59,9 @@ export class AcompanhamentoService implements IAcompanhamentoService {
     }
 
     const mes = normalizeCompetencia(competencia);
-    await this.contaService.sincronizarOcorrenciasDosRecorrentesDoUsuario(
-      requestUserId,
-    );
 
+    // Materialização de recorrentes ocorre nos eventos de mutação (create/update/delete),
+    // não no caminho de leitura do acompanhamento.
     const [lancamentosMes, recorrentes, contasAbertas, preferencias] =
       await Promise.all([
         this.lancamentoRepositoryRead.listLancamentosByUserCompetencia(
@@ -106,10 +105,6 @@ export class AcompanhamentoService implements IAcompanhamentoService {
     if (!requestUserId?.trim()) {
       throw new DomainError(EErrorCode.USER_NOT_IDENTIFIED, 401);
     }
-
-    await this.contaService.sincronizarOcorrenciasDosRecorrentesDoUsuario(
-      requestUserId,
-    );
 
     const mesInicial = normalizeCompetencia(input.dataPrimeiroPagamento);
     const [lancamentos, contasAbertas, caixas, orcamentos] =
