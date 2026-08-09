@@ -93,6 +93,9 @@ export class ContaController implements IController {
 
   list = async (req: Request, res: Response): Promise<void> => {
     try {
+      await this.contaService.sincronizarOcorrenciasDosRecorrentesDoUsuario(
+        this.userId(req),
+      );
       const filtro: IListContasFiltro = {};
       if (typeof req.query.status === 'string') {
         filtro.status = req.query.status as EStatusConta;
@@ -102,6 +105,9 @@ export class ContaController implements IController {
       }
       if (typeof req.query.competencia === 'string') {
         filtro.competencia = req.query.competencia;
+      }
+      if (typeof req.query.recorrenteId === 'string') {
+        filtro.recorrenteId = req.query.recorrenteId;
       }
       const result = await this.contaService.listContas(this.userId(req), filtro);
       res.status(200).json(result);

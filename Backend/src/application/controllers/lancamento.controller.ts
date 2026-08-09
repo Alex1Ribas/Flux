@@ -1,9 +1,11 @@
 import { Router, type Request, type Response } from 'express';
+import type { IContaService } from '../../domain/conta/entity/interfaces/conta.service.interface.js';
 import type {
   ILancamentoService,
   IParamsCreateLancamentoInput,
   IParamsUpdateLancamentoInput,
 } from '../../domain/lancamento/entity/interfaces/lancamento.service.interface.js';
+import type { ILancamento } from '../../domain/lancamento/entity/interfaces/lancamento.interface.js';
 import type { IController } from '../../domain/server/interfaces/IController.js';
 import { EUserRole } from '../../domain/user/entity/interfaces/user.interface.js';
 import type { IUserRepositoryRead } from '../../domain/user/repository/user.repository.read.js';
@@ -16,6 +18,7 @@ import { validateObjectIdMiddleware } from '../middlewares/validate-object-id.mi
 
 export interface IParamsLancamentoController {
   lancamentoService: ILancamentoService;
+  contaService: IContaService;
   tokenService: TokenService;
   userRepositoryRead: IUserRepositoryRead;
 }
@@ -23,15 +26,18 @@ export interface IParamsLancamentoController {
 export class LancamentoController implements IController {
   readonly router: Router;
   private readonly lancamentoService: ILancamentoService;
+  private readonly contaService: IContaService;
   private readonly authMiddleware: ReturnType<typeof createAuthMiddleware>;
 
   constructor({
     lancamentoService,
+    contaService,
     tokenService,
     userRepositoryRead,
   }: IParamsLancamentoController) {
     this.router = Router();
     this.lancamentoService = lancamentoService;
+    this.contaService = contaService;
     this.authMiddleware = createAuthMiddleware(tokenService, userRepositoryRead);
     this.initRoutes();
   }
@@ -67,12 +73,23 @@ export class LancamentoController implements IController {
     return req.user?.role ?? EUserRole.DEPENDENT;
   }
 
+  private async sincronizarSeRecorrente(
+    userId: string,
+    lancamentos: ILancamento[],
+  ): Promise<void> {
+    for (const lancamento of lancamentos) {
+      if (!lancamento.recorrente) continue;
+      await this.contaService.sincronizarOcorrenciasDoRecorrente(userId, lancamento);
+    }
+  }
+
   create = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.lancamentoService.createLancamento(
         this.userId(req),
         req.body as IParamsCreateLancamentoInput,
       );
+      await this.sincronizarSeRecorrente(this.userId(req), result);
       res.status(201).json(result);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res, req);
@@ -120,6 +137,17 @@ export class LancamentoController implements IController {
         this.userRole(req),
         req.body as IParamsUpdateLancamentoInput,
       );
+      if (result.recorrente) {
+        await this.contaService.sincronizarOcorrenciasDoRecorrente(
+          this.userId(req),
+          result,
+        );
+      } else {
+        await this.contaService.removerOcorrenciasAbertasDoRecorrente(
+          this.userId(req),
+          result._id,
+        );
+      }
       res.status(200).json(result);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res, req);
@@ -133,6 +161,12 @@ export class LancamentoController implements IController {
         this.userId(req),
         this.userRole(req),
       );
+      if (result.recorrente) {
+        await this.contaService.removerOcorrenciasAbertasDoRecorrente(
+          this.userId(req),
+          result._id,
+        );
+      }
       res.status(200).json(result);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res, req);
