@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { FINANCE_API_BASE_URL } from "@/api";
 import { useAuth } from "@/entities/auth";
 import { Botao, Campo } from "@/shared/components";
 import { useEstiloSuperficie, useFundoTela } from "@/shared/estiloSuperficie";
