@@ -1,7 +1,12 @@
 import { ScrollView, Text, View } from "react-native";
 
 import { NavegadorMes } from "@/components/acompanhamento";
-import { CartaoCategoriaPainel, ModalExtratoCategoria } from "@/components/painel";
+import {
+  CartaoCategoriaPainel,
+  ModalExtratoCategoria,
+  ResumoDistribuicaoCaixas,
+  ResumoSaudeMes,
+} from "@/components/painel";
 import { usePainel } from "@/entities/painel";
 import { useFundoTela } from "@/shared/estiloSuperficie";
 import { useCores } from "@/shared/tema";
@@ -31,7 +36,7 @@ export function TelaPainel(_props: TelaProps) {
           </Text>
           <Text className="text-text text-4xl font-medium">Painel</Text>
           <Text className="text-textMuted text-md mt-1 leading-4">
-            Categorias do mês com tendência versus o mês anterior.
+            Onde seu dinheiro está e como está a saúde do mês.
           </Text>
         </View>
 
@@ -41,16 +46,24 @@ export function TelaPainel(_props: TelaProps) {
           onSeguinte={painel.irMesSeguinte}
         />
 
+        <ResumoDistribuicaoCaixas
+          caixasCatalogo={painel.caixasCatalogo}
+          caixas={painel.caixas}
+          totalDisponivel={painel.totalDisponivel}
+        />
+
+        <ResumoSaudeMes dados={painel.saudeMes} />
+
         <Text className="text-textMuted text-xs font-semibold uppercase tracking-wide mb-3">
-          Categorias
+          Onde você gastou?
         </Text>
 
-        {painel.categorias.length === 0 ? (
-          <Text className="text-textMuted text-sm text-center py-10">
-            Nenhum lançamento neste mês
+        {painel.categoriasSaida.length === 0 ? (
+          <Text className="text-textMuted text-sm text-center py-6 mb-2">
+            Nenhuma saída neste mês
           </Text>
         ) : (
-          painel.categorias.map((categoria) => (
+          painel.categoriasSaida.map((categoria) => (
             <CartaoCategoriaPainel
               key={categoria.chave}
               categoria={categoria}
@@ -58,6 +71,21 @@ export function TelaPainel(_props: TelaProps) {
             />
           ))
         )}
+
+        {painel.categoriasEntrada.length > 0 ? (
+          <>
+            <Text className="text-textMuted text-xs font-semibold uppercase tracking-wide mb-3 mt-4">
+              De onde veio?
+            </Text>
+            {painel.categoriasEntrada.map((categoria) => (
+              <CartaoCategoriaPainel
+                key={categoria.chave}
+                categoria={categoria}
+                onPress={() => painel.abrirExtrato(categoria)}
+              />
+            ))}
+          </>
+        ) : null}
 
         <View className="h-10" />
       </ScrollView>
