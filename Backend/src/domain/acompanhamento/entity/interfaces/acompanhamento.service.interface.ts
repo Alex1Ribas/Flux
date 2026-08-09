@@ -47,6 +47,10 @@ export interface ICompromissoMes {
   tipo: 'entrada' | 'saida';
   valor: number;
   dia: number | null;
+  /** Parcela atual no período (1-based); ausente se não for parcelado/recorrente com duração. */
+  parcelaNum?: number;
+  /** Total de parcelas/meses do compromisso. */
+  totalParcelas?: number;
 }
 
 export interface IImpactoRisco {

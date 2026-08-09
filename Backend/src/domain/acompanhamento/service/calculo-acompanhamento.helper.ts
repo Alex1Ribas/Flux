@@ -186,18 +186,53 @@ export function calcEvolucaoRiscoMes(
   return pontos;
 }
 
+function parcelaDoRecorrenteNoMes(
+  recorrente: ILancamento,
+  mes: string,
+): { parcelaNum: number; totalParcelas: number } | null {
+  const meses = listarMesesDoRecorrente(recorrente);
+  const indice = meses.indexOf(mes);
+  if (indice < 0) return null;
+  return {
+    parcelaNum: indice + 1,
+    totalParcelas: meses.length,
+  };
+}
+
+function camposParcela(
+  parcela: { parcelaNum: number; totalParcelas: number } | null,
+): Pick<ICompromissoMes, 'parcelaNum' | 'totalParcelas'> {
+  if (!parcela) return {};
+  return {
+    parcelaNum: parcela.parcelaNum,
+    totalParcelas: parcela.totalParcelas,
+  };
+}
+
 export function calcCompromissosMes(
   mes: string,
   lancamentos: ILancamento[],
   contas: IConta[],
 ): ICompromissoMes[] {
-  const contasDoMes = listarContasAbertasDoMes(mes, contas).map((conta) => ({
-    id: conta._id,
-    descricao: conta.descricao,
-    tipo: (conta.tipo === ETipoConta.A_RECEBER ? 'entrada' : 'saida') as ICompromissoMes['tipo'],
-    valor: Number(conta.valor),
-    dia: getDiaCompetencia(conta.vencimento),
-  }));
+  const recorrentesPorId = new Map(
+    lancamentos
+      .filter((lancamento) => lancamento.recorrente)
+      .map((lancamento) => [lancamento._id, lancamento]),
+  );
+
+  const contasDoMes = listarContasAbertasDoMes(mes, contas).map((conta) => {
+    const recorrente = conta.recorrenteId
+      ? recorrentesPorId.get(conta.recorrenteId)
+      : undefined;
+    return {
+      id: conta._id,
+      descricao: conta.descricao,
+      tipo: (conta.tipo === ETipoConta.A_RECEBER ? 'entrada' : 'saida') as ICompromissoMes['tipo'],
+      valor: Number(conta.valor),
+      dia: getDiaCompetencia(conta.vencimento),
+      ...camposParcela(recorrente ? parcelaDoRecorrenteNoMes(recorrente, mes) : null),
+    };
+  });
 
   const recorrentesSemOcorrencia = listarRecorrentesDoMes(mes, lancamentos)
     .filter((lancamento) => !recorrenteTemOcorrenciaNoMes(lancamento._id, mes, contas))
@@ -209,6 +244,7 @@ export function calcCompromissosMes(
         tipo: lancamento.tipo as ICompromissoMes['tipo'],
         valor: Number(lancamento.valor),
         dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
+        ...camposParcela(parcelaDoRecorrenteNoMes(lancamento, mes)),
       };
     });
 
