@@ -115,11 +115,17 @@ components:
           type: string
         valor:
           type: number
+        competencia:
+          type: string
+          description: Occurrence month in yyyy-mm
         vencimento:
           type: string
           description: Due date in yyyy-mm-dd
         caixaId:
           type: string
+        recorrenteId:
+          type: string
+          description: Optional recurring template that originated this occurrence
     ContaUpdateRequest:
       type: object
       additionalProperties: false
@@ -131,6 +137,8 @@ components:
           type: string
         valor:
           type: number
+        competencia:
+          type: string
         vencimento:
           type: string
         caixaId:
@@ -138,6 +146,8 @@ components:
         status:
           type: string
           enum: [aberta, cancelada]
+        recorrenteId:
+          type: string
     ContaLiquidarRequest:
       type: object
       additionalProperties: false
