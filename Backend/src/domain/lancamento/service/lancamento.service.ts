@@ -322,7 +322,7 @@ export class LancamentoService implements ILancamentoService {
       await this.orcamentoRepositoryRead.findOrcamentoByUserCaixaCompetencia(
         lancamento.user,
         lancamento.caixaOrigem,
-        lancamento.competencia,
+        normalizeCompetencia(lancamento.competencia),
       );
     const limite = orcamento?.valor ?? caixaOrigem.orcamentoMensal ?? 0;
     if (limite <= 0 || lancamento.valor <= limite) {
