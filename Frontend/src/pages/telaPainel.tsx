@@ -1,4 +1,4 @@
-import { ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
 import { NavegadorMes } from "@/components/acompanhamento";
 import {
@@ -52,7 +52,31 @@ export function TelaPainel(_props: TelaProps) {
           totalDisponivel={painel.totalDisponivel}
         />
 
-        <ResumoSaudeMes dados={painel.saudeMes} />
+        {painel.carregandoSaude ? (
+          <View className="items-center py-6 mb-4">
+            <ActivityIndicator color={cores.primary} />
+          </View>
+        ) : null}
+
+        {painel.erroSaude ? (
+          <Pressable
+            onPress={painel.recarregarSaude}
+            className="mb-4 py-3"
+            accessibilityRole="button"
+            accessibilityLabel="Tentar carregar saúde do mês novamente"
+          >
+            <Text
+              className="text-sm text-center"
+              style={{ color: cores.danger }}
+            >
+              {painel.erroSaude} Toque para tentar de novo.
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {!painel.carregandoSaude && !painel.erroSaude ? (
+          <ResumoSaudeMes dados={painel.saudeMes} />
+        ) : null}
 
         <Text className="text-textMuted text-xs font-semibold uppercase tracking-wide mb-3">
           Onde você gastou?
