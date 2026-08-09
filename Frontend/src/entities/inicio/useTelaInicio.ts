@@ -12,7 +12,7 @@ import {
 } from "@/service/inicio";
 import { obterNomeCaixa, ordenarCaixasPorSaldo } from "@/shared/catalogoCaixas";
 import type { CaixaId } from "@/shared/estilosCaixa";
-import type { CaixaCatalogoItem, Caixas, TipoRecorrencia } from "@/types/flux";
+import type { CaixaCatalogoItem, Caixas } from "@/types/flux";
 import { getDataAtual, getMesAtual, getMesDeCompetencia } from "@/utils/helpers";
 
 export interface ParametrosHome {
@@ -64,9 +64,6 @@ export function useTelaInicio({
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState("");
   const [recorrente, setRecorrente] = useState(false);
-  const [parcelamentoAtivo, setParcelamentoAtivo] = useState(false);
-  const [tipoRecorrencia, setTipoRecorrencia] = useState<TipoRecorrencia>("dividir");
-  const [parcelas, setParcelas] = useState("12");
   const [caixaCompensacao, setCaixaCompensacao] = useState("");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -90,9 +87,6 @@ export function useTelaInicio({
     setValor("");
     setTipo("");
     setRecorrente(false);
-    setParcelamentoAtivo(false);
-    setTipoRecorrencia("dividir");
-    setParcelas("12");
     setCaixaCompensacao("");
     setErro("");
   };
@@ -112,12 +106,9 @@ export function useTelaInicio({
       caixaSelecionada,
       caixaCompensacao,
       orcamentoCaixa,
-      parcelamentoAtivo,
-      tipoRecorrencia: tipoRecorrencia === "cheio" ? "cheio" : "dividir",
-      parcelas,
       recorrente,
       competenciaInicial: recorrente ? dataLancamento : undefined,
-      duracaoMeses: recorrente ? Math.max(1, Number(parcelas) || 12) : undefined,
+      duracaoMeses: recorrente ? 12 : undefined,
     });
 
     const estouro = calcEstouroOrcamento(
@@ -168,12 +159,6 @@ export function useTelaInicio({
     tipo,
     recorrente,
     setRecorrente,
-    parcelamentoAtivo,
-    setParcelamentoAtivo,
-    tipoRecorrencia,
-    setTipoRecorrencia,
-    parcelas,
-    setParcelas,
     caixaCompensacao,
     setCaixaCompensacao,
     erro,
