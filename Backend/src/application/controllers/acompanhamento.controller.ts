@@ -1,5 +1,8 @@
 import { Router, type Request, type Response } from 'express';
-import type { IAcompanhamentoService } from '../../domain/acompanhamento/entity/interfaces/acompanhamento.service.interface.js';
+import type {
+  IAcompanhamentoService,
+  ISimulacaoImpactoInput,
+} from '../../domain/acompanhamento/entity/interfaces/acompanhamento.service.interface.js';
 import type { IController } from '../../domain/server/interfaces/IController.js';
 import type { IUserRepositoryRead } from '../../domain/user/repository/user.repository.read.js';
 import { ErrorCatalog } from '../../infrastructure/i18n/error-catalog.js';
@@ -35,6 +38,11 @@ export class AcompanhamentoController implements IController {
       this.authMiddleware,
       this.search,
     );
+    this.router.post(
+      '/acompanhamento/simulacao-impacto',
+      this.authMiddleware,
+      this.simularImpacto,
+    );
   }
 
   private userId(req: Request): string {
@@ -51,6 +59,19 @@ export class AcompanhamentoController implements IController {
       const result = await this.acompanhamentoService.montarAcompanhamentoMes(
         this.userId(req),
         this.competencia(req),
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res, req);
+    }
+  };
+
+  simularImpacto = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const body = req.body as ISimulacaoImpactoInput;
+      const result = await this.acompanhamentoService.simularImpacto(
+        this.userId(req),
+        body,
       );
       res.status(200).json(result);
     } catch (error) {
