@@ -1,4 +1,5 @@
 export { useTelaAcompanhamento } from "./useTelaAcompanhamento";
+export { useAcompanhamentoApi } from "./useAcompanhamentoApi";
 export { useTelaConfigRecorrentes } from "./useTelaConfigRecorrentes";
 export { useEditarLancamentoAvulso } from "./useEditarLancamentoAvulso";
 export {
@@ -16,4 +17,4 @@ export {
   classificarStatusRiscoMensal,
   montarAcompanhamentoMes,
   obterRotuloTipoImpacto,
-} from "./calculoAcompanhamento";
+} from "@/service/acompanhamento";

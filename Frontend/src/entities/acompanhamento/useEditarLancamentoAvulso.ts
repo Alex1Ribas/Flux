@@ -45,24 +45,24 @@ export function useEditarLancamentoAvulso() {
     setModalAberto(true);
   };
 
-  const salvar = async () => {
-    if (!lancamentoId) return;
+  const salvar = async (): Promise<boolean> => {
+    if (!lancamentoId) return false;
 
     const erroValidacao = validarFormularioLancamentoAvulso(formulario);
     if (erroValidacao) {
       setErro(erroValidacao);
-      return;
+      return false;
     }
 
     if (!token) {
       setErro("Sessão expirada. Faça login novamente.");
-      return;
+      return false;
     }
 
     const lancamentoOriginal = lancamentos.find((item) => item.id === lancamentoId);
     if (!lancamentoOriginal || lancamentoOriginal.recorrente) {
       setErro("Lançamento não encontrado");
-      return;
+      return false;
     }
 
     setSalvando(true);
@@ -71,8 +71,10 @@ export function useEditarLancamentoAvulso() {
       await lancamentosApi.atualizar(token, lancamentoId, payload);
       await sincronizar();
       fecharModal();
+      return true;
     } catch {
       setErro("Não foi possível salvar o lançamento na API");
+      return false;
     } finally {
       setSalvando(false);
     }
