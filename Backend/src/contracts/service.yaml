@@ -692,6 +692,24 @@ paths:
                 $ref: '#/components/schemas/ContasListaPaginada'
         '401':
           description: Unauthorized
+  /api/contas/sincronizar-recorrentes:
+    post:
+      summary: Materialize Conta occurrences from active recorrentes
+      operationId: sincronizarContasRecorrentes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
   /api/contas/{id}:
     get:
       summary: Get conta
