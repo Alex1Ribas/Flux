@@ -190,3 +190,80 @@ export interface ImpactoRisco {
   competencia: string;
   direcao: "aumenta" | "reduz";
 }
+
+export type CompensationSourceType = "orcamento" | "objetivo";
+export type ModoCompensacaoSimulacao = "declarada" | "nao-declarada";
+
+export interface CompensationSource {
+  id: string;
+  tipoOrigem: CompensationSourceType;
+  origemId: string;
+  valorMensalDestinado: number;
+}
+
+export interface SimulationInput {
+  valorTotal: number;
+  duracaoMeses: number;
+  dataPrimeiroPagamento: string;
+  modoCompensacao: ModoCompensacaoSimulacao;
+  fontesDeCompensacao: CompensationSource[];
+}
+
+export interface MonthlyImpact {
+  referenciaMes: string;
+  entradasPrevistas: number;
+  compromissosAnteriores: number;
+  novaParcela: number;
+  totalComprometido: number;
+  comprometimentoAntes: number | null;
+  comprometimentoDepois: number | null;
+  variacaoComprometimento: number | null;
+  classificacaoAntes: StatusRiscoMensal;
+  classificacaoDepois: StatusRiscoMensal;
+  alertas: string[];
+}
+
+export interface BudgetImpact {
+  fonteId: string;
+  nome: string;
+  valorPlanejadoMensal: number;
+  valorMensalDestinado: number;
+  novoValorMensal: number;
+  percentualReducao: number | null;
+  alertas: string[];
+}
+
+export interface GoalImpact {
+  fonteId: string;
+  nome: string;
+  valorRestanteObjetivo: number;
+  aporteMensalPlanejado: number;
+  valorMensalDestinado: number;
+  novoAporteMensal: number;
+  prazoOriginalMeses: number | null;
+  novoPrazoMeses: number | null;
+  diferencaPrazoMeses: number | null;
+  status: "normal" | "congelado";
+  alertas: string[];
+}
+
+export interface ScenarioSummary {
+  totalFontesDeclaradas: number;
+  quantidadeFontes: number;
+  possuiOrcamento: boolean;
+  possuiObjetivo: boolean;
+  impactoBruto: boolean;
+  piorComprometimentoDepois: number | null;
+  piorMes: string | null;
+  mesesCriticos: number;
+  alertasGerais: string[];
+}
+
+export interface SimulationResult {
+  parcelaMensal: number;
+  mesesAfetados: string[];
+  budgetImpacts: BudgetImpact[];
+  goalImpacts: GoalImpact[];
+  monthlyImpacts: MonthlyImpact[];
+  resumoImpacto: ScenarioSummary;
+}

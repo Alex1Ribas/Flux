@@ -3,9 +3,12 @@ import Constants from "expo-constants";
 import { criarClienteApi } from "./clienteApi";
 import type {
   AcompanhamentoMes,
+  CompensationSource,
   ConfigLimitesRisco,
   Distribuicao,
   Horizonte,
+  ModoCompensacaoSimulacao,
+  SimulationResult,
   TipoLancamento,
 } from "@/types/flux";
 
@@ -300,6 +303,25 @@ export const acompanhamentoApi = {
     cliente.get<AcompanhamentoMes>(`/acompanhamento/${competencia}`, {
       headers: authHeaders(token),
     }),
+};
+
+export interface SimulacaoImpactoPayload {
+  valorTotal: number;
+  duracaoMeses: number;
+  dataPrimeiroPagamento: string;
+  modoCompensacao: ModoCompensacaoSimulacao;
+  fontesDeCompensacao: CompensationSource[];
+}
+
+export const simulacaoImpactoApi = {
+  simular: (token: string, payload: SimulacaoImpactoPayload) =>
+    cliente.post<SimulationResult, SimulacaoImpactoPayload>(
+      "/acompanhamento/simulacao-impacto",
+      payload,
+      {
+        headers: authHeaders(token),
+      }
+    ),
 };
 
 export interface CategoriaCreatePayload {

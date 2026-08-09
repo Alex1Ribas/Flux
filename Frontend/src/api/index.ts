@@ -19,6 +19,7 @@ export {
   lancamentosApi,
   orcamentosApi,
   preferenciasApi,
+  simulacaoImpactoApi,
   type CadastroUsuarioPayload,
   type CadastroUsuarioResposta,
   type CaixaApi,
@@ -37,5 +38,6 @@ export {
   type OrcamentoPayload,
   type PapelUsuarioApi,
   type PreferenciasApi,
+  type SimulacaoImpactoPayload,
   type UsuarioApi,
 } from "./fluxApi";
