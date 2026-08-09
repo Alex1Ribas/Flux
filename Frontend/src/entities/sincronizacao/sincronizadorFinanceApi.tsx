@@ -5,7 +5,10 @@ import { useAuth } from "@/entities/auth";
 import { useStore } from "@/entities/store";
 
 import { useEstadoSincronizacaoFinance } from "./estadoSincronizacaoFinance";
-import { sincronizarDadosFinance } from "./hubSincronizacaoFinance";
+import {
+  cacheSincronizacaoExpirado,
+  sincronizarDadosFinance,
+} from "./hubSincronizacaoFinance";
 
 export function SincronizadorFinanceApi() {
   const { sessao } = useAuth();
@@ -37,10 +40,11 @@ export function SincronizadorFinanceApi() {
       return;
     }
 
-    void sincronizar(true);
+    // Bootstrap leve: leitura com cache; sem materializar recorrentes.
+    void sincronizar(false);
 
     const aoMudarEstado = (estado: AppStateStatus) => {
-      if (estado === "active") {
+      if (estado === "active" && cacheSincronizacaoExpirado(sessao.token)) {
         void sincronizar(false);
       }
     };
@@ -60,7 +64,10 @@ export function useRetrySincronizacaoFinance() {
   return useCallback(async () => {
     if (!sessao?.token) return;
     try {
-      const dados = await sincronizarDadosFinance(sessao.token, { force: true });
+      const dados = await sincronizarDadosFinance(sessao.token, {
+        force: true,
+        materializarRecorrentes: true,
+      });
       hidratarDadosRemotos(dados);
       definirErro(null);
     } catch {

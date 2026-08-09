@@ -1,6 +1,9 @@
-import { carregarDadosFinanceApi } from "./carregarDadosFinanceApi";
+import {
+  carregarDadosFinanceApi,
+  type OpcoesCarregarDadosFinance,
+} from "./carregarDadosFinanceApi";
 
-const TTL_MS = 60_000;
+export const TTL_SYNC_MS = 60_000;
 
 type DadosFinance = Awaited<ReturnType<typeof carregarDadosFinanceApi>>;
 
@@ -14,12 +17,17 @@ let cache: CacheSync | null = null;
 let inflight: Promise<DadosFinance> | null = null;
 let inflightToken: string | null = null;
 
-export type OpcoesSincronizacaoFinance = {
+export type OpcoesSincronizacaoFinance = OpcoesCarregarDadosFinance & {
   force?: boolean;
 };
 
 export function invalidarCacheSincronizacaoFinance() {
   cache = null;
+}
+
+export function cacheSincronizacaoExpirado(token: string, ttlMs = TTL_SYNC_MS): boolean {
+  if (!cache || cache.token !== token) return true;
+  return Date.now() - cache.carregadoEm >= ttlMs;
 }
 
 export async function sincronizarDadosFinance(
@@ -29,19 +37,22 @@ export async function sincronizarDadosFinance(
   const agora = Date.now();
   const cacheValido =
     !opcoes.force &&
+    !opcoes.materializarRecorrentes &&
     cache &&
     cache.token === token &&
-    agora - cache.carregadoEm < TTL_MS;
+    agora - cache.carregadoEm < TTL_SYNC_MS;
 
   if (cacheValido && cache) {
     return cache.dados;
   }
 
-  if (inflight && inflightToken === token && !opcoes.force) {
+  if (inflight && inflightToken === token && !opcoes.force && !opcoes.materializarRecorrentes) {
     return inflight;
   }
 
-  const request = carregarDadosFinanceApi(token)
+  const request = carregarDadosFinanceApi(token, {
+    materializarRecorrentes: opcoes.materializarRecorrentes,
+  })
     .then((dados) => {
       cache = { token, carregadoEm: Date.now(), dados };
       return dados;

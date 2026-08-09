@@ -1,8 +1,20 @@
-import { caixasApi, contasApi, lancamentosApi, orcamentosApi, preferenciasApi, type ContaApi } from "@/api";
+import {
+  caixasApi,
+  contasApi,
+  lancamentosApi,
+  orcamentosApi,
+  preferenciasApi,
+  type ContaApi,
+} from "@/api";
 import { CAIXAS_PADRAO } from "@/shared/catalogoCaixas";
 import { getMesAtual } from "@/utils/helpers";
 
 const CONTAS_SYNC_PAGE_SIZE = 100;
+
+export type OpcoesCarregarDadosFinance = {
+  /** Materializa ocorrências de recorrentes (escrita). Só sob demanda explícita. */
+  materializarRecorrentes?: boolean;
+};
 
 async function listarTodasContas(token: string): Promise<ContaApi[]> {
   const items: ContaApi[] = [];
@@ -46,15 +58,19 @@ async function garantirCaixas(token: string) {
   return caixas;
 }
 
-export async function carregarDadosFinanceApi(token: string) {
+/** Bootstrap leve: só leituras. Materialização de recorrentes fica fora do caminho crítico. */
+export async function carregarDadosFinanceApi(
+  token: string,
+  opcoes: OpcoesCarregarDadosFinance = {}
+) {
   const competencia = getMesAtual();
 
-  const [caixas] = await Promise.all([
-    garantirCaixas(token),
-    contasApi.sincronizarRecorrentes(token),
-  ]);
+  if (opcoes.materializarRecorrentes) {
+    await contasApi.sincronizarRecorrentes(token);
+  }
 
-  const [lancamentos, orcamentos, preferencias, contas] = await Promise.all([
+  const [caixas, lancamentos, orcamentos, preferencias, contas] = await Promise.all([
+    garantirCaixas(token),
     lancamentosApi.listar(token),
     orcamentosApi.listar(token, competencia),
     preferenciasApi.obter(token),
