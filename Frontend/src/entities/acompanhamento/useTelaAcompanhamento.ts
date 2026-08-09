@@ -9,7 +9,7 @@ import type { AcompanhamentoMes } from "@/types/flux";
 export function useTelaAcompanhamento() {
   const { token, sincronizar } = useSincronizarRemoto();
   const { competencia, irMesAnterior, irMesSeguinte } = useCompetenciaNavegavel();
-  const { lancamentos, limitesRisco } = useStore();
+  const { lancamentos, contas, limitesRisco } = useStore();
 
   useEffect(() => {
     if (!token) return;
@@ -17,8 +17,8 @@ export function useTelaAcompanhamento() {
   }, [competencia, sincronizar, token]);
 
   const dados: AcompanhamentoMes = useMemo(
-    () => montarAcompanhamentoMes(competencia, lancamentos, limitesRisco.global),
-    [competencia, lancamentos, limitesRisco.global]
+    () => montarAcompanhamentoMes(competencia, lancamentos, limitesRisco.global, contas),
+    [competencia, lancamentos, limitesRisco.global, contas]
   );
 
   return {

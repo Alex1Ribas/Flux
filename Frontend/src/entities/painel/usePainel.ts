@@ -13,7 +13,7 @@ import { somarCaixas } from "@/utils/helpers";
 
 export function usePainel() {
   const { token, sincronizar } = useSincronizarRemoto();
-  const { lancamentos, caixas, caixasCatalogo, limitesRisco } = useStore();
+  const { lancamentos, caixas, caixasCatalogo, limitesRisco, contas } = useStore();
   const { competencia, irMesAnterior, irMesSeguinte } = useCompetenciaNavegavel();
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<ResumoCategoriaMes | null>(
     null
@@ -42,8 +42,8 @@ export function usePainel() {
   const totalDisponivel = useMemo(() => somarCaixas(caixas), [caixas]);
 
   const saudeMes: AcompanhamentoMes = useMemo(
-    () => montarAcompanhamentoMes(competencia, lancamentos, limitesRisco.global),
-    [competencia, lancamentos, limitesRisco.global]
+    () => montarAcompanhamentoMes(competencia, lancamentos, limitesRisco.global, contas),
+    [competencia, lancamentos, limitesRisco.global, contas]
   );
 
   const abrirExtrato = (categoria: ResumoCategoriaMes) => {

@@ -1,9 +1,11 @@
 import { classificarPercentualPorLimites } from "@/service/risco";
 import { LIMITES_RISCO_PADRAO } from "@/shared/limitesRisco";
+import { listarContasAbertasDoMes } from "@/service/contas";
 import type {
   AcompanhamentoMes,
   CompromissoMes,
   ComposicaoRiscoDecisao,
+  Conta,
   ImpactoRisco,
   Lancamento,
   LimitesRisco,
@@ -85,9 +87,29 @@ export function listarAvulsosDoMes(
     );
 }
 
+function aplicarContasAbertasNoRisco(
+  riscoBase: RiscoPrevisto,
+  competencia: string,
+  contas: Conta[]
+): RiscoPrevisto {
+  let entradaPrevista = riscoBase.entradaPrevista;
+  let comprometido = riscoBase.comprometido;
+
+  listarContasAbertasDoMes(competencia, contas).forEach((conta) => {
+    if (conta.tipo === "a_receber") {
+      entradaPrevista += Number(conta.valor);
+    } else {
+      comprometido += Number(conta.valor);
+    }
+  });
+
+  return montarRisco(entradaPrevista, comprometido);
+}
+
 export function calcRiscoPrevistoDaColecao(
   competencia: string,
-  lancamentos: Lancamento[]
+  lancamentos: Lancamento[],
+  contas: Conta[] = []
 ): RiscoPrevisto {
   let entradaPrevista = 0;
   let comprometido = 0;
@@ -98,7 +120,11 @@ export function calcRiscoPrevistoDaColecao(
     else comprometido += valor;
   });
 
-  return montarRisco(entradaPrevista, comprometido);
+  return aplicarContasAbertasNoRisco(
+    montarRisco(entradaPrevista, comprometido),
+    competencia,
+    contas
+  );
 }
 
 function comprometidoAvulsoAteDia(
@@ -128,11 +154,12 @@ export function classificarStatusRiscoMensal(
 
 export function calcEvolucaoRiscoMes(
   competencia: string,
-  lancamentos: Lancamento[]
+  lancamentos: Lancamento[],
+  contas: Conta[] = []
 ): PontoEvolucaoRisco[] {
   const mes = getMesDeCompetencia(competencia);
   const diasNoMes = getDiasNoMes(mes);
-  const previsto = calcRiscoPrevistoDaColecao(mes, lancamentos);
+  const previsto = calcRiscoPrevistoDaColecao(mes, lancamentos, contas);
   const pontos: PontoEvolucaoRisco[] = [];
 
   for (let dia = 1; dia <= diasNoMes; dia++) {
@@ -154,10 +181,11 @@ export function calcEvolucaoRiscoMes(
 
 export function calcCompromissosMes(
   competencia: string,
-  lancamentos: Lancamento[]
+  lancamentos: Lancamento[],
+  contas: Conta[] = []
 ): CompromissoMes[] {
-  return listarRecorrentesDoMes(competencia, lancamentos)
-    .map((lancamento) => {
+  const recorrentes = listarRecorrentesDoMes(competencia, lancamentos).map(
+    (lancamento) => {
       const referencia = lancamento.competenciaInicial ?? lancamento.competencia;
       return {
         id: lancamento.id,
@@ -166,19 +194,30 @@ export function calcCompromissosMes(
         valor: Number(lancamento.valor),
         dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
       };
-    })
-    .sort((a, b) => {
-      if (a.tipo !== b.tipo) return a.tipo === "entrada" ? -1 : 1;
-      if (a.dia !== null && b.dia !== null && a.dia !== b.dia) return a.dia - b.dia;
-      return b.valor - a.valor;
-    });
+    }
+  );
+
+  const contasDoMes = listarContasAbertasDoMes(competencia, contas).map((conta) => ({
+    id: conta.id,
+    descricao: conta.descricao,
+    tipo: (conta.tipo === "a_receber" ? "entrada" : "saida") as CompromissoMes["tipo"],
+    valor: Number(conta.valor),
+    dia: getDiaCompetencia(conta.vencimento),
+  }));
+
+  return [...recorrentes, ...contasDoMes].sort((a, b) => {
+    if (a.tipo !== b.tipo) return a.tipo === "entrada" ? -1 : 1;
+    if (a.dia !== null && b.dia !== null && a.dia !== b.dia) return a.dia - b.dia;
+    return b.valor - a.valor;
+  });
 }
 
 export function calcComposicaoRisco(
   competencia: string,
-  lancamentos: Lancamento[]
+  lancamentos: Lancamento[],
+  contas: Conta[] = []
 ): ComposicaoRiscoDecisao[] {
-  const previsto = calcRiscoPrevistoDaColecao(competencia, lancamentos);
+  const previsto = calcRiscoPrevistoDaColecao(competencia, lancamentos, contas);
   if (previsto.comprometido <= 0) return [];
 
   const totais = new Map<string, number>();
@@ -188,6 +227,15 @@ export function calcComposicaoRisco(
       totais.set(
         lancamento.descricao,
         (totais.get(lancamento.descricao) ?? 0) + Number(lancamento.valor)
+      );
+    });
+
+  listarContasAbertasDoMes(competencia, contas)
+    .filter((conta) => conta.tipo === "a_pagar")
+    .forEach((conta) => {
+      totais.set(
+        conta.descricao,
+        (totais.get(conta.descricao) ?? 0) + Number(conta.valor)
       );
     });
 
@@ -209,9 +257,10 @@ function classificarTipoImpacto(lancamento: Lancamento): TipoImpactoRisco {
 
 export function calcImpactosRisco(
   competencia: string,
-  lancamentos: Lancamento[]
+  lancamentos: Lancamento[],
+  contas: Conta[] = []
 ): ImpactoRisco[] {
-  const previsto = calcRiscoPrevistoDaColecao(competencia, lancamentos);
+  const previsto = calcRiscoPrevistoDaColecao(competencia, lancamentos, contas);
   const avulsos = listarAvulsosDoMes(competencia, lancamentos);
 
   const impactos: ImpactoRisco[] = [];
@@ -245,10 +294,11 @@ export function calcImpactosRisco(
 export function montarAcompanhamentoMes(
   competencia: string,
   lancamentos: Lancamento[],
-  limites: LimitesRisco = LIMITES_RISCO_PADRAO
+  limites: LimitesRisco = LIMITES_RISCO_PADRAO,
+  contas: Conta[] = []
 ): AcompanhamentoMes {
   const mes = getMesDeCompetencia(competencia);
-  const risco = calcRiscoPrevistoDaColecao(mes, lancamentos);
+  const risco = calcRiscoPrevistoDaColecao(mes, lancamentos, contas);
   const avulsos = listarAvulsosDoMes(mes, lancamentos);
   const saidasAvulsas = avulsos
     .filter((l) => l.tipo === "saida")
@@ -274,10 +324,10 @@ export function montarAcompanhamentoMes(
     status,
     dentroPlanejado: status === "saudavel",
     limites,
-    evolucao: calcEvolucaoRiscoMes(mes, lancamentos),
-    compromissos: calcCompromissosMes(mes, lancamentos),
-    composicao: calcComposicaoRisco(mes, lancamentos),
-    impactos: calcImpactosRisco(mes, lancamentos),
+    evolucao: calcEvolucaoRiscoMes(mes, lancamentos, contas),
+    compromissos: calcCompromissosMes(mes, lancamentos, contas),
+    composicao: calcComposicaoRisco(mes, lancamentos, contas),
+    impactos: calcImpactosRisco(mes, lancamentos, contas),
   };
 }
 
