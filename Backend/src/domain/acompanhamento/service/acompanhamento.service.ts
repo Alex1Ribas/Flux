@@ -76,7 +76,7 @@ export class AcompanhamentoService implements IAcompanhamentoService {
         requestUserId,
         mes,
       ),
-      this.contaService.listContas(requestUserId, {
+      this.contaService.listTodasContas(requestUserId, {
         status: EStatusConta.ABERTA,
         competencia: mes,
       }),
