@@ -109,11 +109,76 @@ describe('calculo-acompanhamento.helper', () => {
           id: 'rec-1',
           descricao: 'Internet',
           valor: 120,
+          parcelaNum: 1,
+          totalParcelas: 12,
         }),
       ]);
 
       const impactos = calcImpactosRisco('2026-01', lancamentos, []);
       expect(impactos).toEqual([]);
+    });
+
+    it('should expose current parcel index for later months', () => {
+      const lancamentos: ILancamento[] = [
+        lancamentoBase({
+          _id: 'rec-1',
+          descricao: 'Internet',
+          tipo: ETipoLancamento.SAIDA,
+          valor: 120,
+          competencia: '2026-01',
+          recorrente: true,
+          competenciaInicial: '2026-01',
+          duracaoMeses: 12,
+          ativo: true,
+          horizonte: EHorizonteLancamento.FUTURO,
+        }),
+      ];
+
+      const compromissos = calcCompromissosMes('2026-05', lancamentos, []);
+      expect(compromissos).toEqual([
+        expect.objectContaining({
+          id: 'rec-1',
+          parcelaNum: 5,
+          totalParcelas: 12,
+        }),
+      ]);
+    });
+
+    it('should resolve parcel info from conta recorrenteId', () => {
+      const lancamentos: ILancamento[] = [
+        lancamentoBase({
+          _id: 'rec-1',
+          descricao: 'Internet',
+          tipo: ETipoLancamento.SAIDA,
+          valor: 120,
+          competencia: '2026-01',
+          recorrente: true,
+          competenciaInicial: '2026-01',
+          duracaoMeses: 12,
+          ativo: true,
+          horizonte: EHorizonteLancamento.FUTURO,
+        }),
+      ];
+      const contas: IConta[] = [
+        contaBase({
+          _id: 'conta-1',
+          descricao: 'Internet',
+          tipo: ETipoConta.A_PAGAR,
+          valor: 120,
+          competencia: '2026-05',
+          vencimento: '2026-05-10',
+          recorrenteId: 'rec-1',
+        }),
+      ];
+
+      const compromissos = calcCompromissosMes('2026-05', lancamentos, contas);
+      expect(compromissos).toEqual([
+        expect.objectContaining({
+          id: 'conta-1',
+          parcelaNum: 5,
+          totalParcelas: 12,
+        }),
+      ]);
     });
   });
 });
