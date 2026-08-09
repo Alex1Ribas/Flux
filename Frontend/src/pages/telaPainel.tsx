@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 
 import { NavegadorMes } from "@/components/acompanhamento";
 import {
@@ -26,6 +26,14 @@ export function TelaPainel(_props: TelaProps) {
       <ScrollView
         contentContainerClassName="p-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={painel.atualizandoSaude}
+            onRefresh={painel.recarregarSaude}
+            tintColor={cores.primary}
+            colors={[cores.primary]}
+          />
+        }
       >
         <View className="mb-4 mt-1">
           <Text
