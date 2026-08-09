@@ -57,8 +57,8 @@ export function TelaRecorrentes({ setTela, voltarPara = "previsao" }: TelaProps)
         />
 
         <Text className="text-textMuted text-[11px] mb-4 leading-4">
-          Planejamento base mensal: salário, aluguel, contas fixas e financiamentos. As projeções
-          alimentam o cálculo de risco no Acompanhamento.
+          Regra mensal (template): salário, aluguel, contas fixas. Cada mês vira uma Conta
+          concreta que você pode liquidar sem mudar a regra.
         </Text>
 
         <View className="flex-row justify-end mb-3">

@@ -55,8 +55,8 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
         />
 
         <Text className="text-textMuted text-[11px] mb-4 leading-4">
-          Compromissos a pagar e a receber. Ao liquidar, o Flux registra a saída ou entrada
-          real nas caixas.
+          Ocorrências concretas do mês: a pagar e a receber. Recorrentes são a regra; cada Conta
+          pode ser liquidada independentemente — inclusive antecipada — sem alterar o template.
         </Text>
 
         <View className="flex-row gap-2 mb-3">
@@ -112,11 +112,17 @@ export function TelaContas({ setTela, voltarPara = "previsao" }: TelaProps) {
                       {rotuloTipoConta(conta.tipo)} · {formatBRL(conta.valor)}
                     </Text>
                     <Text className="text-textMuted text-[11px] mt-0.5">
+                      Competência: {conta.competencia || conta.vencimento.slice(0, 7)} ·
                       Vencimento: {formatarCompetencia(conta.vencimento)}
                     </Text>
                     <Text className="text-textMuted text-[11px] mt-0.5">
                       Caixa: {obterNomeCaixa(contas.caixasCatalogo, conta.caixaId)}
                     </Text>
+                    {conta.recorrenteId ? (
+                      <Text className="text-textFaint text-[10px] mt-0.5">
+                        Origem: recorrente
+                      </Text>
+                    ) : null}
                     {conta.liquidadoEm ? (
                       <Text className="text-textFaint text-[10px] mt-0.5">
                         {conta.tipo === "a_pagar" ? "Pago" : "Recebido"} em{" "}
