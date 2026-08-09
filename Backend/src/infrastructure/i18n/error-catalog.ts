@@ -232,4 +232,49 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     en: 'Settlement date must be in yyyy-mm-dd format.',
     es: 'La fecha de liquidación debe estar en formato aaaa-mm-dd.',
   },
+  [EErrorCode.SIMULACAO_VALOR_TOTAL_INVALIDO]: {
+    'pt-BR': 'Valor total da simulação deve ser maior que zero.',
+    en: 'Simulation total amount must be greater than zero.',
+    es: 'El valor total de la simulación debe ser mayor que cero.',
+  },
+  [EErrorCode.SIMULACAO_DURACAO_INVALIDA]: {
+    'pt-BR': 'Duração da simulação deve ser de pelo menos 1 mês.',
+    en: 'Simulation duration must be at least 1 month.',
+    es: 'La duración de la simulación debe ser de al menos 1 mes.',
+  },
+  [EErrorCode.SIMULACAO_DATA_INVALIDA]: {
+    'pt-BR': 'Data do primeiro pagamento é obrigatória.',
+    en: 'First payment date is required.',
+    es: 'La fecha del primer pago es obligatoria.',
+  },
+  [EErrorCode.SIMULACAO_PARCELA_INVALIDA]: {
+    'pt-BR': 'Parcela mensal da simulação deve ser maior que zero.',
+    en: 'Simulation monthly installment must be greater than zero.',
+    es: 'La cuota mensual de la simulación debe ser mayor que cero.',
+  },
+  [EErrorCode.SIMULACAO_MODO_COMPENSACAO_INVALIDO]: {
+    'pt-BR': 'Modo de compensação da simulação é inválido.',
+    en: 'Simulation compensation mode is invalid.',
+    es: 'El modo de compensación de la simulación es inválido.',
+  },
+  [EErrorCode.SIMULACAO_FONTES_OBRIGATORIAS]: {
+    'pt-BR': 'Informe ao menos uma fonte de compensação no modo declarado.',
+    en: 'Provide at least one compensation source in declared mode.',
+    es: 'Informe al menos una fuente de compensación en modo declarado.',
+  },
+  [EErrorCode.SIMULACAO_FONTE_VALOR_INVALIDO]: {
+    'pt-BR': 'Valor mensal destinado da fonte deve ser maior ou igual a zero.',
+    en: 'Source monthly allocated value must be greater than or equal to zero.',
+    es: 'El valor mensual asignado de la fuente debe ser mayor o igual a cero.',
+  },
+  [EErrorCode.SIMULACAO_FONTE_INEXISTENTE]: {
+    'pt-BR': 'Fonte de compensação apontada não existe.',
+    en: 'Selected compensation source does not exist.',
+    es: 'La fuente de compensación seleccionada no existe.',
+  },
+  [EErrorCode.SIMULACAO_TOTAL_FONTES_DIVERGENTE]: {
+    'pt-BR': 'A soma das fontes deve ser igual ao valor da parcela mensal.',
+    en: 'Sources sum must equal the monthly installment value.',
+    es: 'La suma de fuentes debe ser igual al valor de la cuota mensual.',
+  },
 };
