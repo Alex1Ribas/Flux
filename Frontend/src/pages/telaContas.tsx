@@ -1,5 +1,12 @@
 import { useEffect } from "react";
-import { BackHandler, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  BackHandler,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import { ModalFormularioConta, ModalLiquidarConta } from "@/components/contas";
 import { useTelaContas } from "@/entities/contas";
@@ -51,6 +58,16 @@ export function TelaContas(_props: TelaProps) {
           contentContainerClassName="p-4"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={contas.atualizando}
+              onRefresh={() => {
+                void contas.atualizarPorGesto();
+              }}
+              tintColor={cores.primary}
+              colors={[cores.primary]}
+            />
+          }
         >
           <View className="mb-4 mt-1">
             <Text
