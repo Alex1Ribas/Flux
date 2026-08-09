@@ -9,6 +9,18 @@ export interface IListContasRepositoryFiltro {
   tipo?: ETipoConta;
   competencia?: string;
   recorrenteId?: string;
+  /** Cursor: `_id` do último item da página anterior. */
+  lastItemId?: string;
+  pageSize?: number;
+}
+
+export interface IListaContasPaginada {
+  items: IConta[];
+  total: number;
+  pageSize: number;
+  /** `_id` do último item desta página (passar na próxima busca). */
+  lastItemId: string | null;
+  hasMore: boolean;
 }
 
 export interface IContaRepositoryRead {
@@ -21,7 +33,7 @@ export interface IContaRepositoryRead {
   listContasByUser(
     userId: string,
     filtro?: IListContasRepositoryFiltro,
-  ): Promise<IConta[]>;
+  ): Promise<IListaContasPaginada>;
   listContasByRecorrente(
     userId: string,
     recorrenteId: string,

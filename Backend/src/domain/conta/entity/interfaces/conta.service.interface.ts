@@ -6,11 +6,16 @@ import type {
   IConta,
   IParamsCreateConta,
 } from './conta.interface.js';
-import type { IContaRepositoryRead } from '../../repository/conta.repository.read.js';
+import type {
+  IContaRepositoryRead,
+  IListaContasPaginada,
+} from '../../repository/conta.repository.read.js';
 import type { IContaRepositoryWrite } from '../../repository/conta.repository.write.js';
 import type { ICaixaRepositoryRead } from '../../../caixa/repository/caixa.repository.read.js';
 import type { ILancamentoService } from '../../../lancamento/entity/interfaces/lancamento.service.interface.js';
 import type { ILancamentoRepositoryRead } from '../../../lancamento/repository/lancamento.repository.read.js';
+
+export type { IListaContasPaginada };
 
 export interface IParamsCreateContaInput extends Omit<IParamsCreateConta, 'user'> {
   userId?: string;
@@ -47,6 +52,10 @@ export interface IListContasFiltro {
   /** Filtra por competência da ocorrência (AAAA-MM). */
   competencia?: string;
   recorrenteId?: string;
+  /** Cursor: `_id` do último item da página anterior. */
+  lastItemId?: string;
+  /** Itens por página. Default: 10. Máximo: 100. */
+  pageSize?: number;
 }
 
 export interface IParamsContaService {
@@ -59,7 +68,15 @@ export interface IParamsContaService {
 
 export interface IContaService {
   createConta(requestUserId: string, params: IParamsCreateContaInput): Promise<IConta>;
-  listContas(requestUserId: string, filtro?: IListContasFiltro): Promise<IConta[]>;
+  listContas(
+    requestUserId: string,
+    filtro?: IListContasFiltro,
+  ): Promise<IListaContasPaginada>;
+  /** Lista todas as contas do filtro (percorre o cursor até o fim). */
+  listTodasContas(
+    requestUserId: string,
+    filtro?: Omit<IListContasFiltro, 'lastItemId' | 'pageSize'>,
+  ): Promise<IConta[]>;
   getContaById(
     id: string,
     requestUserId: string,

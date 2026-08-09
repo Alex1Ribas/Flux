@@ -20,6 +20,7 @@ import {
 import type {
   IContaService,
   IListContasFiltro,
+  IListaContasPaginada,
   IParamsContaService,
   IParamsCreateContaInput,
   IParamsLiquidarConta,
@@ -101,15 +102,48 @@ export class ContaService implements IContaService {
   async listContas(
     requestUserId: string,
     filtro?: IListContasFiltro,
-  ): Promise<IConta[]> {
+  ): Promise<IListaContasPaginada> {
     this.ensureUserId(requestUserId);
+    const pageSizeRaw = Number(filtro?.pageSize) || 10;
+    const pageSize = Math.min(100, Math.max(1, pageSizeRaw));
+    const lastItemId =
+      typeof filtro?.lastItemId === 'string' && filtro.lastItemId.trim()
+        ? filtro.lastItemId.trim()
+        : undefined;
     const normalized: IListContasFiltro = {
       ...filtro,
       competencia: filtro?.competencia
         ? normalizeCompetencia(filtro.competencia)
         : undefined,
+      lastItemId,
+      pageSize,
     };
     return this.contaRepositoryRead.listContasByUser(requestUserId, normalized);
+  }
+
+  async listTodasContas(
+    requestUserId: string,
+    filtro?: Omit<IListContasFiltro, 'lastItemId' | 'pageSize'>,
+  ): Promise<IConta[]> {
+    const items: IConta[] = [];
+    let lastItemId: string | undefined;
+    let hasMore = true;
+
+    while (hasMore) {
+      const page = await this.listContas(requestUserId, {
+        ...filtro,
+        pageSize: 100,
+        lastItemId,
+      });
+      items.push(...page.items);
+      hasMore = page.hasMore;
+      if (!page.lastItemId) {
+        break;
+      }
+      lastItemId = page.lastItemId;
+    }
+
+    return items;
   }
 
   async getContaById(
