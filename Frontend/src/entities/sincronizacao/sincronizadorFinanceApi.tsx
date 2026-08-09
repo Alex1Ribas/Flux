@@ -4,11 +4,13 @@ import { AppState, type AppStateStatus } from "react-native";
 import { useAuth } from "@/entities/auth";
 import { useStore } from "@/entities/store";
 
+import { useEstadoSincronizacaoFinance } from "./estadoSincronizacaoFinance";
 import { sincronizarDadosFinance } from "./hubSincronizacaoFinance";
 
 export function SincronizadorFinanceApi() {
   const { sessao } = useAuth();
   const hidratarDadosRemotos = useStore((state) => state.hidratarDadosRemotos);
+  const definirErro = useEstadoSincronizacaoFinance((state) => state.definirErro);
   const emAndamento = useRef(false);
 
   const sincronizar = useCallback(
@@ -19,17 +21,21 @@ export function SincronizadorFinanceApi() {
       try {
         const dados = await sincronizarDadosFinance(sessao.token, { force });
         hidratarDadosRemotos(dados);
+        definirErro(null);
       } catch {
-        // Mantém o estado local se a sincronização falhar.
+        definirErro("Falha ao sincronizar dados. Toque para tentar de novo.");
       } finally {
         emAndamento.current = false;
       }
     },
-    [hidratarDadosRemotos, sessao]
+    [definirErro, hidratarDadosRemotos, sessao]
   );
 
   useEffect(() => {
-    if (!sessao?.token) return;
+    if (!sessao?.token) {
+      definirErro(null);
+      return;
+    }
 
     void sincronizar(true);
 
@@ -41,7 +47,24 @@ export function SincronizadorFinanceApi() {
 
     const subscricao = AppState.addEventListener("change", aoMudarEstado);
     return () => subscricao.remove();
-  }, [sessao?.token, sincronizar]);
+  }, [sessao?.token, sincronizar, definirErro]);
 
   return null;
+}
+
+export function useRetrySincronizacaoFinance() {
+  const { sessao } = useAuth();
+  const hidratarDadosRemotos = useStore((state) => state.hidratarDadosRemotos);
+  const definirErro = useEstadoSincronizacaoFinance((state) => state.definirErro);
+
+  return useCallback(async () => {
+    if (!sessao?.token) return;
+    try {
+      const dados = await sincronizarDadosFinance(sessao.token, { force: true });
+      hidratarDadosRemotos(dados);
+      definirErro(null);
+    } catch {
+      definirErro("Falha ao sincronizar dados. Toque para tentar de novo.");
+    }
+  }, [definirErro, hidratarDadosRemotos, sessao?.token]);
 }
