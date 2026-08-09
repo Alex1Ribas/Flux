@@ -159,6 +159,25 @@ components:
           type: string
         caixaCompensacao:
           type: string
+    ContasListaPaginada:
+      type: object
+      additionalProperties: false
+      required: [items, total, pageSize, lastItemId, hasMore]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+        pageSize:
+          type: integer
+        lastItemId:
+          type: string
+          nullable: true
+          description: Cursor for the next page (`_id` of the last item)
+        hasMore:
+          type: boolean
     DistribuicaoLancamento:
       type: object
       additionalProperties: false
@@ -650,9 +669,27 @@ paths:
           required: false
           schema:
             type: string
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: lastItemId
+          in: query
+          required: false
+          description: Cursor — `_id` do último item da página anterior
+          schema:
+            type: string
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContasListaPaginada'
         '401':
           description: Unauthorized
   /api/contas/{id}:
