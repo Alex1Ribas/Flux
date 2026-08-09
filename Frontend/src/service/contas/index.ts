@@ -1,10 +1,12 @@
 export {
+  calcEstouroLiquidacaoConta,
   competenciaDaConta,
   filtrarContasPorStatus,
   listarContasAbertasDoMes,
   montarFormularioConta,
   montarFormularioLiquidacao,
   montarPayloadConta,
+  obterLimiteOrcamentoLiquidacao,
   rotuloStatusConta,
   rotuloTipoConta,
   validarFormularioConta,

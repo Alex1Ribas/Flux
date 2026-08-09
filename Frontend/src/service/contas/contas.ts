@@ -1,5 +1,9 @@
-import type { Conta, ContaInput, StatusConta, TipoConta } from "@/types/flux";
-import { getDataAtual, getMesDeCompetencia } from "@/utils/helpers";
+import type { Conta, ContaInput, StatusConta, TipoConta, CaixaCatalogoItem } from "@/types/flux";
+import { formatBRL, getDataAtual, getMesDeCompetencia } from "@/utils/helpers";
+import {
+  calcEstouroOrcamento,
+  type EstouroOrcamento,
+} from "@/service/inicio/movimentacao";
 
 export interface FormularioConta {
   tipo: TipoConta;
@@ -12,6 +16,7 @@ export interface FormularioConta {
 export interface FormularioLiquidacaoConta {
   liquidadoEm: string;
   caixaId: string;
+  caixaCompensacao: string;
 }
 
 export function montarFormularioConta(
@@ -43,7 +48,39 @@ export function montarFormularioLiquidacao(
   return {
     liquidadoEm: getDataAtual(),
     caixaId: conta.caixaId,
+    caixaCompensacao: "",
   };
+}
+
+export function obterLimiteOrcamentoLiquidacao(params: {
+  caixaId: string;
+  liquidadoEm: string;
+  orcamentos: Record<string, Record<string, number>>;
+  caixasCatalogo: CaixaCatalogoItem[];
+}): number {
+  const mes = getMesDeCompetencia(params.liquidadoEm);
+  const orcamentoMes = params.orcamentos[mes]?.[params.caixaId];
+  if (typeof orcamentoMes === "number" && orcamentoMes > 0) {
+    return orcamentoMes;
+  }
+  const caixa = params.caixasCatalogo.find((item) => item.id === params.caixaId);
+  return Number(caixa?.orcamentoMensal) || 0;
+}
+
+export function calcEstouroLiquidacaoConta(params: {
+  conta: Conta;
+  formulario: FormularioLiquidacaoConta;
+  limiteOrcamento: number;
+}): EstouroOrcamento {
+  if (params.conta.tipo !== "a_pagar") {
+    return { precisaCompensacao: false, estouro: 0 };
+  }
+  return calcEstouroOrcamento(
+    "saida",
+    "presente",
+    Number(params.conta.valor),
+    params.limiteOrcamento
+  );
 }
 
 export function validarFormularioConta(formulario: FormularioConta): string | null {
@@ -64,13 +101,24 @@ export function validarFormularioConta(formulario: FormularioConta): string | nu
 }
 
 export function validarFormularioLiquidacao(
-  formulario: FormularioLiquidacaoConta
+  formulario: FormularioLiquidacaoConta,
+  estouro: EstouroOrcamento = { precisaCompensacao: false, estouro: 0 }
 ): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(formulario.liquidadoEm)) {
     return "Informe a data de liquidação no formato aaaa-mm-dd.";
   }
   if (!formulario.caixaId) {
     return "Selecione a caixa da liquidação.";
+  }
+  if (estouro.precisaCompensacao && !formulario.caixaCompensacao) {
+    return `Estouro de ${formatBRL(estouro.estouro)}: escolha a caixa de compensação`;
+  }
+  if (
+    estouro.precisaCompensacao &&
+    formulario.caixaCompensacao &&
+    formulario.caixaCompensacao === formulario.caixaId
+  ) {
+    return "A caixa de compensação deve ser diferente da caixa de origem.";
   }
   return null;
 }
