@@ -128,8 +128,19 @@ export function AutocompleteCategoria({
 
   const mostraLista = aberto && (carregando || salvando || sugestoes.length > 0 || mostrarAdicionar);
 
+  const rotulo = modo === "entrada" ? "De onde veio?" : "Onde você gastou?";
+  const placeholder = modo === "entrada" ? "Ex.: Salário" : "Ex.: Mercado";
+  const rotuloAcessibilidade =
+    modo === "entrada" ? "De onde veio o dinheiro" : "Onde você gastou";
+
   return (
     <View>
+      <Text
+        className="text-textMuted text-sm font-medium mb-2"
+        style={{ color: tokens.textMuted }}
+      >
+        {rotulo}
+      </Text>
       <View
         className="flex-row items-center rounded-2xl border border-border bg-surface2 px-3"
         style={{ minHeight: 48 }}
@@ -144,7 +155,7 @@ export function AutocompleteCategoria({
           onSubmitEditing={() => {
             void adicionarDigitado();
           }}
-          placeholder="Categoria"
+          placeholder={placeholder}
           placeholderTextColor={tokens.textMuted}
           returnKeyType="done"
           autoCorrect={false}
@@ -152,7 +163,7 @@ export function AutocompleteCategoria({
           editable={!salvando}
           className="flex-1 text-text text-md py-3"
           style={{ color: tokens.text }}
-          accessibilityLabel="Categoria do lançamento"
+          accessibilityLabel={rotuloAcessibilidade}
         />
         {carregando || salvando ? (
           <ActivityIndicator
@@ -192,7 +203,7 @@ export function AutocompleteCategoria({
               }}
               className="px-4 py-3"
               accessibilityRole="button"
-              accessibilityLabel={`Adicionar categoria ${texto.trim()}`}
+              accessibilityLabel={`Adicionar ${texto.trim()}`}
             >
               <Text
                 className="text-md font-semibold"

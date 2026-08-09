@@ -13,6 +13,9 @@ interface CabecalhoCaixasProps {
   caixas: Record<string, number>;
   selecionada: CaixaId;
   onSelect: (caixaId: CaixaId) => void;
+  /** Pergunta contextual: para onde vai / de onde sai. */
+  pergunta?: string;
+  nomeSelecionada?: string;
 }
 
 function CaixaCard({
@@ -80,27 +83,57 @@ export function CabecalhoCaixas({
   caixas,
   selecionada,
   onSelect,
+  pergunta,
+  nomeSelecionada,
 }: CabecalhoCaixasProps) {
+  const tokens = useTokensInicio();
   const caixasOrdenadas = useMemo(
     () => ordenarCaixasPorSaldo(caixasCatalogo, caixas),
     [caixasCatalogo, caixas]
   );
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-    >
-      {caixasOrdenadas.map((caixa) => (
-        <CaixaCard
-          key={caixa.id}
-          nome={caixa.nome}
-          valor={caixas[caixa.id] || 0}
-          ativo={selecionada === caixa.id}
-          onPress={() => onSelect(caixa.id)}
-        />
-      ))}
-    </ScrollView>
+    <View>
+      {pergunta ? (
+        <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+          <Text
+            style={{
+              color: tokens.text,
+              fontSize: 18,
+              fontWeight: "600",
+              marginBottom: 4,
+            }}
+          >
+            {pergunta}
+          </Text>
+          {nomeSelecionada ? (
+            <Text
+              style={{
+                color: tokens.textMuted,
+                fontSize: 14,
+                fontWeight: "500",
+              }}
+            >
+              Caixa: {nomeSelecionada}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+      >
+        {caixasOrdenadas.map((caixa) => (
+          <CaixaCard
+            key={caixa.id}
+            nome={caixa.nome}
+            valor={caixas[caixa.id] || 0}
+            ativo={selecionada === caixa.id}
+            onPress={() => onSelect(caixa.id)}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
