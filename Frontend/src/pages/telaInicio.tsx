@@ -276,8 +276,8 @@ export function TelaInicio({
               />
             )}
           </Pressable>
-          <Pressable onPress={() => setTela("painel")}>
-            <Text className="text-text text-sm font-medium">Ver painel</Text>
+          <Pressable onPress={() => setTela("previsao")}>
+            <Text className="text-text text-sm font-medium">Ver acompanhamento</Text>
           </Pressable>
         </View>
 

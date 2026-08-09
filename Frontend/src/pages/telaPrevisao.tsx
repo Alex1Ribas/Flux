@@ -1,12 +1,14 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 
 import {
-  IndicadorRiscoPrincipal,
   GraficoAcompanhamentoMes,
   ListaCompromissosMes,
   ListaImpactosRisco,
+  ModalExtratoCategoria,
   ModalFormularioLancamentoAvulso,
   NavegadorMes,
+  ResumoDistribuicaoCaixas,
+  ResumoSaudeMes,
 } from "@/components/acompanhamento";
 import { useEditarLancamentoAvulso, useTelaAcompanhamento } from "@/entities/acompanhamento";
 import { useEstiloSuperficie, useFundoTela } from "@/shared/estiloSuperficie";
@@ -25,6 +27,18 @@ export function TelaPrevisao({ setTela }: TelaProps) {
     recarregar,
     irMesAnterior,
     irMesSeguinte,
+    caixas,
+    caixasCatalogo,
+    totalDisponivel,
+    impactosEnriquecidos,
+    compromissosExpandidos,
+    impactosExpandidos,
+    alternarCompromissos,
+    alternarImpactos,
+    categoriaSelecionada,
+    lancamentosExtrato,
+    abrirExtratoPorImpacto,
+    fecharExtrato,
   } = useTelaAcompanhamento();
   const editarAvulso = useEditarLancamentoAvulso();
   const fundo = useFundoTela();
@@ -110,21 +124,44 @@ export function TelaPrevisao({ setTela }: TelaProps) {
 
         {!carregando && !erro ? (
           <>
-            <IndicadorRiscoPrincipal dados={dados} />
+            <ResumoSaudeMes dados={dados} />
 
             <GraficoAcompanhamentoMes pontos={dados.evolucao} />
 
-            <ListaCompromissosMes compromissos={dados.compromissos} />
+            <ResumoDistribuicaoCaixas
+              caixasCatalogo={caixasCatalogo}
+              caixas={caixas}
+              totalDisponivel={totalDisponivel}
+            />
+
+            <ListaCompromissosMes
+              compromissos={dados.compromissos}
+              expandido={compromissosExpandidos}
+              onToggle={alternarCompromissos}
+            />
 
             <ListaImpactosRisco
-              impactos={dados.impactos}
-              onPressImpacto={editarAvulso.abrirEditar}
+              impactos={impactosEnriquecidos}
+              expandido={impactosExpandidos}
+              onToggle={alternarImpactos}
+              onPressImpacto={abrirExtratoPorImpacto}
             />
           </>
         ) : null}
 
         <View className="h-10" />
       </ScrollView>
+
+      <ModalExtratoCategoria
+        visivel={Boolean(categoriaSelecionada)}
+        titulo={categoriaSelecionada?.nome ?? ""}
+        lancamentos={lancamentosExtrato}
+        onFechar={fecharExtrato}
+        onPressLancamento={(lancamentoId) => {
+          fecharExtrato();
+          editarAvulso.abrirEditar(lancamentoId);
+        }}
+      />
 
       <ModalFormularioLancamentoAvulso
         visivel={editarAvulso.modalAberto}
