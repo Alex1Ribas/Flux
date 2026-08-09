@@ -94,7 +94,7 @@ export function useTelaContas() {
   };
 
   const recarregarLista = async () => {
-    await sincronizar();
+    await sincronizar({ force: true });
     await carregarPagina(undefined, false);
   };
 
