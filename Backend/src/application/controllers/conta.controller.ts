@@ -44,6 +44,11 @@ export class ContaController implements IController {
 
   private initRoutes(): void {
     this.router.post('/contas', this.authMiddleware, this.create);
+    this.router.post(
+      '/contas/sincronizar-recorrentes',
+      this.authMiddleware,
+      this.sincronizarRecorrentes,
+    );
     this.router.get('/contas', this.authMiddleware, this.list);
     this.router.get(
       '/contas/:id',
@@ -91,11 +96,19 @@ export class ContaController implements IController {
     }
   };
 
-  list = async (req: Request, res: Response): Promise<void> => {
+  sincronizarRecorrentes = async (req: Request, res: Response): Promise<void> => {
     try {
       await this.contaService.sincronizarOcorrenciasDosRecorrentesDoUsuario(
         this.userId(req),
       );
+      res.status(204).send();
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res, req);
+    }
+  };
+
+  list = async (req: Request, res: Response): Promise<void> => {
+    try {
       const filtro: IListContasFiltro = {};
       if (typeof req.query.status === 'string') {
         filtro.status = req.query.status as EStatusConta;
