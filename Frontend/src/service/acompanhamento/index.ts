@@ -24,3 +24,8 @@ export {
   validarFormularioLancamentoAvulso,
   type FormularioLancamentoAvulso,
 } from "./editarLancamentoAvulso";
+export {
+  enriquecerImpactosComCategorias,
+  montarCategoriaFallbackDoLancamento,
+  type ImpactoRiscoEnriquecido,
+} from "./enriquecerImpactos";
