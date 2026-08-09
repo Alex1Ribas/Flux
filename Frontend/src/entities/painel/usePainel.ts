@@ -1,18 +1,24 @@
 import { useMemo, useState } from "react";
 
+import { useAcompanhamentoApi } from "@/entities/acompanhamento/useAcompanhamentoApi";
 import { useStore } from "@/entities/store";
 import { useCompetenciaNavegavel } from "@/hooks";
-import { montarAcompanhamentoMes } from "@/service/acompanhamento";
 import {
   montarResumoCategoriasMes,
   type ResumoCategoriaMes,
 } from "@/service/painel/agruparCategoriasMes";
-import type { AcompanhamentoMes, Lancamento } from "@/types/flux";
+import type { Lancamento } from "@/types/flux";
 import { somarCaixas } from "@/utils/helpers";
 
 export function usePainel() {
-  const { lancamentos, caixas, caixasCatalogo, limitesRisco, contas } = useStore();
+  const { lancamentos, caixas, caixasCatalogo } = useStore();
   const { competencia, irMesAnterior, irMesSeguinte } = useCompetenciaNavegavel();
+  const {
+    dados: saudeMes,
+    carregando: carregandoSaude,
+    erro: erroSaude,
+    recarregar: recarregarSaude,
+  } = useAcompanhamentoApi(competencia);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<ResumoCategoriaMes | null>(
     null
   );
@@ -34,11 +40,6 @@ export function usePainel() {
 
   const totalDisponivel = useMemo(() => somarCaixas(caixas), [caixas]);
 
-  const saudeMes: AcompanhamentoMes = useMemo(
-    () => montarAcompanhamentoMes(competencia, lancamentos, limitesRisco.global, contas),
-    [competencia, lancamentos, limitesRisco.global, contas]
-  );
-
   const abrirExtrato = (categoria: ResumoCategoriaMes) => {
     setCategoriaSelecionada(categoria);
   };
@@ -57,6 +58,9 @@ export function usePainel() {
     caixasCatalogo,
     totalDisponivel,
     saudeMes,
+    carregandoSaude,
+    erroSaude,
+    recarregarSaude,
     categorias,
     categoriasSaida,
     categoriasEntrada,
