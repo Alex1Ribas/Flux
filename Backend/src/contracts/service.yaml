@@ -397,6 +397,10 @@ components:
         dia:
           type: number
           nullable: true
+        parcelaNum:
+          type: number
+        totalParcelas:
+          type: number
     ComposicaoRisco:
       type: object
       additionalProperties: false
