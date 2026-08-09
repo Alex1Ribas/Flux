@@ -12,6 +12,7 @@ describe('conta.schema', () => {
         tipo: ETipoConta.A_PAGAR,
         descricao: 'Aluguel',
         valor: 1000,
+        competencia: '2026-08',
         vencimento: '2026-08-10',
         caixaId: '507f1f77bcf86cd799439012',
         status: EStatusConta.ABERTA,
@@ -28,6 +29,7 @@ describe('conta.schema', () => {
         tipo: 'invalid',
         descricao: 'Aluguel',
         valor: 1000,
+        competencia: '2026-08',
         vencimento: '2026-08-10',
         caixaId: '507f1f77bcf86cd799439012',
       });
