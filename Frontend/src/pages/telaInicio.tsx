@@ -103,27 +103,7 @@ export function TelaInicio({
           </View>
         </View>
 
-        {/* 1. Origem/Destino — caixas */}
-        <View className="mb-5">
-          <CabecalhoCaixas
-            caixasCatalogo={home.caixasCatalogo}
-            caixas={home.caixas}
-            selecionada={home.caixaSelecionada}
-            onSelect={home.setCaixaSelecionada}
-          />
-        </View>
-
-        {/* 2. Valor */}
-        <View className="mb-2">
-          <ValorPrincipal
-            valor={home.valor}
-            onChangeValor={home.setValor}
-            modo={home.modo}
-            nomeCaixa={home.nomeCaixaSelecionada}
-          />
-        </View>
-
-        {/* 3. Natureza */}
+        {/* 1. Natureza — define a pergunta da caixa */}
         <View className="px-4 mb-5">
           <View className="flex-row justify-center items-center">
             <ControleSegmentado
@@ -136,13 +116,36 @@ export function TelaInicio({
           </View>
         </View>
 
-        {/* 4. Classificação — categoria + data + recorrência */}
+        {/* 2. Origem/Destino — caixas */}
+        <View className="mb-5">
+          <CabecalhoCaixas
+            caixasCatalogo={home.caixasCatalogo}
+            caixas={home.caixas}
+            selecionada={home.caixaSelecionada}
+            onSelect={home.setCaixaSelecionada}
+            pergunta={
+              home.modo === "entrada" ? "Para onde vai o dinheiro?" : "De onde sai o dinheiro?"
+            }
+            nomeSelecionada={home.nomeCaixaSelecionada}
+          />
+        </View>
+
+        {/* 3. Valor */}
+        <View className="mb-2">
+          <ValorPrincipal
+            valor={home.valor}
+            onChangeValor={home.setValor}
+            modo={home.modo}
+          />
+        </View>
+
+        {/* 4. Motivo do lançamento + data + recorrência */}
         <View
           className="mx-4 mb-5 rounded-3xl border p-4"
           style={superficie}
         >
           <View
-            className="flex-row items-start gap-2"
+            className="flex-row items-end gap-2"
             style={{ marginBottom: 14 }}
           >
             <View className="flex-1">
