@@ -15,6 +15,8 @@ export {
   calcImpactosRisco,
   calcRiscoPrevistoDaColecao,
   classificarStatusRiscoMensal,
+  enriquecerImpactosComCategorias,
   montarAcompanhamentoMes,
   obterRotuloTipoImpacto,
+  type ImpactoRiscoEnriquecido,
 } from "@/service/acompanhamento";
