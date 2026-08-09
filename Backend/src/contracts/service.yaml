@@ -345,6 +345,140 @@ components:
           enum: [entrada, saida]
         categoria:
           type: string
+    RiscoPrevisto:
+      type: object
+      additionalProperties: false
+      required: [entradaPrevista, comprometido, risco]
+      properties:
+        entradaPrevista:
+          type: number
+        comprometido:
+          type: number
+        risco:
+          type: number
+    LimitesRiscoMensal:
+      type: object
+      additionalProperties: false
+      required: [saudavel, atencao]
+      properties:
+        saudavel:
+          type: number
+        atencao:
+          type: number
+    PontoEvolucaoRisco:
+      type: object
+      additionalProperties: false
+      required: [dia, label, riscoEsperado, riscoReal, diferencial]
+      properties:
+        dia:
+          type: number
+        label:
+          type: string
+        riscoEsperado:
+          type: number
+        riscoReal:
+          type: number
+        diferencial:
+          type: number
+    CompromissoMes:
+      type: object
+      additionalProperties: false
+      required: [id, descricao, tipo, valor]
+      properties:
+        id:
+          type: string
+        descricao:
+          type: string
+        tipo:
+          type: string
+          enum: [entrada, saida]
+        valor:
+          type: number
+        dia:
+          type: number
+          nullable: true
+    ComposicaoRisco:
+      type: object
+      additionalProperties: false
+      required: [descricao, valor, percentual]
+      properties:
+        descricao:
+          type: string
+        valor:
+          type: number
+        percentual:
+          type: number
+    ImpactoRisco:
+      type: object
+      additionalProperties: false
+      required: [id, descricao, tipo, valor, impactoRisco, competencia, direcao]
+      properties:
+        id:
+          type: string
+        descricao:
+          type: string
+        tipo:
+          type: string
+          enum: [despesa_futura, parcelamento, renda_extra, realizacao, abatimento, outro]
+        valor:
+          type: number
+        impactoRisco:
+          type: number
+        competencia:
+          type: string
+        direcao:
+          type: string
+          enum: [aumenta, reduz]
+    AcompanhamentoMes:
+      type: object
+      additionalProperties: false
+      required:
+        - competencia
+        - risco
+        - riscoReal
+        - diferencial
+        - diferencialValor
+        - status
+        - dentroPlanejado
+        - limites
+        - evolucao
+        - compromissos
+        - composicao
+        - impactos
+      properties:
+        competencia:
+          type: string
+        risco:
+          $ref: '#/components/schemas/RiscoPrevisto'
+        riscoReal:
+          $ref: '#/components/schemas/RiscoPrevisto'
+        diferencial:
+          type: number
+        diferencialValor:
+          type: number
+        status:
+          type: string
+          enum: [saudavel, atencao, critico]
+        dentroPlanejado:
+          type: boolean
+        limites:
+          $ref: '#/components/schemas/LimitesRiscoMensal'
+        evolucao:
+          type: array
+          items:
+            $ref: '#/components/schemas/PontoEvolucaoRisco'
+        compromissos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompromissoMes'
+        composicao:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComposicaoRisco'
+        impactos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImpactoRisco'
 paths:
   /api/health:
     get:
@@ -957,6 +1091,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcompanhamentoMes'
         '401':
           description: Unauthorized
   /api/preferencias:
