@@ -397,9 +397,11 @@ export class ContaService implements IContaService {
       requestUserId,
       { recorrente: true },
     );
-    for (const recorrente of recorrentes) {
-      await this.sincronizarOcorrenciasDoRecorrente(requestUserId, recorrente);
-    }
+    await Promise.all(
+      recorrentes.map((recorrente) =>
+        this.sincronizarOcorrenciasDoRecorrente(requestUserId, recorrente),
+      ),
+    );
   }
 
   private async findAndAssertAccess(
