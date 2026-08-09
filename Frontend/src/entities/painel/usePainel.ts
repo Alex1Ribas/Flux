@@ -16,6 +16,7 @@ export function usePainel() {
   const {
     dados: saudeMes,
     carregando: carregandoSaude,
+    atualizando: atualizandoSaude,
     erro: erroSaude,
     recarregar: recarregarSaude,
   } = useAcompanhamentoApi(competencia);
@@ -59,6 +60,7 @@ export function usePainel() {
     totalDisponivel,
     saudeMes,
     carregandoSaude,
+    atualizandoSaude,
     erroSaude,
     recarregarSaude,
     categorias,
