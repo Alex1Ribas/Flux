@@ -13,6 +13,7 @@ const NAV_ITEMS: { id: keyof typeof NAV_ICONS; accessibilityLabel: string }[] = 
   { id: "contas", accessibilityLabel: "Contas" },
   { id: "caixas", accessibilityLabel: "Caixas" },
   { id: "painel", accessibilityLabel: "Painel" },
+  { id: "simulacao", accessibilityLabel: "Simulação de impacto" },
 ];
 
 interface BarraNavegacaoProps {

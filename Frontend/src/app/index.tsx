@@ -14,6 +14,7 @@ import {
   TelaPainel,
   TelaPrevisao,
   TelaRecorrentes,
+  TelaSimulacao,
 } from "@/pages";
 import { ProvedorQueryApp } from "@/queries";
 import { AuthProvider, useAuth } from "@/entities/auth";
@@ -56,6 +57,8 @@ export default function App() {
         return <TelaCaixas {...propsTela} />;
       case "painel":
         return <TelaPainel {...propsTela} />;
+      case "simulacao":
+        return <TelaSimulacao {...propsTela} />;
       case "parcelamento":
         return <TelaParcelamento {...propsTela} />;
       case "configurar":

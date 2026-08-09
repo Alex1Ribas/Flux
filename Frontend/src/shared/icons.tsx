@@ -72,7 +72,7 @@ export function CaixaIcon({
 }
 
 export const NAV_ICONS: Record<
-  Extract<TelaId, "inicio" | "previsao" | "contas" | "caixas" | "painel">,
+  Extract<TelaId, "inicio" | "previsao" | "contas" | "caixas" | "painel" | "simulacao">,
   LucideIcon
 > = {
   inicio: Landmark,
@@ -80,6 +80,7 @@ export const NAV_ICONS: Record<
   contas: ClipboardList,
   caixas: LayoutGrid,
   painel: Notebook,
+  simulacao: BarChart3,
 };
 
 export {

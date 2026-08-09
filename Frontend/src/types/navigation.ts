@@ -6,6 +6,7 @@ export type TelaId =
   | "previsao"
   | "caixas"
   | "painel"
+  | "simulacao"
   | "parcelamento"
   | "configurar"
   | "recorrentes"
@@ -28,4 +29,11 @@ export interface TelaProps {
   voltarPara?: TelaId;
 }
 
-export const TELAS_COM_NAV = ["inicio", "previsao", "contas", "caixas", "painel"] as const;
+export const TELAS_COM_NAV = [
+  "inicio",
+  "previsao",
+  "contas",
+  "caixas",
+  "painel",
+  "simulacao",
+] as const;
