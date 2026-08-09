@@ -13,12 +13,19 @@ import { useVarsTema } from "@/shared/tema";
 import type { FormularioConta } from "@/service/contas";
 import type { CaixaCatalogoItem } from "@/types/flux";
 
+function rotuloBotaoConta(salvando: boolean, editando: boolean): string {
+  if (salvando) return "Salvando...";
+  if (editando) return "Salvar";
+  return "Criar conta";
+}
+
 interface ModalFormularioContaProps {
   visivel: boolean;
   editando: boolean;
   formulario: FormularioConta;
   caixasCatalogo: CaixaCatalogoItem[];
   erro: string;
+  salvando: boolean;
   onFechar: () => void;
   onSalvar: () => void;
   onExcluir?: () => void;
@@ -31,6 +38,7 @@ export function ModalFormularioConta({
   formulario,
   caixasCatalogo,
   erro,
+  salvando,
   onFechar,
   onSalvar,
   onExcluir,
@@ -128,9 +136,10 @@ export function ModalFormularioConta({
                 ) : null}
 
                 <Botao
-                  label={editando ? "Salvar" : "Criar conta"}
+                  label={rotuloBotaoConta(salvando, editando)}
                   onPress={onSalvar}
                   variant="primary"
+                  disabled={salvando}
                 />
 
                 {editando && onExcluir ? (
@@ -139,6 +148,7 @@ export function ModalFormularioConta({
                     onPress={onExcluir}
                     variant="secondary"
                     style={{ marginTop: 8 }}
+                    disabled={salvando}
                   />
                 ) : null}
               </ScrollView>

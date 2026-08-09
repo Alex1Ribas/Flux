@@ -9,17 +9,27 @@ import {
 } from "react-native";
 
 import { Botao, CampoData, SeletorCaixa } from "@/shared/components";
-import { useVarsTema } from "@/shared/tema";
+import { useCores, useVarsTema } from "@/shared/tema";
+import { AlertTriangle } from "@/shared/icons";
 import type { FormularioLiquidacaoConta } from "@/service/contas";
 import type { CaixaCatalogoItem, Conta } from "@/types/flux";
 import { formatBRL, formatarCompetencia } from "@/utils/helpers";
+
+function rotuloBotaoLiquidar(salvando: boolean, eAPagar: boolean): string {
+  if (salvando) return "Salvando...";
+  if (eAPagar) return "Confirmar pagamento";
+  return "Confirmar recebimento";
+}
 
 interface ModalLiquidarContaProps {
   visivel: boolean;
   conta: Conta | null;
   formulario: FormularioLiquidacaoConta;
   caixasCatalogo: CaixaCatalogoItem[];
+  precisaCompensacao: boolean;
+  estouro: number;
   erro: string;
+  salvando: boolean;
   onFechar: () => void;
   onLiquidar: () => void;
   onAtualizarCampo: (campo: keyof FormularioLiquidacaoConta, valor: string) => void;
@@ -30,12 +40,16 @@ export function ModalLiquidarConta({
   conta,
   formulario,
   caixasCatalogo,
+  precisaCompensacao,
+  estouro,
   erro,
+  salvando,
   onFechar,
   onLiquidar,
   onAtualizarCampo,
 }: ModalLiquidarContaProps) {
   const varsTema = useVarsTema();
+  const cores = useCores();
   if (!conta) return null;
 
   const eAPagar = conta.tipo === "a_pagar";
@@ -94,6 +108,37 @@ export function ModalLiquidarConta({
                   }
                 />
 
+                {precisaCompensacao ? (
+                  <View
+                    className="mb-4 p-4 rounded-3xl border"
+                    style={{
+                      backgroundColor: cores.errorHighlight,
+                      borderColor: cores.error + "55",
+                    }}
+                  >
+                    <View className="flex-row items-center gap-2 mb-3">
+                      <AlertTriangle
+                        size={18}
+                        color={cores.error}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        className="text-md font-semibold"
+                        style={{ color: cores.error }}
+                      >
+                        Estouro: {formatBRL(estouro)}
+                      </Text>
+                    </View>
+                    <SeletorCaixa
+                      caixasCatalogo={caixasCatalogo}
+                      selecionado={formulario.caixaCompensacao}
+                      onSelect={(caixaId) => onAtualizarCampo("caixaCompensacao", caixaId)}
+                      excluir={formulario.caixaId}
+                      label="Caixa de compensação"
+                    />
+                  </View>
+                ) : null}
+
                 <Text className="text-textMuted text-[11px] mb-3 leading-4">
                   Isso gera uma {eAPagar ? "saída" : "entrada"} real nas caixas.
                 </Text>
@@ -103,9 +148,10 @@ export function ModalLiquidarConta({
                 ) : null}
 
                 <Botao
-                  label={eAPagar ? "Confirmar pagamento" : "Confirmar recebimento"}
+                  label={rotuloBotaoLiquidar(salvando, eAPagar)}
                   onPress={onLiquidar}
                   variant="primary"
+                  disabled={salvando}
                 />
               </ScrollView>
             </Pressable>

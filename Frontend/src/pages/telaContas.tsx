@@ -208,6 +208,7 @@ export function TelaContas(_props: TelaProps) {
         formulario={contas.formulario}
         caixasCatalogo={contas.caixasCatalogo}
         erro={contas.erro}
+        salvando={contas.salvando}
         onFechar={contas.fecharModal}
         onSalvar={() => {
           void contas.salvar();
@@ -221,7 +222,10 @@ export function TelaContas(_props: TelaProps) {
         conta={contas.contaLiquidando}
         formulario={contas.formularioLiquidacao}
         caixasCatalogo={contas.caixasCatalogo}
+        precisaCompensacao={contas.estouroLiquidacao.precisaCompensacao}
+        estouro={contas.estouroLiquidacao.estouro}
         erro={contas.erro}
+        salvando={contas.salvando}
         onFechar={contas.fecharModalLiquidar}
         onLiquidar={() => {
           void contas.liquidar();
