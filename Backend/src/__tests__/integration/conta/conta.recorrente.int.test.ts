@@ -41,11 +41,11 @@ describe('contas from recorrente', () => {
       const recorrenteId = recorrente.body[0]._id as string;
 
       const contas = await request(app)
-        .get('/api/contas?status=aberta')
+        .get('/api/contas?status=aberta&pageSize=100')
         .set(authHeader(token))
         .expect(200);
 
-      expect(contas.body).toEqual(
+      expect(contas.body.items).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             descricao: 'Aluguel',
@@ -67,7 +67,7 @@ describe('contas from recorrente', () => {
         ]),
       );
 
-      const contaAgosto = contas.body.find(
+      const contaAgosto = contas.body.items.find(
         (conta: { competencia: string }) => conta.competencia === '2026-08',
       );
 
@@ -102,17 +102,17 @@ describe('contas from recorrente', () => {
       );
 
       const abertas = await request(app)
-        .get('/api/contas?status=aberta')
+        .get('/api/contas?status=aberta&pageSize=100')
         .set(authHeader(token))
         .expect(200);
 
       expect(
-        abertas.body.some(
+        abertas.body.items.some(
           (conta: { competencia: string }) => conta.competencia === '2026-08',
         ),
       ).toEqual(false);
       expect(
-        abertas.body.filter(
+        abertas.body.items.filter(
           (conta: { recorrenteId: string }) => conta.recorrenteId === recorrenteId,
         ),
       ).toHaveLength(2);
