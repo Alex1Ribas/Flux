@@ -81,8 +81,13 @@ export function montarPayloadConta(formulario: FormularioConta): ContaInput {
     descricao: formulario.descricao.trim(),
     valor: Number(formulario.valorTexto),
     vencimento: formulario.vencimento,
+    competencia: formulario.vencimento.slice(0, 7),
     caixaId: formulario.caixaId,
   };
+}
+
+export function competenciaDaConta(conta: Conta): string {
+  return getMesDeCompetencia(conta.competencia || conta.vencimento);
 }
 
 export function listarContasAbertasDoMes(
@@ -91,8 +96,7 @@ export function listarContasAbertasDoMes(
 ): Conta[] {
   const mes = getMesDeCompetencia(competencia);
   return contas.filter(
-    (conta) =>
-      conta.status === "aberta" && getMesDeCompetencia(conta.vencimento) === mes
+    (conta) => conta.status === "aberta" && competenciaDaConta(conta) === mes
   );
 }
 

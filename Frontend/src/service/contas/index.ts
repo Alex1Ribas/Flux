@@ -1,4 +1,5 @@
 export {
+  competenciaDaConta,
   filtrarContasPorStatus,
   listarContasAbertasDoMes,
   montarFormularioConta,
