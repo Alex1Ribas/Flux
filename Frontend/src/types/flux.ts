@@ -138,6 +138,10 @@ export interface CompromissoMes {
   valor: number;
   /** Dia do mês do compromisso (1–31); null se só houver mês. */
   dia: number | null;
+  /** Parcela atual no período (1-based); ausente se não houver duração. */
+  parcelaNum?: number;
+  /** Total de parcelas/meses do compromisso. */
+  totalParcelas?: number;
 }
 
 export interface AcompanhamentoMes {

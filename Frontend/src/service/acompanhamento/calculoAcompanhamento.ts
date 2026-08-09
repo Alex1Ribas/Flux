@@ -179,18 +179,58 @@ export function calcEvolucaoRiscoMes(
   return pontos;
 }
 
+function parcelaDoRecorrenteNoMes(
+  recorrente: Lancamento,
+  mes: string
+): { parcelaNum: number; totalParcelas: number } | null {
+  const inicio = getMesDeCompetencia(
+    recorrente.competenciaInicial ?? recorrente.competencia
+  );
+  const duracao = Math.max(1, Number(recorrente.duracaoMeses) || 1);
+  const meses = getMesesFuturos(inicio, duracao);
+  const indice = meses.indexOf(mes);
+  if (indice < 0) return null;
+  return {
+    parcelaNum: indice + 1,
+    totalParcelas: meses.length,
+  };
+}
+
+function camposParcela(
+  parcela: { parcelaNum: number; totalParcelas: number } | null
+): Pick<CompromissoMes, "parcelaNum" | "totalParcelas"> {
+  if (!parcela) return {};
+  return {
+    parcelaNum: parcela.parcelaNum,
+    totalParcelas: parcela.totalParcelas,
+  };
+}
+
 export function calcCompromissosMes(
   competencia: string,
   lancamentos: Lancamento[],
   contas: Conta[] = []
 ): CompromissoMes[] {
-  const contasDoMes = listarContasAbertasDoMes(competencia, contas).map((conta) => ({
-    id: conta.id,
-    descricao: conta.descricao,
-    tipo: (conta.tipo === "a_receber" ? "entrada" : "saida") as CompromissoMes["tipo"],
-    valor: Number(conta.valor),
-    dia: getDiaCompetencia(conta.vencimento),
-  }));
+  const mes = getMesDeCompetencia(competencia);
+  const recorrentesPorId = new Map(
+    lancamentos
+      .filter((lancamento) => lancamento.recorrente)
+      .map((lancamento) => [lancamento.id, lancamento])
+  );
+
+  const contasDoMes = listarContasAbertasDoMes(competencia, contas).map((conta) => {
+    const recorrente = conta.recorrenteId
+      ? recorrentesPorId.get(conta.recorrenteId)
+      : undefined;
+    return {
+      id: conta.id,
+      descricao: conta.descricao,
+      tipo: (conta.tipo === "a_receber" ? "entrada" : "saida") as CompromissoMes["tipo"],
+      valor: Number(conta.valor),
+      dia: getDiaCompetencia(conta.vencimento),
+      ...camposParcela(recorrente ? parcelaDoRecorrenteNoMes(recorrente, mes) : null),
+    };
+  });
 
   const recorrentesSemOcorrencia = listarRecorrentesDoMes(competencia, lancamentos)
     .filter((lancamento) => !recorrenteTemOcorrenciaNoMes(lancamento.id, competencia, contas))
@@ -202,6 +242,7 @@ export function calcCompromissosMes(
         tipo: lancamento.tipo,
         valor: Number(lancamento.valor),
         dia: temDiaNaCompetencia(referencia) ? getDiaCompetencia(referencia) : null,
+        ...camposParcela(parcelaDoRecorrenteNoMes(lancamento, mes)),
       };
     });
 
