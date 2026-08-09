@@ -5,7 +5,6 @@ export type TelaId =
   | "inicio"
   | "previsao"
   | "caixas"
-  | "painel"
   | "simulacao"
   | "parcelamento"
   | "configurar"
@@ -34,6 +33,5 @@ export const TELAS_COM_NAV = [
   "previsao",
   "contas",
   "caixas",
-  "painel",
   "simulacao",
 ] as const;

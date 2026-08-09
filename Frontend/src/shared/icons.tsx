@@ -31,7 +31,6 @@ import {
   type LucideIcon,
   ChartNoAxesColumn,
   Landmark,
-  Notebook,
 } from "lucide-react-native";
 
 
@@ -72,14 +71,13 @@ export function CaixaIcon({
 }
 
 export const NAV_ICONS: Record<
-  Extract<TelaId, "inicio" | "previsao" | "contas" | "caixas" | "painel" | "simulacao">,
+  Extract<TelaId, "inicio" | "previsao" | "contas" | "caixas" | "simulacao">,
   LucideIcon
 > = {
   inicio: Landmark,
   previsao: ChartNoAxesColumn,
   contas: ClipboardList,
   caixas: LayoutGrid,
-  painel: Notebook,
   simulacao: BarChart3,
 };
 

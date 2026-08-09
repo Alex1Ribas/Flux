@@ -122,7 +122,7 @@ export function CarrosselBoasVindas({ onConcluir, onConfigurar }: CarrosselBoasV
       );
     }
 
-    const cards = ["Painel", "Caixas", "Acompanhamento", "Movimentos"];
+    const cards = ["Caixas", "Contas", "Acompanhamento", "Movimentos"];
     return (
       <View className="h-[300px] items-center justify-center">
         <View className="flex-row flex-wrap gap-4 px-2">

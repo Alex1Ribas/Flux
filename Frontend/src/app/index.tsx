@@ -11,7 +11,6 @@ import {
   TelaAuth,
   TelaBoasVindas,
   TelaParcelamento,
-  TelaPainel,
   TelaPrevisao,
   TelaRecorrentes,
   TelaSimulacao,
@@ -55,8 +54,6 @@ export default function App() {
         return <TelaPrevisao {...propsTela} />;
       case "caixas":
         return <TelaCaixas {...propsTela} />;
-      case "painel":
-        return <TelaPainel {...propsTela} />;
       case "simulacao":
         return <TelaSimulacao {...propsTela} />;
       case "parcelamento":

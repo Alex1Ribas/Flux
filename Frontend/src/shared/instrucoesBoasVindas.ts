@@ -3,7 +3,7 @@ import { COLORS } from "@/shared/tokensDesign";
 export interface InstrucaoOnboarding {
   titulo: string;
   descricao: string;
-  ilustracao: "dinheiro" | "caixas" | "grafico" | "painel";
+  ilustracao: "dinheiro" | "caixas" | "grafico" | "inicio";
   cor: string;
 }
 
@@ -41,7 +41,7 @@ export const INSTRUCOES_ONBOARDING: InstrucaoOnboarding[] = [
     titulo: "Vamos começar.",
     descricao:
       "Configure salário, contas recorrentes e caixas. O restante o Flux acompanha automaticamente.",
-    ilustracao: "painel",
+    ilustracao: "inicio",
     cor: COLORS.primary,
   },
 ];
