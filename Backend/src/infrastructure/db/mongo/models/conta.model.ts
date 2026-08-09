@@ -3,10 +3,14 @@ import type { IConta } from '../../../../domain/conta/entity/interfaces/conta.in
 import { contaSchema } from '../schema/conta.schema.js';
 
 export interface IMConta
-  extends Omit<IConta, '_id' | 'user' | 'caixaId' | 'lancamentoId'> {
+  extends Omit<
+    IConta,
+    '_id' | 'user' | 'caixaId' | 'lancamentoId' | 'recorrenteId'
+  > {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   caixaId: Types.ObjectId;
+  recorrenteId?: Types.ObjectId;
   lancamentoId?: Types.ObjectId;
 }
 

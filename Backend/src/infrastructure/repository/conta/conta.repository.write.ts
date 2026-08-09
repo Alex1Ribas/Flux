@@ -24,6 +24,9 @@ export class ContaRepositoryWrite implements IContaRepositoryWrite {
     if (params.lancamentoId) {
       $set.lancamentoId = new Types.ObjectId(params.lancamentoId);
     }
+    if (params.recorrenteId) {
+      $set.recorrenteId = new Types.ObjectId(params.recorrenteId);
+    }
 
     const document = await MConta.findByIdAndUpdate(
       id,

@@ -10,9 +10,11 @@ export function toIConta(document: IMConta): IConta {
     tipo: document.tipo,
     descricao: document.descricao,
     valor: document.valor,
+    competencia: document.competencia,
     vencimento: document.vencimento,
     caixaId: document.caixaId.toString(),
     status: document.status,
+    recorrenteId: document.recorrenteId?.toString(),
     liquidadoEm: document.liquidadoEm,
     lancamentoId: document.lancamentoId?.toString(),
     createdAt: document.createdAt,
@@ -28,9 +30,13 @@ export function toPersistence(
     tipo: conta.tipo,
     descricao: conta.descricao,
     valor: conta.valor,
+    competencia: conta.competencia,
     vencimento: conta.vencimento,
     caixaId: new Types.ObjectId(conta.caixaId),
     status: conta.status,
+    recorrenteId: conta.recorrenteId
+      ? new Types.ObjectId(conta.recorrenteId)
+      : undefined,
     liquidadoEm: conta.liquidadoEm,
     lancamentoId: conta.lancamentoId
       ? new Types.ObjectId(conta.lancamentoId)
