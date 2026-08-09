@@ -103,6 +103,52 @@ components:
           type: number
         orcamentoMensal:
           type: number
+    ContaRequest:
+      type: object
+      additionalProperties: false
+      required: [tipo, descricao, valor, vencimento, caixaId]
+      properties:
+        tipo:
+          type: string
+          enum: [a_pagar, a_receber]
+        descricao:
+          type: string
+        valor:
+          type: number
+        vencimento:
+          type: string
+          description: Due date in yyyy-mm-dd
+        caixaId:
+          type: string
+    ContaUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        tipo:
+          type: string
+          enum: [a_pagar, a_receber]
+        descricao:
+          type: string
+        valor:
+          type: number
+        vencimento:
+          type: string
+        caixaId:
+          type: string
+        status:
+          type: string
+          enum: [aberta, cancelada]
+    ContaLiquidarRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        liquidadoEm:
+          type: string
+          description: Settlement date in yyyy-mm-dd
+        caixaId:
+          type: string
+        caixaCompensacao:
+          type: string
     DistribuicaoLancamento:
       type: object
       additionalProperties: false
@@ -548,6 +594,141 @@ paths:
       responses:
         '200':
           description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+  /api/contas:
+    post:
+      summary: Create conta
+      operationId: createConta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContaRequest'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+    get:
+      summary: List contas
+      operationId: listContas
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [aberta, liquidada, cancelada]
+        - name: tipo
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [a_pagar, a_receber]
+        - name: competencia
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  /api/contas/{id}:
+    get:
+      summary: Get conta
+      operationId: getConta
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    put:
+      summary: Update conta
+      operationId: updateConta
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContaUpdateRequest'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+    delete:
+      summary: Delete conta
+      operationId: deleteConta
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+  /api/contas/{id}/liquidar:
+    post:
+      summary: Settle conta into a present lancamento
+      operationId: liquidarConta
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContaLiquidarRequest'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
         '404':
