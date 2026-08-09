@@ -11,11 +11,10 @@ export function ProvedorQueryApp({ children }: ProvedorQueryAppProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0,
-            refetchOnMount: "always",
-            refetchOnWindowFocus: true,
-            refetchOnReconnect: true,
+            staleTime: 60_000,
             retry: 1,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
           },
         },
       })
