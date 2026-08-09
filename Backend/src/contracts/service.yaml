@@ -479,6 +479,228 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ImpactoRisco'
+    CompensationSource:
+      type: object
+      additionalProperties: false
+      required: [id, tipoOrigem, origemId, valorMensalDestinado]
+      properties:
+        id:
+          type: string
+        tipoOrigem:
+          type: string
+          enum: [orcamento, objetivo]
+        origemId:
+          type: string
+        valorMensalDestinado:
+          type: number
+    SimulacaoImpactoRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - valorTotal
+        - duracaoMeses
+        - dataPrimeiroPagamento
+        - modoCompensacao
+        - fontesDeCompensacao
+      properties:
+        valorTotal:
+          type: number
+        duracaoMeses:
+          type: number
+        dataPrimeiroPagamento:
+          type: string
+        modoCompensacao:
+          type: string
+          enum: [declarada, nao-declarada]
+        fontesDeCompensacao:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompensationSource'
+    MonthlyImpact:
+      type: object
+      additionalProperties: false
+      required:
+        - referenciaMes
+        - entradasPrevistas
+        - compromissosAnteriores
+        - novaParcela
+        - totalComprometido
+        - comprometimentoAntes
+        - comprometimentoDepois
+        - variacaoComprometimento
+        - classificacaoAntes
+        - classificacaoDepois
+        - alertas
+      properties:
+        referenciaMes:
+          type: string
+        entradasPrevistas:
+          type: number
+        compromissosAnteriores:
+          type: number
+        novaParcela:
+          type: number
+        totalComprometido:
+          type: number
+        comprometimentoAntes:
+          type: number
+          nullable: true
+        comprometimentoDepois:
+          type: number
+          nullable: true
+        variacaoComprometimento:
+          type: number
+          nullable: true
+        classificacaoAntes:
+          type: string
+          enum: [saudavel, atencao, critico]
+        classificacaoDepois:
+          type: string
+          enum: [saudavel, atencao, critico]
+        alertas:
+          type: array
+          items:
+            type: string
+    BudgetImpact:
+      type: object
+      additionalProperties: false
+      required:
+        - fonteId
+        - nome
+        - valorPlanejadoMensal
+        - valorMensalDestinado
+        - novoValorMensal
+        - percentualReducao
+        - alertas
+      properties:
+        fonteId:
+          type: string
+        nome:
+          type: string
+        valorPlanejadoMensal:
+          type: number
+        valorMensalDestinado:
+          type: number
+        novoValorMensal:
+          type: number
+        percentualReducao:
+          type: number
+          nullable: true
+        alertas:
+          type: array
+          items:
+            type: string
+    GoalImpact:
+      type: object
+      additionalProperties: false
+      required:
+        - fonteId
+        - nome
+        - valorRestanteObjetivo
+        - aporteMensalPlanejado
+        - valorMensalDestinado
+        - novoAporteMensal
+        - prazoOriginalMeses
+        - novoPrazoMeses
+        - diferencaPrazoMeses
+        - status
+        - alertas
+      properties:
+        fonteId:
+          type: string
+        nome:
+          type: string
+        valorRestanteObjetivo:
+          type: number
+        aporteMensalPlanejado:
+          type: number
+        valorMensalDestinado:
+          type: number
+        novoAporteMensal:
+          type: number
+        prazoOriginalMeses:
+          type: number
+          nullable: true
+        novoPrazoMeses:
+          type: number
+          nullable: true
+        diferencaPrazoMeses:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [normal, congelado]
+        alertas:
+          type: array
+          items:
+            type: string
+    ScenarioSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - totalFontesDeclaradas
+        - quantidadeFontes
+        - possuiOrcamento
+        - possuiObjetivo
+        - impactoBruto
+        - piorComprometimentoDepois
+        - piorMes
+        - mesesCriticos
+        - alertasGerais
+      properties:
+        totalFontesDeclaradas:
+          type: number
+        quantidadeFontes:
+          type: number
+        possuiOrcamento:
+          type: boolean
+        possuiObjetivo:
+          type: boolean
+        impactoBruto:
+          type: boolean
+        piorComprometimentoDepois:
+          type: number
+          nullable: true
+        piorMes:
+          type: string
+          nullable: true
+        mesesCriticos:
+          type: number
+        alertasGerais:
+          type: array
+          items:
+            type: string
+    SimulationResult:
+      type: object
+      additionalProperties: false
+      required:
+        - parcelaMensal
+        - mesesAfetados
+        - budgetImpacts
+        - goalImpacts
+        - monthlyImpacts
+        - resumoImpacto
+      properties:
+        parcelaMensal:
+          type: number
+        mesesAfetados:
+          type: array
+          items:
+            type: string
+        budgetImpacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetImpact'
+        goalImpacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoalImpact'
+        monthlyImpacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyImpact'
+        resumoImpacto:
+          $ref: '#/components/schemas/ScenarioSummary'
 paths:
   /api/health:
     get:
@@ -1095,6 +1317,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AcompanhamentoMes'
+        '401':
+          description: Unauthorized
+  /api/acompanhamento/simulacao-impacto:
+    post:
+      summary: Simulate impact of new installment commitment
+      operationId: simularImpactoAcompanhamento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulacaoImpactoRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationResult'
+        '400':
+          description: Bad Request
         '401':
           description: Unauthorized
   /api/preferencias:
