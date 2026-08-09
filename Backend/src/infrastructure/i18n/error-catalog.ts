@@ -182,4 +182,54 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     en: 'Monthly budget must be greater than zero.',
     es: 'El presupuesto mensual debe ser mayor que cero.',
   },
+  [EErrorCode.CONTA_NOT_FOUND]: {
+    'pt-BR': 'Conta não encontrada.',
+    en: 'Account not found.',
+    es: 'Cuenta no encontrada.',
+  },
+  [EErrorCode.CONTA_TIPO_INVALID]: {
+    'pt-BR': 'Tipo de conta inválido. Use a_pagar ou a_receber.',
+    en: 'Invalid account type. Use a_pagar or a_receber.',
+    es: 'Tipo de cuenta inválido. Use a_pagar o a_receber.',
+  },
+  [EErrorCode.CONTA_DESCRICAO_REQUIRED]: {
+    'pt-BR': 'Descrição da conta é obrigatória.',
+    en: 'Account description is required.',
+    es: 'La descripción de la cuenta es obligatoria.',
+  },
+  [EErrorCode.CONTA_VALUE_INVALID]: {
+    'pt-BR': 'Valor da conta deve ser maior que zero.',
+    en: 'Account value must be greater than zero.',
+    es: 'El valor de la cuenta debe ser mayor que cero.',
+  },
+  [EErrorCode.CONTA_VENCIMENTO_INVALID]: {
+    'pt-BR': 'Vencimento deve estar no formato aaaa-mm-dd.',
+    en: 'Due date must be in yyyy-mm-dd format.',
+    es: 'El vencimiento debe estar en formato aaaa-mm-dd.',
+  },
+  [EErrorCode.CONTA_CAIXA_REQUIRED]: {
+    'pt-BR': 'Caixa da conta é obrigatória.',
+    en: 'Account box is required.',
+    es: 'La caja de la cuenta es obligatoria.',
+  },
+  [EErrorCode.CONTA_STATUS_INVALID]: {
+    'pt-BR': 'Status de conta inválido para esta operação.',
+    en: 'Invalid account status for this operation.',
+    es: 'Estado de cuenta inválido para esta operación.',
+  },
+  [EErrorCode.CONTA_NAO_ABERTA]: {
+    'pt-BR': 'Só é possível alterar ou liquidar contas abertas.',
+    en: 'Only open accounts can be updated or settled.',
+    es: 'Solo se pueden alterar o liquidar cuentas abiertas.',
+  },
+  [EErrorCode.CONTA_JA_LIQUIDADA]: {
+    'pt-BR': 'Conta já liquidada não pode ser excluída.',
+    en: 'A settled account cannot be deleted.',
+    es: 'Una cuenta liquidada no puede eliminarse.',
+  },
+  [EErrorCode.CONTA_LIQUIDACAO_DATA_INVALID]: {
+    'pt-BR': 'Data de liquidação deve estar no formato aaaa-mm-dd.',
+    en: 'Settlement date must be in yyyy-mm-dd format.',
+    es: 'La fecha de liquidación debe estar en formato aaaa-mm-dd.',
+  },
 };
