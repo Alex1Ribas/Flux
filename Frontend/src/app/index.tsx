@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from "react";
-import { ActivityIndicator, StatusBar, View } from "react-native";
+import { ActivityIndicator, Pressable, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BarraNavegacao } from "@/components/navegacao/barraNavegacao";
@@ -17,7 +17,11 @@ import {
 } from "@/pages";
 import { ProvedorQueryApp } from "@/queries";
 import { AuthProvider, useAuth } from "@/entities/auth";
-import { SincronizadorFinanceApi } from "@/entities/sincronizacao";
+import {
+  SincronizadorFinanceApi,
+  useEstadoSincronizacaoFinance,
+  useRetrySincronizacaoFinance,
+} from "@/entities/sincronizacao";
 import { useTema } from "@/shared/tema";
 import type { NavParams, TelaId } from "@/types/navigation";
 import { TELAS_COM_NAV } from "@/types/navigation";
@@ -153,6 +157,8 @@ function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
   }
 
   const showNav = TELAS_COM_NAV.includes(tela as (typeof TELAS_COM_NAV)[number]);
+  const erroSincronizacao = useEstadoSincronizacaoFinance((state) => state.erro);
+  const tentarSincronizar = useRetrySincronizacaoFinance();
 
   return (
     <SafeAreaView
@@ -164,6 +170,24 @@ function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
         barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={cores.bg}
       />
+      {erroSincronizacao ? (
+        <Pressable
+          onPress={() => {
+            void tentarSincronizar();
+          }}
+          className="px-4 py-2 border-b border-border"
+          style={{ backgroundColor: cores.errorHighlight }}
+          accessibilityRole="button"
+          accessibilityLabel="Tentar sincronizar novamente"
+        >
+          <Text
+            className="text-xs text-center"
+            style={{ color: cores.error }}
+          >
+            {erroSincronizacao}
+          </Text>
+        </Pressable>
+      ) : null}
       <View className="flex-1">{renderTela()}</View>
       {showNav && (
         <BarraNavegacao
