@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CONTAS_PAGE_SIZE, contasApi } from "@/api";
 import { useSincronizarRemoto } from "@/entities/sincronizacao";
 import { useStore } from "@/entities/store";
 import {
+  calcEstouroLiquidacaoConta,
   montarFormularioConta,
   montarFormularioLiquidacao,
   montarPayloadConta,
+  obterLimiteOrcamentoLiquidacao,
   validarFormularioConta,
   validarFormularioLiquidacao,
   type FormularioConta,
@@ -17,7 +19,7 @@ import { mapearContaApi } from "./mapearContaApi";
 
 export function useTelaContas() {
   const { token, sincronizar } = useSincronizarRemoto();
-  const { caixasCatalogo } = useStore();
+  const { caixasCatalogo, orcamentos } = useStore();
   const caixaPadrao = caixasCatalogo[0]?.id ?? "";
 
   const [filtroTipo, setFiltroTipo] = useState<TipoConta>("a_pagar");
@@ -40,10 +42,38 @@ export function useTelaContas() {
     useState<FormularioLiquidacaoConta>({
       liquidadoEm: "",
       caixaId: "",
+      caixaCompensacao: "",
     });
   const [erro, setErro] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [salvando, setSalvando] = useState(false);
+
+  const limiteOrcamentoLiquidacao = useMemo(() => {
+    if (!contaLiquidando) return 0;
+    return obterLimiteOrcamentoLiquidacao({
+      caixaId: formularioLiquidacao.caixaId || contaLiquidando.caixaId,
+      liquidadoEm: formularioLiquidacao.liquidadoEm,
+      orcamentos,
+      caixasCatalogo,
+    });
+  }, [
+    caixasCatalogo,
+    contaLiquidando,
+    formularioLiquidacao.caixaId,
+    formularioLiquidacao.liquidadoEm,
+    orcamentos,
+  ]);
+
+  const estouroLiquidacao = useMemo(() => {
+    if (!contaLiquidando) {
+      return { precisaCompensacao: false, estouro: 0 };
+    }
+    return calcEstouroLiquidacaoConta({
+      conta: contaLiquidando,
+      formulario: formularioLiquidacao,
+      limiteOrcamento: limiteOrcamentoLiquidacao,
+    });
+  }, [contaLiquidando, formularioLiquidacao, limiteOrcamentoLiquidacao]);
 
   const carregarPagina = useCallback(
     async (cursor: string | undefined, acumular: boolean) => {
@@ -171,7 +201,10 @@ export function useTelaContas() {
 
   const liquidar = async (): Promise<boolean> => {
     if (!contaLiquidando) return false;
-    const erroValidacao = validarFormularioLiquidacao(formularioLiquidacao);
+    const erroValidacao = validarFormularioLiquidacao(
+      formularioLiquidacao,
+      estouroLiquidacao
+    );
     if (erroValidacao) {
       setErro(erroValidacao);
       return false;
@@ -186,6 +219,9 @@ export function useTelaContas() {
       await contasApi.liquidar(token, contaLiquidando.id, {
         liquidadoEm: formularioLiquidacao.liquidadoEm,
         caixaId: formularioLiquidacao.caixaId,
+        caixaCompensacao: estouroLiquidacao.precisaCompensacao
+          ? formularioLiquidacao.caixaCompensacao
+          : undefined,
       });
       await recarregarLista();
       fecharModalLiquidar();
@@ -243,6 +279,7 @@ export function useTelaContas() {
     contaLiquidando,
     formulario,
     formularioLiquidacao,
+    estouroLiquidacao,
     erro,
     confirmarExclusao,
     salvando,
