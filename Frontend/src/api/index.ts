@@ -10,6 +10,7 @@ export {
   lancamentoInputParaPayload,
 } from "./movimentacaoApi";
 export {
+  CONTAS_PAGE_SIZE,
   FINANCE_API_BASE_URL,
   acompanhamentoApi,
   authApi,
@@ -27,6 +28,7 @@ export {
   type ContaLiquidarPayload,
   type ContaPayload,
   type ContaUpdatePayload,
+  type ContasListaPaginada,
   type LancamentoApi,
   type LancamentoPayload,
   type LoginPayload,

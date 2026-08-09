@@ -193,6 +193,16 @@ export type ContaLiquidacaoResposta = {
   lancamentos: LancamentoApi[];
 };
 
+export type ContasListaPaginada = {
+  items: ContaApi[];
+  total: number;
+  pageSize: number;
+  lastItemId: string | null;
+  hasMore: boolean;
+};
+
+export const CONTAS_PAGE_SIZE = 10;
+
 export const authApi = {
   cadastrar: (payload: CadastroUsuarioPayload) =>
     cliente.post<CadastroUsuarioResposta, CadastroUsuarioPayload>("/users/register", payload),
@@ -217,14 +227,24 @@ export const caixasApi = {
 export const contasApi = {
   listar: (
     token: string,
-    filtro?: { status?: ContaApi["status"]; tipo?: ContaApi["tipo"]; competencia?: string }
+    filtro?: {
+      status?: ContaApi["status"];
+      tipo?: ContaApi["tipo"];
+      competencia?: string;
+      pageSize?: number;
+      lastItemId?: string;
+    }
   ) => {
     const params = new URLSearchParams();
     if (filtro?.status) params.set("status", filtro.status);
     if (filtro?.tipo) params.set("tipo", filtro.tipo);
     if (filtro?.competencia) params.set("competencia", filtro.competencia);
+    if (filtro?.pageSize) params.set("pageSize", String(filtro.pageSize));
+    if (filtro?.lastItemId) params.set("lastItemId", filtro.lastItemId);
     const query = params.toString() ? `?${params.toString()}` : "";
-    return cliente.get<ContaApi[]>(`/contas${query}`, { headers: authHeaders(token) });
+    return cliente.get<ContasListaPaginada>(`/contas${query}`, {
+      headers: authHeaders(token),
+    });
   },
   criar: (token: string, payload: ContaPayload) =>
     cliente.post<ContaApi, ContaPayload>("/contas", payload, { headers: authHeaders(token) }),
