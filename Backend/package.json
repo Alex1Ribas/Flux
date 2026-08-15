@@ -10,7 +10,9 @@
     "start": "node dist/main.js",
     "test": "yarn test:unit && yarn test:int",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.config.mjs",
-    "test:int": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.int-config.mjs"
+    "test:int": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.int-config.mjs",
+    "migrate:fluxo-financeiro": "tsx --env-file=.env scripts/migrate-fluxo-financeiro.ts",
+    "migrate:fluxo-financeiro:dry": "tsx --env-file=.env scripts/migrate-fluxo-financeiro.ts --dry-run"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
