@@ -47,6 +47,7 @@ export class ContaService implements IContaService {
   private readonly contaRepositoryRead: IParamsContaService['contaRepositoryRead'];
   private readonly contaRepositoryWrite: IParamsContaService['contaRepositoryWrite'];
   private readonly caixaRepositoryRead: IParamsContaService['caixaRepositoryRead'];
+  private readonly caixaRepositoryWrite: IParamsContaService['caixaRepositoryWrite'];
   private readonly lancamentoService: IParamsContaService['lancamentoService'];
   private readonly lancamentoRepositoryRead: IParamsContaService['lancamentoRepositoryRead'];
 
@@ -54,12 +55,14 @@ export class ContaService implements IContaService {
     contaRepositoryRead,
     contaRepositoryWrite,
     caixaRepositoryRead,
+    caixaRepositoryWrite,
     lancamentoService,
     lancamentoRepositoryRead,
   }: IParamsContaService) {
     this.contaRepositoryRead = contaRepositoryRead;
     this.contaRepositoryWrite = contaRepositoryWrite;
     this.caixaRepositoryRead = caixaRepositoryRead;
+    this.caixaRepositoryWrite = caixaRepositoryWrite;
     this.lancamentoService = lancamentoService;
     this.lancamentoRepositoryRead = lancamentoRepositoryRead;
   }
@@ -83,7 +86,7 @@ export class ContaService implements IContaService {
     await this.findOwnedCaixa(caixaId, requestUserId);
     const recorrenteId = params.recorrenteId?.trim() || undefined;
 
-    return this.contaRepositoryWrite.createConta(
+    const created = await this.contaRepositoryWrite.createConta(
       new Conta(
         '',
         requestUserId,
@@ -97,6 +100,12 @@ export class ContaService implements IContaService {
         recorrenteId,
       ),
     );
+
+    if (tipo === ETipoConta.A_PAGAR) {
+      await this.recalcularComprometidoCaixa(caixaId, requestUserId);
+    }
+
+    return created;
   }
 
   async listContas(
@@ -205,6 +214,11 @@ export class ContaService implements IContaService {
     if (!updated) {
       throw new DomainError(EErrorCode.CONTA_NOT_FOUND, 404);
     }
+
+    const caixasAfetadas = new Set([existing.caixaId, updated.caixaId]);
+    for (const caixaAfetada of caixasAfetadas) {
+      await this.recalcularComprometidoCaixa(caixaAfetada, existing.user);
+    }
     return updated;
   }
 
@@ -220,6 +234,12 @@ export class ContaService implements IContaService {
     const deleted = await this.contaRepositoryWrite.deleteContaById(id);
     if (!deleted) {
       throw new DomainError(EErrorCode.CONTA_NOT_FOUND, 404);
+    }
+    if (
+      existing.status === EStatusConta.ABERTA &&
+      existing.tipo === ETipoConta.A_PAGAR
+    ) {
+      await this.recalcularComprometidoCaixa(existing.caixaId, existing.user);
     }
     return deleted;
   }
@@ -244,25 +264,55 @@ export class ContaService implements IContaService {
     const caixaId = this.validateCaixaId(params.caixaId ?? existing.caixaId);
     await this.findOwnedCaixa(caixaId, existing.user);
 
-    const lancamentos =
-      existing.tipo === ETipoConta.A_PAGAR
-        ? await this.lancamentoService.createLancamento(requestUserId, {
-            tipo: ETipoLancamento.SAIDA,
-            horizonte: EHorizonteLancamento.PRESENTE,
-            valor: existing.valor,
-            descricao: existing.descricao,
-            competencia: liquidadoEm,
-            caixaOrigem: caixaId,
-            caixaCompensacao: params.caixaCompensacao?.trim() || undefined,
-          })
-        : await this.lancamentoService.createLancamento(requestUserId, {
-            tipo: ETipoLancamento.ENTRADA,
-            horizonte: EHorizonteLancamento.PRESENTE,
-            valor: existing.valor,
-            descricao: existing.descricao,
-            competencia: liquidadoEm,
-            distribuicao: [{ caixa: caixaId, valor: existing.valor }],
-          });
+    let lancamentos: ILancamento[];
+
+    if (existing.tipo === ETipoConta.A_PAGAR) {
+      // Marca liquidada no comprometimento antes da saída (saldo ainda cobre a obrigação).
+      await this.contaRepositoryWrite.updateContaById(id, {
+        status: EStatusConta.LIQUIDADA,
+        liquidadoEm,
+        caixaId,
+      });
+      await this.recalcularComprometidoCaixa(existing.caixaId, existing.user);
+      if (caixaId !== existing.caixaId) {
+        await this.recalcularComprometidoCaixa(caixaId, existing.user);
+      }
+
+      try {
+        lancamentos = await this.lancamentoService.createLancamento(requestUserId, {
+          tipo: ETipoLancamento.SAIDA,
+          horizonte: EHorizonteLancamento.PRESENTE,
+          valor: existing.valor,
+          descricao: existing.descricao,
+          competencia: liquidadoEm,
+          caixaOrigem: caixaId,
+          caixaCompensacao: params.caixaCompensacao?.trim() || undefined,
+        });
+      } catch (error) {
+        await this.contaRepositoryWrite.updateContaById(id, {
+          status: EStatusConta.ABERTA,
+          liquidadoEm: undefined,
+          lancamentoId: undefined,
+          caixaId: existing.caixaId,
+        });
+        await this.recalcularComprometidoCaixa(existing.caixaId, existing.user);
+        if (caixaId !== existing.caixaId) {
+          await this.recalcularComprometidoCaixa(caixaId, existing.user);
+        }
+        throw error;
+      }
+    } else {
+      lancamentos = await this.lancamentoService.createLancamento(requestUserId, {
+        tipo: ETipoLancamento.ENTRADA,
+        horizonte: EHorizonteLancamento.PRESENTE,
+        valor: existing.valor,
+        descricao: existing.descricao,
+        competencia: liquidadoEm,
+        caixaOrigem: caixaId,
+        distribuicao: params.distribuicao,
+        distribuirAutomaticamente: params.distribuirAutomaticamente,
+      });
+    }
 
     const lancamentoPrincipal = lancamentos[0];
     if (!lancamentoPrincipal) {
@@ -338,6 +388,9 @@ export class ContaService implements IContaService {
             recorrente._id,
           ),
         );
+        if (tipo === ETipoConta.A_PAGAR) {
+          await this.recalcularComprometidoCaixa(caixaId, requestUserId);
+        }
         resultado.push(criada);
         continue;
       }
@@ -360,12 +413,20 @@ export class ContaService implements IContaService {
           caixaId,
         },
       );
-      resultado.push(atualizada ?? existente);
+      const finalConta = atualizada ?? existente;
+      await this.recalcularComprometidoCaixa(existente.caixaId, requestUserId);
+      if (finalConta.caixaId !== existente.caixaId) {
+        await this.recalcularComprometidoCaixa(finalConta.caixaId, requestUserId);
+      }
+      resultado.push(finalConta);
     }
 
     for (const sobra of porCompetencia.values()) {
       if (sobra.status !== EStatusConta.ABERTA) continue;
       await this.contaRepositoryWrite.deleteContaById(sobra._id);
+      if (sobra.tipo === ETipoConta.A_PAGAR) {
+        await this.recalcularComprometidoCaixa(sobra.caixaId, requestUserId);
+      }
     }
 
     return resultado;
@@ -384,6 +445,9 @@ export class ContaService implements IContaService {
     for (const conta of contas) {
       if (conta.status !== EStatusConta.ABERTA) continue;
       await this.contaRepositoryWrite.deleteContaById(conta._id);
+      if (conta.tipo === ETipoConta.A_PAGAR) {
+        await this.recalcularComprometidoCaixa(conta.caixaId, requestUserId);
+      }
       removidas += 1;
     }
     return removidas;
@@ -402,6 +466,39 @@ export class ContaService implements IContaService {
         this.sincronizarOcorrenciasDoRecorrente(requestUserId, recorrente),
       ),
     );
+  }
+
+
+  private competenciaAtualMes(): string {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    return `${ano}-${mes}`;
+  }
+
+  /** Compromete só obrigações do mês corrente e atrasadas (não meses futuros). */
+  private async recalcularComprometidoCaixa(
+    caixaId: string,
+    userId: string,
+  ): Promise<void> {
+    const mesAtual = this.competenciaAtualMes();
+    const contas = await this.listTodasContas(userId, {
+      status: EStatusConta.ABERTA,
+      tipo: ETipoConta.A_PAGAR,
+    });
+    const comprometido = contas
+      .filter(
+        (conta) =>
+          conta.caixaId === caixaId && conta.competencia === mesAtual,
+      )
+      .reduce((sum, conta) => sum + Number(conta.valor), 0);
+
+    const caixa = await this.caixaRepositoryRead.findCaixaById(caixaId);
+    if (!caixa) return;
+    const atual = Number(caixa.comprometido) || 0;
+    const delta = comprometido - atual;
+    if (Math.abs(delta) < 0.001) return;
+    await this.caixaRepositoryWrite.incrementComprometidoById(caixaId, delta);
   }
 
   private async findAndAssertAccess(

@@ -58,6 +58,9 @@ export function caixaIdDoRecorrente(recorrente: ILancamento): string | null {
   if (recorrente.tipo === ETipoLancamento.SAIDA) {
     return recorrente.caixaOrigem?.trim() || null;
   }
+  if (recorrente.caixaOrigem?.trim()) {
+    return recorrente.caixaOrigem.trim();
+  }
   const primeiro = recorrente.distribuicao?.[0]?.caixa?.trim();
   return primeiro || null;
 }
