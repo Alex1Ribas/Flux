@@ -67,13 +67,24 @@ export class PreferenciasService implements IPreferenciasService {
       params.limitesRisco !== undefined
         ? this.validateLimitesRisco(params.limitesRisco)
         : current.limitesRisco;
+    const distribuicaoAutomatica =
+      params.distribuicaoAutomatica !== undefined
+        ? params.distribuicaoAutomatica
+        : current.distribuicaoAutomatica;
 
     return this.preferenciasRepositoryWrite.upsertPreferencias({
       user: requestUserId,
       tiposEntrada,
       tiposSaida,
       limitesRisco,
+      distribuicaoAutomatica,
     });
+  }
+
+  async obterRegrasDistribuicao(requestUserId: string) {
+    const prefs = await this.getPreferencias(requestUserId);
+    if (!prefs.distribuicaoAutomatica?.ativo) return null;
+    return prefs.distribuicaoAutomatica.regras ?? [];
   }
 
   async buscarCategorias(

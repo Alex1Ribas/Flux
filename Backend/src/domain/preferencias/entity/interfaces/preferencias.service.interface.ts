@@ -3,6 +3,7 @@ import type { ILancamentoRepositoryRead } from '../../../lancamento/repository/l
 import type {
   IPreferencias,
   IParamsUpdatePreferencias,
+  IRegraDistribuicao,
 } from './preferencias.interface.js';
 
 export type TipoCategoriaLancamento = 'entrada' | 'saida';
@@ -28,6 +29,9 @@ export interface IPreferenciasService {
     tipo: TipoCategoriaLancamento,
     categoria: string,
   ): Promise<void>;
+  obterRegrasDistribuicao(
+    requestUserId: string,
+  ): Promise<IRegraDistribuicao[] | null>;
 }
 
 export const TIPOS_ENTRADA_PADRAO = [
