@@ -119,15 +119,27 @@ export function TelaInicio({
         {/* 2. Origem/Destino — caixas */}
         <View className="mb-5">
           <CabecalhoCaixas
-            caixasCatalogo={home.caixasCatalogo}
+            caixasCatalogo={home.catalogoSelecao}
             caixas={home.caixas}
             selecionada={home.caixaSelecionada}
             onSelect={home.setCaixaSelecionada}
             pergunta={
-              home.modo === "entrada" ? "Para onde vai o dinheiro?" : "De onde sai o dinheiro?"
+              home.modo === "entrada"
+                ? "De qual origem vem o dinheiro?"
+                : "De qual caixa sai o dinheiro?"
             }
             nomeSelecionada={home.nomeCaixaSelecionada}
           />
+          {home.modo === "entrada" ? (
+            <View className="px-4 mt-3">
+              <SeletorCaixa
+                label="Alocar em"
+                caixasCatalogo={home.catalogoDestino}
+                selecionado={home.caixaDestino}
+                onSelect={home.setCaixaDestino}
+              />
+            </View>
+          ) : null}
         </View>
 
         {/* 3. Valor */}

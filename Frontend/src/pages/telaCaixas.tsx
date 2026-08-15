@@ -32,14 +32,19 @@ export function TelaCaixas(_props: TelaProps) {
     padding: 10,
   });
 
-  const { orcamentos, objetivos } = useMemo(() => {
+  const { origens, orcamentos, objetivos } = useMemo(() => {
+    const origensLista = tela.caixasCatalogo.filter((caixa) => caixa.tipo === "origem");
     const orcamentosLista = tela.caixasCatalogo.filter(
-      (caixa) => (caixa.tipo ?? "orcamento") !== "objetivo"
+      (caixa) => (caixa.tipo ?? "orcamento") === "orcamento"
     );
     const objetivosLista = tela.caixasCatalogo.filter(
       (caixa) => caixa.tipo === "objetivo"
     );
-    return { orcamentos: orcamentosLista, objetivos: objetivosLista };
+    return {
+      origens: origensLista,
+      orcamentos: orcamentosLista,
+      objetivos: objetivosLista,
+    };
   }, [tela.caixasCatalogo]);
 
   return (
@@ -79,6 +84,36 @@ export function TelaCaixas(_props: TelaProps) {
         </View>
 
         <Text className="text-textMuted text-xs font-semibold uppercase tracking-wide mb-3">
+          Origens
+        </Text>
+        {origens.length === 0 ? (
+          <Text className="text-textMuted text-sm mb-5">Nenhuma caixa de origem</Text>
+        ) : (
+          origens.map((caixa) => {
+            const indice = tela.caixasCatalogo.findIndex((item) => item.id === caixa.id);
+            return (
+              <Pressable
+                key={caixa.id}
+                onPress={() => tela.abrirEditar(caixa.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Editar ${caixa.nome}`}
+              >
+                <CartaoCaixa
+                  id={caixa.id}
+                  nome={caixa.nome}
+                  saldo={tela.caixas[caixa.id] || 0}
+                  indice={indice >= 0 ? indice : 0}
+                  tipo={caixa.tipo}
+                  comprometido={caixa.comprometido}
+                  disponivel={caixa.disponivel}
+                  diasNoMes={diasNoMes}
+                />
+              </Pressable>
+            );
+          })
+        )}
+
+        <Text className="text-textMuted text-xs font-semibold uppercase tracking-wide mb-3 mt-2">
           Orçamentos
         </Text>
         {orcamentos.length === 0 ? (
@@ -106,6 +141,8 @@ export function TelaCaixas(_props: TelaProps) {
                   meta={caixa.meta}
                   aporteMensal={caixa.aporteMensal}
                   orcamentoMensal={orcamentoMensal}
+                  comprometido={caixa.comprometido}
+                  disponivel={caixa.disponivel}
                   diasNoMes={diasNoMes}
                 />
               </Pressable>
@@ -137,6 +174,8 @@ export function TelaCaixas(_props: TelaProps) {
                   meta={caixa.meta}
                   aporteMensal={caixa.aporteMensal}
                   orcamentoMensal={caixa.orcamentoMensal}
+                  comprometido={caixa.comprometido}
+                  disponivel={caixa.disponivel}
                   diasNoMes={diasNoMes}
                 />
               </Pressable>
@@ -194,12 +233,13 @@ export function TelaCaixas(_props: TelaProps) {
                     {tela.caixaEditando ? "Editar caixa" : "Nova caixa"}
                   </Text>
                   <Text className="text-textMuted text-md mb-4">
-                    Escolha entre caixa de objetivo ou de orçamento
+                    Origem (receita), objetivo ou orçamento (alocação)
                   </Text>
 
                   <View className="flex-row gap-2 mb-4">
                     {(
                       [
+                        { id: "origem", label: "Origem" },
                         { id: "objetivo", label: "Objetivo" },
                         { id: "orcamento", label: "Orçamento" },
                       ] as const
@@ -231,9 +271,11 @@ export function TelaCaixas(_props: TelaProps) {
                   value={tela.formulario.nome}
                   onChangeText={(valor) => tela.atualizarCampo("nome", valor)}
                   placeholder={
-                    tela.formulario.tipo === "objetivo"
-                      ? "Ex.: Reserva de Emergência"
-                      : "Ex.: Qualidade de Vida"
+                    tela.formulario.tipo === "origem"
+                      ? "Ex.: Salário"
+                      : tela.formulario.tipo === "objetivo"
+                        ? "Ex.: Reserva de Emergência"
+                        : "Ex.: Qualidade de Vida"
                   }
                 />
                 <Campo
@@ -244,7 +286,7 @@ export function TelaCaixas(_props: TelaProps) {
                   placeholder="0"
                 />
 
-                {tela.formulario.tipo === "objetivo" ? (
+                {tela.formulario.tipo === "origem" ? null : tela.formulario.tipo === "objetivo" ? (
                   <>
                     <Campo
                       label="Valor da meta (R$)"
