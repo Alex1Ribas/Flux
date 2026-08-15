@@ -32,6 +32,18 @@ export class CaixaRepositoryWrite implements ICaixaRepositoryWrite {
     return document ? toICaixa(document) : null;
   }
 
+  async incrementComprometidoById(
+    id: string,
+    amount: number,
+  ): Promise<ICaixa | null> {
+    const document = await MCaixa.findByIdAndUpdate(
+      id,
+      { $inc: { comprometido: amount } },
+      { new: true, runValidators: true },
+    ).lean();
+    return document ? toICaixa(document) : null;
+  }
+
   async deleteCaixaById(id: string): Promise<ICaixa | null> {
     const document = await MCaixa.findByIdAndDelete(id).lean();
     return document ? toICaixa(document) : null;

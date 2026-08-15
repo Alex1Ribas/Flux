@@ -7,6 +7,7 @@ export const caixaSchema = new Schema<IMCaixa>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     nome: { type: String, required: true, trim: true },
     saldo: { type: Number, required: true, default: 0 },
+    comprometido: { type: Number, required: true, default: 0, min: 0 },
     tipo: {
       type: String,
       required: true,
