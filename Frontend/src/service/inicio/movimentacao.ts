@@ -9,7 +9,10 @@ export interface MovimentacaoHomeInput {
   valor: number;
   tipo: string;
   competencia: string;
+  /** Entrada: caixa de origem. Saída: caixa de alocação. */
   caixaSelecionada: string;
+  /** Entrada presente: caixa de alocação destino da distribuição. */
+  caixaDestino?: string;
   caixaCompensacao?: string;
   orcamentoCaixa: number;
   /** Quando true, o lançamento entra no planejamento de risco como recorrente. */
@@ -17,6 +20,7 @@ export interface MovimentacaoHomeInput {
   competenciaInicial?: string;
   duracaoMeses?: number;
   mesesAbatidos?: number;
+  meioPagamento?: "caixa" | "cartao";
 }
 
 export interface EstouroOrcamento {
@@ -58,6 +62,16 @@ export function validarMovimentacaoHome(
   if (input.valor <= 0) {
     return "Informe um valor válido";
   }
+  if (input.modo === "entrada" && !input.caixaSelecionada) {
+    return "Selecione a caixa de origem da receita";
+  }
+  if (
+    input.modo === "entrada" &&
+    input.horizonte === "presente" &&
+    !input.caixaDestino
+  ) {
+    return "Selecione a caixa de alocação (destino)";
+  }
   if (estouro.precisaCompensacao && !input.caixaCompensacao) {
     return `Estouro de ${formatBRL(estouro.estouro)}: escolha a caixa de compensação`;
   }
@@ -81,7 +95,10 @@ function registrarEntrada(input: MovimentacaoHomeInput, acoes: AcoesMovimentacao
     valor: input.valor,
     descricao: input.tipo,
     competencia: input.competencia,
-    distribuicao: [{ caixa: input.caixaSelecionada, valor: input.valor }],
+    caixaOrigem: input.caixaSelecionada,
+    distribuicao: input.caixaDestino
+      ? [{ caixa: input.caixaDestino, valor: input.valor }]
+      : undefined,
     ...camposRecorrencia(input),
     mesesAbatidos: input.horizonte === "presente" ? input.mesesAbatidos : undefined,
   });
@@ -145,12 +162,14 @@ export function montarMovimentacaoHome(params: {
   tipo: string;
   competencia: string;
   caixaSelecionada: string;
+  caixaDestino?: string;
   caixaCompensacao: string;
   orcamentoCaixa: number;
   recorrente?: boolean;
   competenciaInicial?: string;
   duracaoMeses?: number;
-  mesesAbatidos?: string;
+  mesesAbatidos?: number;
+  meioPagamento?: "caixa" | "cartao";
 }): MovimentacaoHomeInput {
   return {
     modo: params.modo,
@@ -159,12 +178,14 @@ export function montarMovimentacaoHome(params: {
     tipo: params.tipo,
     competencia: params.competencia,
     caixaSelecionada: params.caixaSelecionada,
+    caixaDestino: params.caixaDestino,
     caixaCompensacao: params.caixaCompensacao || undefined,
     orcamentoCaixa: params.orcamentoCaixa,
     recorrente: Boolean(params.recorrente),
     competenciaInicial: params.competenciaInicial,
     duracaoMeses: params.duracaoMeses,
-    mesesAbatidos: params.mesesAbatidos ? Number(params.mesesAbatidos) || 1 : undefined,
+    mesesAbatidos: params.mesesAbatidos,
+    meioPagamento: params.meioPagamento,
   };
 }
 

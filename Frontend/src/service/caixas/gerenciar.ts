@@ -80,6 +80,10 @@ export function validarFormularioCaixa(
     return null;
   }
 
+  if (input.tipo === "origem") {
+    return null;
+  }
+
   const orcamento = Number(input.orcamentoMensalTexto);
   if (!input.orcamentoMensalTexto || Number.isNaN(orcamento) || orcamento <= 0) {
     return "Informe o orçamento mensal (maior que zero)";
