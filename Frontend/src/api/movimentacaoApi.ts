@@ -49,19 +49,29 @@ export async function enviarMovimentacaoHomeNaApi(
   input: MovimentacaoHomeInput
 ): Promise<void> {
   if (input.modo === "entrada") {
-    await criarLancamento(token, {
+    const criados = await lancamentosApi.criar(token, {
       tipo: "entrada",
       horizonte: input.horizonte,
       valor: input.valor,
       descricao: input.tipo,
       competencia: input.competencia,
-      distribuicao: [{ caixa: input.caixaSelecionada, valor: input.valor }],
+      caixaOrigem: input.caixaSelecionada,
       recorrente: Boolean(input.recorrente),
       competenciaInicial: input.competenciaInicial,
       duracaoMeses: input.duracaoMeses,
       ativo: input.recorrente ? true : undefined,
       mesesAbatidos: input.horizonte === "presente" ? input.mesesAbatidos : undefined,
     });
+    const entrada = criados[0];
+    if (
+      entrada &&
+      input.horizonte === "presente" &&
+      input.caixaDestino
+    ) {
+      await lancamentosApi.distribuir(token, entrada._id, {
+        itens: [{ caixa: input.caixaDestino, valor: input.valor }],
+      });
+    }
     return;
   }
 
@@ -78,6 +88,7 @@ export async function enviarMovimentacaoHomeNaApi(
     valor: input.valor,
     descricao: input.tipo,
     competencia: input.competencia,
+    meioPagamento: input.meioPagamento,
     caixaOrigem: input.caixaSelecionada,
     caixaCompensacao: estouro.precisaCompensacao ? input.caixaCompensacao : undefined,
     recorrente: Boolean(input.recorrente),

@@ -82,7 +82,9 @@ export interface CaixaApi {
   user: string;
   nome: string;
   saldo: number;
-  tipo: "objetivo" | "orcamento";
+  tipo: "objetivo" | "orcamento" | "origem";
+  comprometido?: number;
+  disponivel?: number;
   meta?: number;
   aporteMensal?: number;
   orcamentoMensal?: number;
@@ -93,7 +95,7 @@ export interface CaixaApi {
 export interface CaixaPayload {
   nome: string;
   saldo?: number;
-  tipo: "objetivo" | "orcamento";
+  tipo: "objetivo" | "orcamento" | "origem";
   meta?: number;
   aporteMensal?: number;
   orcamentoMensal?: number;
@@ -110,6 +112,7 @@ export interface LancamentoApi {
   observacao?: string;
   caixaOrigem?: string;
   caixaCompensacao?: string;
+  meioPagamento?: "caixa" | "cartao";
   distribuicao?: Distribuicao[];
   parcelaRef?: string;
   parcelaNum?: number;
@@ -185,6 +188,8 @@ export type ContaLiquidarPayload = {
   liquidadoEm?: string;
   caixaId?: string;
   caixaCompensacao?: string;
+  distribuicao?: Distribuicao[];
+  distribuirAutomaticamente?: boolean;
 };
 
 export type ContaLiquidacaoResposta = {
@@ -266,6 +271,16 @@ export const contasApi = {
 };
 
 export const lancamentosApi = {
+  distribuir: (
+    token: string,
+    id: string,
+    payload: { itens: Distribuicao[] },
+  ) =>
+    cliente.post<LancamentoApi, { itens: Distribuicao[] }>(
+      `/lancamentos/${id}/distribuir`,
+      payload,
+      { headers: authHeaders(token) },
+    ),
   listar: (token: string, filtro?: { competencia?: string; recorrente?: boolean }) => {
     const params = new URLSearchParams();
     if (filtro?.competencia) params.set("competencia", filtro.competencia);
