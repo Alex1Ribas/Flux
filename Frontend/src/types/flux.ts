@@ -16,6 +16,7 @@ export interface LancamentoInput {
   observacao?: string;
   caixaOrigem?: string;
   caixaCompensacao?: string;
+  meioPagamento?: "caixa" | "cartao";
   distribuicao?: Distribuicao[];
   parcelaRef?: string;
   parcelaNum?: number;
@@ -87,7 +88,7 @@ export interface ParcelamentoInput {
   recorrente?: boolean;
 }
 
-export type TipoCaixa = "objetivo" | "orcamento";
+export type TipoCaixa = "objetivo" | "orcamento" | "origem";
 
 export interface CaixaCatalogoItem {
   id: string;
@@ -96,6 +97,8 @@ export interface CaixaCatalogoItem {
   meta?: number;
   aporteMensal?: number;
   orcamentoMensal?: number;
+  comprometido?: number;
+  disponivel?: number;
 }
 
 export interface LimitesRisco {

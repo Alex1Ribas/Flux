@@ -2,6 +2,11 @@ import type { CaixaCatalogoItem } from "@/types/flux";
 
 export const CAIXAS_PADRAO: CaixaCatalogoItem[] = [
   {
+    id: "salario",
+    nome: "Salário",
+    tipo: "origem",
+  },
+  {
     id: "saldo_atual",
     nome: "Saldo Atual",
     tipo: "orcamento",
