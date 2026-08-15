@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { ETipoConta } from '../../domain/conta/entity/interfaces/conta.interface.js';
 import type { IContaService } from '../../domain/conta/entity/interfaces/conta.service.interface.js';
 import type {
   ILancamentoService,
@@ -63,6 +64,12 @@ export class LancamentoController implements IController {
       validateObjectIdMiddleware,
       this.remove,
     );
+    this.router.post(
+      '/lancamentos/:id/distribuir',
+      this.authMiddleware,
+      validateObjectIdMiddleware,
+      this.distribuir,
+    );
   }
 
   private userId(req: Request): string {
@@ -85,11 +92,36 @@ export class LancamentoController implements IController {
 
   create = async (req: Request, res: Response): Promise<void> => {
     try {
+      const body = req.body as IParamsCreateLancamentoInput & {
+        meioPagamento?: string;
+      };
       const result = await this.lancamentoService.createLancamento(
         this.userId(req),
-        req.body as IParamsCreateLancamentoInput,
+        body,
       );
       await this.sincronizarSeRecorrente(this.userId(req), result);
+
+      const principal = result[0];
+      if (
+        principal &&
+        principal.tipo === 'saida' &&
+        (body.meioPagamento === 'cartao' || principal.meioPagamento === 'cartao') &&
+        principal.caixaOrigem
+      ) {
+        const vencimentoCartao =
+          principal.competencia.length === 10
+            ? principal.competencia
+            : `${principal.competencia}-01`;
+        await this.contaService.createConta(this.userId(req), {
+          tipo: ETipoConta.A_PAGAR,
+          descricao: principal.descricao,
+          valor: principal.valor,
+          competencia: vencimentoCartao.slice(0, 7),
+          vencimento: vencimentoCartao,
+          caixaId: principal.caixaOrigem,
+        });
+      }
+
       res.status(201).json(result);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res, req);
@@ -167,6 +199,20 @@ export class LancamentoController implements IController {
           result._id,
         );
       }
+      res.status(200).json(result);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res, req);
+    }
+  };
+
+  distribuir = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await this.lancamentoService.distribuirLancamentoById(
+        paramId(req.params.id),
+        this.userId(req),
+        this.userRole(req),
+        req.body as { itens: { caixa: string; valor: number }[] },
+      );
       res.status(200).json(result);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res, req);
