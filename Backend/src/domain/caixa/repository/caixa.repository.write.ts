@@ -6,5 +6,6 @@ export interface ICaixaRepositoryWrite {
   createCaixa(caixa: Caixa): Promise<ICaixa>;
   updateCaixaById(id: string, params: IParamsUpdateCaixa): Promise<ICaixa | null>;
   incrementSaldoById(id: string, amount: number): Promise<ICaixa | null>;
+  incrementComprometidoById(id: string, amount: number): Promise<ICaixa | null>;
   deleteCaixaById(id: string): Promise<ICaixa | null>;
 }

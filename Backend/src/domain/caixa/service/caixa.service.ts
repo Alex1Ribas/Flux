@@ -52,6 +52,7 @@ export class CaixaService implements ICaixaService {
         nome,
         saldo,
         tipo,
+        0,
         camposTipo.meta,
         camposTipo.aporteMensal,
         camposTipo.orcamentoMensal,
@@ -202,6 +203,14 @@ export class CaixaService implements ICaixaService {
     aporteMensal?: number;
     orcamentoMensal?: number;
   } {
+    if (tipo === ETipoCaixa.ORIGEM) {
+      return {
+        meta: undefined,
+        aporteMensal: undefined,
+        orcamentoMensal: undefined,
+      };
+    }
+
     if (tipo === ETipoCaixa.OBJETIVO) {
       const meta = Number(params.meta);
       const aporteMensal = Number(params.aporteMensal);

@@ -11,6 +11,7 @@ export interface IParamsUpdateCaixa {
   nome?: string;
   saldo?: number;
   tipo?: ETipoCaixa;
+  comprometido?: number;
   meta?: number;
   aporteMensal?: number;
   orcamentoMensal?: number;
