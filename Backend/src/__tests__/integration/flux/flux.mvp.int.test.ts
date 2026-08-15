@@ -7,6 +7,10 @@ describe('flux MVP API', () => {
     const app = getTestApp();
     const token = await registerAndGetToken(app);
 
+    const caixaOrigem = await request(app)
+      .post('/api/caixas')
+      .set(authHeader(token))
+      .send({ nome: 'Salario', saldo: 0, tipo: 'origem' });
     const caixaPrincipal = await request(app)
       .post('/api/caixas')
       .set(authHeader(token))
@@ -16,6 +20,7 @@ describe('flux MVP API', () => {
       .set(authHeader(token))
       .send({ nome: 'Reserva', saldo: 500, tipo: 'objetivo', meta: 10000, aporteMensal: 500 });
 
+    const origemId = caixaOrigem.body._id as string;
     const principalId = caixaPrincipal.body._id as string;
     const compensacaoId = caixaCompensacao.body._id as string;
 
@@ -32,6 +37,7 @@ describe('flux MVP API', () => {
         competenciaInicial: '2026-01',
         duracaoMeses: 12,
         ativo: true,
+        caixaOrigem: origemId,
         distribuicao: [{ caixa: principalId, valor: 1500 }],
       })
       .expect(201);
@@ -53,7 +59,7 @@ describe('flux MVP API', () => {
       })
       .expect(201);
 
-    await request(app)
+    const entradaPresente = await request(app)
       .post('/api/lancamentos')
       .set(authHeader(token))
       .send({
@@ -62,9 +68,15 @@ describe('flux MVP API', () => {
         valor: 1000,
         descricao: 'Salario mensal',
         competencia: '2026-01',
-        distribuicao: [{ caixa: principalId, valor: 1000 }],
+        caixaOrigem: origemId,
       })
       .expect(201);
+
+    await request(app)
+      .post(`/api/lancamentos/${entradaPresente.body[0]._id}/distribuir`)
+      .set(authHeader(token))
+      .send({ itens: [{ caixa: principalId, valor: 1000 }] })
+      .expect(200);
 
     await request(app)
       .post('/api/lancamentos')
@@ -75,6 +87,7 @@ describe('flux MVP API', () => {
         valor: 500,
         descricao: 'Renda futura',
         competencia: '2026-01',
+        caixaOrigem: origemId,
         distribuicao: [{ caixa: principalId, valor: 500 }],
       })
       .expect(201);
@@ -179,6 +192,13 @@ describe('flux MVP API', () => {
       const caixaOrcamentoId = caixaOrcamento.body._id as string;
       const caixaObjetivoId = caixaObjetivo.body._id as string;
 
+      const caixaOrigemSalario = await request(app)
+        .post('/api/caixas')
+        .set(authHeader(token))
+        .send({ nome: 'Salario', saldo: 0, tipo: 'origem' })
+        .expect(201);
+      const origemSalarioId = caixaOrigemSalario.body._id as string;
+
       await request(app)
         .post('/api/lancamentos')
         .set(authHeader(token))
@@ -192,6 +212,7 @@ describe('flux MVP API', () => {
           competenciaInicial: '2026-09',
           duracaoMeses: 12,
           ativo: true,
+          caixaOrigem: origemSalarioId,
           distribuicao: [{ caixa: caixaOrcamentoId, valor: 2500 }],
         })
         .expect(201);
