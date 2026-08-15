@@ -63,6 +63,18 @@ export interface IImpactoRisco {
   direcao: 'aumenta' | 'reduz';
 }
 
+export interface ICaixaResumoAcompanhamento {
+  caixaId: string;
+  nome: string;
+  tipo: string;
+  saldo: number;
+  comprometido: number;
+  disponivel: number;
+  orcamentoMensal?: number;
+  orcamentoCompetencia?: number;
+  meta?: number;
+}
+
 export interface IAcompanhamentoMes {
   competencia: string;
   risco: IRiscoPrevisto;
@@ -76,6 +88,7 @@ export interface IAcompanhamentoMes {
   compromissos: ICompromissoMes[];
   composicao: IComposicaoRisco[];
   impactos: IImpactoRisco[];
+  caixasResumo: ICaixaResumoAcompanhamento[];
 }
 
 export interface IParamsAcompanhamentoService {

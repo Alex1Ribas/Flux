@@ -62,7 +62,7 @@ export class AcompanhamentoService implements IAcompanhamentoService {
 
     // Materialização de recorrentes ocorre nos eventos de mutação (create/update/delete),
     // não no caminho de leitura do acompanhamento.
-    const [lancamentosMes, recorrentes, contasAbertas, preferencias] =
+    const [lancamentosMes, recorrentes, contasAbertas, preferencias, caixas, orcamentos] =
       await Promise.all([
         this.lancamentoRepositoryRead.listLancamentosByUserCompetencia(
           requestUserId,
@@ -76,6 +76,11 @@ export class AcompanhamentoService implements IAcompanhamentoService {
           competencia: mes,
         }),
         this.preferenciasService.getPreferencias(requestUserId),
+        this.caixaRepositoryRead.listCaixasByUser(requestUserId),
+        this.orcamentoRepositoryRead.listOrcamentosByUserCompetencia(
+          requestUserId,
+          mes,
+        ),
       ]);
 
     const porId = new Map<string, (typeof lancamentosMes)[number]>();
@@ -87,7 +92,7 @@ export class AcompanhamentoService implements IAcompanhamentoService {
     const limites =
       preferencias.limitesRisco?.global ?? LIMITES_RISCO_PADRAO;
 
-    return montarAcompanhamentoMesCalculo(
+    const base = montarAcompanhamentoMesCalculo(
       mes,
       lancamentos,
       contasAbertas,
@@ -96,6 +101,24 @@ export class AcompanhamentoService implements IAcompanhamentoService {
         atencao: Number(limites.atencao) || LIMITES_RISCO_PADRAO.atencao,
       },
     );
+
+    const orcamentoPorCaixa = new Map(
+      orcamentos.map((item) => [item.caixa, item.valor]),
+    );
+
+    const caixasResumo = caixas.map((caixa) => ({
+      caixaId: caixa._id,
+      nome: caixa.nome,
+      tipo: caixa.tipo,
+      saldo: Number(caixa.saldo) || 0,
+      comprometido: Number(caixa.comprometido) || 0,
+      disponivel: Number(caixa.disponivel ?? caixa.saldo - (caixa.comprometido || 0)),
+      orcamentoMensal: caixa.orcamentoMensal,
+      orcamentoCompetencia: orcamentoPorCaixa.get(caixa._id),
+      meta: caixa.meta,
+    }));
+
+    return { ...base, caixasResumo };
   }
 
   async simularImpacto(
