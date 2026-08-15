@@ -143,14 +143,49 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     es: 'Distribución del movimiento inválida.',
   },
   [EErrorCode.LANCAMENTO_CAIXA_ORIGEM_REQUIRED]: {
-    'pt-BR': 'Caixa de origem é obrigatória para saídas.',
-    en: 'Source box is required for outgoing entries.',
-    es: 'La caja de origen es obligatoria para salidas.',
+    'pt-BR': 'Caixa de origem é obrigatória.',
+    en: 'Source box is required.',
+    es: 'La caja de origen es obligatoria.',
+  },
+  [EErrorCode.LANCAMENTO_CAIXA_ORIGEM_TIPO_INVALID]: {
+    'pt-BR': 'Caixa de origem da receita deve ser do tipo origem.',
+    en: 'Income source box must be of type origem.',
+    es: 'La caja de origen del ingreso debe ser de tipo origem.',
   },
   [EErrorCode.LANCAMENTO_COMPENSACAO_REQUIRED]: {
     'pt-BR': 'Caixa de compensação é obrigatória para estouro de orçamento.',
     en: 'Compensation box is required when budget is exceeded.',
     es: 'La caja de compensación es obligatoria al exceder el presupuesto.',
+  },
+  [EErrorCode.LANCAMENTO_DISTRIBUICAO_EXCEDE]: {
+    'pt-BR': 'Valor distribuído excede o disponível na receita/caixa de origem.',
+    en: 'Distributed amount exceeds available income/source balance.',
+    es: 'El valor distribuido excede lo disponible en el ingreso/caja de origen.',
+  },
+  [EErrorCode.LANCAMENTO_DISTRIBUICAO_DESTINO_INVALID]: {
+    'pt-BR': 'Caixa de destino da distribuição deve ser de alocação (objetivo ou orçamento).',
+    en: 'Distribution destination must be an allocation box (objetivo or orcamento).',
+    es: 'El destino de la distribución debe ser una caja de asignación.',
+  },
+  [EErrorCode.LANCAMENTO_NAO_E_ENTRADA]: {
+    'pt-BR': 'Só é possível distribuir lançamentos de entrada.',
+    en: 'Only income entries can be distributed.',
+    es: 'Solo se pueden distribuir movimientos de entrada.',
+  },
+  [EErrorCode.LANCAMENTO_JA_DISTRIBUIDO]: {
+    'pt-BR': 'Esta receita já foi totalmente distribuída.',
+    en: 'This income has already been fully distributed.',
+    es: 'Este ingreso ya fue totalmente distribuido.',
+  },
+  [EErrorCode.CAIXA_DISPONIVEL_INSUFICIENTE]: {
+    'pt-BR': 'Saldo disponível insuficiente na caixa (saldo − comprometido).',
+    en: 'Insufficient available balance in the box (balance − committed).',
+    es: 'Saldo disponible insuficiente en la caja (saldo − comprometido).',
+  },
+  [EErrorCode.CAIXA_NAO_E_ALOCACAO]: {
+    'pt-BR': 'A operação exige uma caixa de alocação (objetivo ou orçamento).',
+    en: 'Operation requires an allocation box (objetivo or orcamento).',
+    es: 'La operación exige una caja de asignación.',
   },
   [EErrorCode.ORCAMENTO_VALUE_INVALID]: {
     'pt-BR': 'Valor do orçamento deve ser maior ou igual a zero.',
@@ -163,9 +198,9 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     es: 'La competencia debe estar en formato aaaa-mm.',
   },
   [EErrorCode.CAIXA_TIPO_INVALID]: {
-    'pt-BR': 'Tipo de caixa inválido. Use objetivo ou orcamento.',
-    en: 'Invalid box type. Use objetivo or orcamento.',
-    es: 'Tipo de caja inválido. Use objetivo u orcamento.',
+    'pt-BR': 'Tipo de caixa inválido. Use objetivo, orcamento ou origem.',
+    en: 'Invalid box type. Use objetivo, orcamento or origem.',
+    es: 'Tipo de caja inválido. Use objetivo, orcamento u origem.',
   },
   [EErrorCode.CAIXA_META_INVALID]: {
     'pt-BR': 'Meta da caixa de objetivo deve ser maior que zero.',
