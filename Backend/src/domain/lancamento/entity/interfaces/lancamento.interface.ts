@@ -8,6 +8,11 @@ export enum EHorizonteLancamento {
   FUTURO = 'futuro',
 }
 
+export enum EMeioPagamento {
+  CAIXA = 'caixa',
+  CARTAO = 'cartao',
+}
+
 export interface IDistribuicaoLancamento {
   caixa: string;
   valor: number;
@@ -24,6 +29,8 @@ export interface ILancamento {
   observacao?: string;
   caixaOrigem?: string;
   caixaCompensacao?: string;
+  /** cartao: registra compra sem debitar saldo (compromisso via Conta). */
+  meioPagamento?: EMeioPagamento | 'caixa' | 'cartao';
   distribuicao?: IDistribuicaoLancamento[];
   parcelaRef?: string;
   parcelaNum?: number;
@@ -51,6 +58,8 @@ export interface IParamsCreateLancamento {
   observacao?: string;
   caixaOrigem?: string;
   caixaCompensacao?: string;
+  /** cartao: registra compra sem debitar saldo (compromisso via Conta). */
+  meioPagamento?: EMeioPagamento | 'caixa' | 'cartao';
   distribuicao?: IDistribuicaoLancamento[];
   parcelaRef?: string;
   parcelaNum?: number;
@@ -71,6 +80,8 @@ export interface IParamsUpdateLancamento {
   observacao?: string;
   caixaOrigem?: string;
   caixaCompensacao?: string;
+  /** cartao: registra compra sem debitar saldo (compromisso via Conta). */
+  meioPagamento?: EMeioPagamento | 'caixa' | 'cartao';
   distribuicao?: IDistribuicaoLancamento[];
   parcelaRef?: string;
   parcelaNum?: number;

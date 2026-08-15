@@ -1,11 +1,15 @@
 import { DomainError } from '../../common/errors/DomainError.js';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode.js';
 import { assertResourceAccess } from '../../common/helpers/access.helper.js';
-import type { ICaixa } from '../../caixa/entity/interfaces/caixa.interface.js';
+import {
+  ETipoCaixa,
+  type ICaixa,
+} from '../../caixa/entity/interfaces/caixa.interface.js';
 import { normalizeCompetencia, normalizeCompetenciaData } from '../../orcamento/service/competencia.helper.js';
 import { Lancamento } from '../entity/lancamento.entity.js';
 import {
   EHorizonteLancamento,
+  EMeioPagamento,
   ETipoLancamento,
   type IDistribuicaoLancamento,
   type ILancamento,
@@ -15,10 +19,27 @@ import {
 import type {
   ILancamentoService,
   IParamsCreateLancamentoInput,
+  IParamsDistribuirLancamento,
   IParamsLancamentoService,
   IParamsUpdateLancamentoInput,
+  IRegraDistribuicaoPreferencia,
 } from '../entity/interfaces/lancamento.service.interface.js';
 import type { EUserRole } from '../../user/entity/interfaces/user.interface.js';
+import { calcularDistribuicaoAutomatica } from './distribuicao-automatica.helper.js';
+
+function normalizeMeioPagamento(
+  value?: string,
+): EMeioPagamento {
+  if (value === EMeioPagamento.CARTAO || value === 'cartao') {
+    return EMeioPagamento.CARTAO;
+  }
+  return EMeioPagamento.CAIXA;
+}
+
+function isPagamentoCartao(value?: string): boolean {
+  return normalizeMeioPagamento(value) === EMeioPagamento.CARTAO;
+}
+
 
 export class LancamentoService implements ILancamentoService {
   private readonly lancamentoRepositoryRead: IParamsLancamentoService['lancamentoRepositoryRead'];
@@ -50,16 +71,57 @@ export class LancamentoService implements ILancamentoService {
   ): Promise<ILancamento[]> {
     this.ensureUserId(requestUserId);
     const ownerId = requestUserId;
-    const payload = this.cleanCreatePayload(ownerId, params);
+    const distribuicaoInicial =
+      params.tipo === ETipoLancamento.ENTRADA &&
+      params.horizonte === EHorizonteLancamento.PRESENTE
+        ? params.distribuicao
+        : undefined;
+    const distribuirAutomaticamente = Boolean(params.distribuirAutomaticamente);
+    const payload = this.cleanCreatePayload(ownerId, {
+      ...params,
+      // Presente: crédito só na origem; distribuição aplicada depois.
+      // Futuro/recorrente: mantém distribuicao como plano (não mexe saldo).
+      distribuicao:
+        params.tipo === ETipoLancamento.ENTRADA &&
+        params.horizonte === EHorizonteLancamento.PRESENTE
+          ? undefined
+          : params.distribuicao,
+    });
 
     if (payload.tipo === ETipoLancamento.ENTRADA) {
       await this.validateEntrada(payload);
-      const created = await this.persistAndApplySaldo(payload);
+      let created = await this.persistAndApplySaldo(payload);
       await this.preferenciasService.garantirCategoria(
         requestUserId,
         'entrada',
         created.descricao,
       );
+
+      if (distribuicaoInicial?.length) {
+        created = await this.aplicarDistribuicao(
+          created,
+          distribuicaoInicial,
+          requestUserId,
+        );
+      } else if (
+        distribuirAutomaticamente &&
+        created.horizonte === EHorizonteLancamento.PRESENTE
+      ) {
+        const regras = await this.preferenciasService.obterRegrasDistribuicao?.(
+          requestUserId,
+        );
+        if (regras?.length) {
+          const itens = await this.montarItensRegras(
+            requestUserId,
+            created.valor,
+            regras,
+          );
+          if (itens.length) {
+            created = await this.aplicarDistribuicao(created, itens, requestUserId);
+          }
+        }
+      }
+
       return [created];
     }
 
@@ -121,14 +183,30 @@ export class LancamentoService implements ILancamentoService {
     }
 
     await this.applySaldo(existing, -1);
+    await this.reverseDistribuicaoMovimentos(existing);
+    const paraSalvar =
+      merged.tipo === ETipoLancamento.ENTRADA
+        ? this.toEntity(merged, { distribuicao: existing.distribuicao })
+        : merged;
     const updated = await this.lancamentoRepositoryWrite.updateLancamentoById(
       id,
-      merged,
+      paraSalvar,
     );
     if (!updated) {
       throw new DomainError(EErrorCode.LANCAMENTO_NOT_FOUND, 404);
     }
     await this.applySaldo(updated, 1);
+    if (
+      merged.tipo === ETipoLancamento.ENTRADA &&
+      existing.distribuicao?.length &&
+      updated.horizonte === EHorizonteLancamento.PRESENTE
+    ) {
+      return this.aplicarDistribuicao(
+        updated,
+        existing.distribuicao,
+        requestUserId,
+      );
+    }
     return updated;
   }
 
@@ -143,7 +221,100 @@ export class LancamentoService implements ILancamentoService {
       throw new DomainError(EErrorCode.LANCAMENTO_NOT_FOUND, 404);
     }
     await this.applySaldo(existing, -1);
+    await this.reverseDistribuicaoMovimentos(existing);
     return deleted;
+  }
+
+  async distribuirLancamentoById(
+    id: string,
+    requestUserId: string,
+    requestRole: EUserRole,
+    params: IParamsDistribuirLancamento,
+  ): Promise<ILancamento> {
+    const existing = await this.findAndAssertAccess(id, requestUserId, requestRole);
+    return this.aplicarDistribuicao(existing, params.itens ?? [], requestUserId);
+  }
+
+  private async aplicarDistribuicao(
+    lancamento: ILancamento,
+    itens: IDistribuicaoLancamento[],
+    requestUserId: string,
+  ): Promise<ILancamento> {
+    if (lancamento.tipo !== ETipoLancamento.ENTRADA) {
+      throw new DomainError(EErrorCode.LANCAMENTO_NAO_E_ENTRADA, 400);
+    }
+    if (!lancamento.caixaOrigem) {
+      throw new DomainError(EErrorCode.LANCAMENTO_CAIXA_ORIGEM_REQUIRED, 400);
+    }
+    if (!itens.length) {
+      throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_INVALID, 400);
+    }
+
+    const jaDistribuido = this.somaDistribuicao(lancamento.distribuicao);
+    const restanteReceita = lancamento.valor - jaDistribuido;
+    if (restanteReceita <= 0.01) {
+      throw new DomainError(EErrorCode.LANCAMENTO_JA_DISTRIBUIDO, 400);
+    }
+
+    const normalizados: IDistribuicaoLancamento[] = [];
+    let totalNovo = 0;
+    for (const item of itens) {
+      const valor = this.validateDistribuicaoItem(item);
+      const destino = await this.findOwnedCaixa(item.caixa, lancamento.user);
+      if (
+        destino.tipo !== ETipoCaixa.OBJETIVO &&
+        destino.tipo !== ETipoCaixa.ORCAMENTO
+      ) {
+        throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_DESTINO_INVALID, 400);
+      }
+      normalizados.push({ caixa: item.caixa.trim(), valor });
+      totalNovo += valor;
+    }
+
+    if (totalNovo - restanteReceita > 0.01) {
+      throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_EXCEDE, 400);
+    }
+
+    const origem = await this.findOwnedCaixa(
+      lancamento.caixaOrigem,
+      lancamento.user,
+    );
+    if (
+      lancamento.horizonte === EHorizonteLancamento.PRESENTE &&
+      origem.saldo + 0.01 < totalNovo
+    ) {
+      throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_EXCEDE, 400);
+    }
+
+    if (lancamento.horizonte === EHorizonteLancamento.PRESENTE) {
+      await this.caixaRepositoryWrite.incrementSaldoById(
+        lancamento.caixaOrigem,
+        -totalNovo,
+      );
+      for (const item of normalizados) {
+        await this.caixaRepositoryWrite.incrementSaldoById(item.caixa, item.valor);
+      }
+    }
+
+    const distribuicao = [...(lancamento.distribuicao ?? []), ...normalizados];
+    const updated = await this.lancamentoRepositoryWrite.updateLancamentoById(
+      lancamento._id,
+      this.toEntity(lancamento, { distribuicao }),
+    );
+    if (!updated) {
+      throw new DomainError(EErrorCode.LANCAMENTO_NOT_FOUND, 404);
+    }
+    void requestUserId;
+    return updated;
+  }
+
+  private async montarItensRegras(
+    userId: string,
+    valorDisponivel: number,
+    regras: IRegraDistribuicaoPreferencia[],
+  ): Promise<IDistribuicaoLancamento[]> {
+    const caixas = await this.caixaRepositoryRead.listCaixasByUser(userId);
+    return calcularDistribuicaoAutomatica(valorDisponivel, regras, caixas);
   }
 
   private cleanCreatePayload(
@@ -187,6 +358,7 @@ export class LancamentoService implements ILancamentoService {
       params.observacao?.trim(),
       params.caixaOrigem?.trim(),
       params.caixaCompensacao?.trim(),
+      normalizeMeioPagamento(params.meioPagamento),
       params.distribuicao?.map((item) => ({
         caixa: item.caixa.trim(),
         valor: Number(item.valor),
@@ -264,6 +436,9 @@ export class LancamentoService implements ILancamentoService {
       params.caixaCompensacao !== undefined
         ? params.caixaCompensacao.trim()
         : existing.caixaCompensacao,
+      params.meioPagamento !== undefined
+        ? normalizeMeioPagamento(params.meioPagamento)
+        : normalizeMeioPagamento(existing.meioPagamento),
       params.distribuicao !== undefined
         ? params.distribuicao.map((item) => ({
             caixa: item.caixa.trim(),
@@ -286,20 +461,37 @@ export class LancamentoService implements ILancamentoService {
   }
 
   private async validateEntrada(lancamento: Lancamento): Promise<void> {
-    if (!lancamento.distribuicao?.length) {
-      throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_REQUIRED, 400);
+    if (!lancamento.caixaOrigem?.trim()) {
+      throw new DomainError(EErrorCode.LANCAMENTO_CAIXA_ORIGEM_REQUIRED, 400);
     }
-
-    const total = lancamento.distribuicao.reduce(
-      (sum, item) => sum + this.validateDistribuicaoItem(item),
-      0,
+    const origem = await this.findOwnedCaixa(
+      lancamento.caixaOrigem,
+      lancamento.user,
     );
-    if (Math.abs(total - lancamento.valor) > 0.01) {
-      throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_INVALID, 400);
+    if (origem.tipo !== ETipoCaixa.ORIGEM) {
+      throw new DomainError(EErrorCode.LANCAMENTO_CAIXA_ORIGEM_TIPO_INVALID, 400);
     }
 
-    for (const item of lancamento.distribuicao) {
-      await this.findOwnedCaixa(item.caixa, lancamento.user);
+    if (lancamento.distribuicao?.length) {
+      const total = lancamento.distribuicao.reduce(
+        (sum, item) => sum + this.validateDistribuicaoItem(item),
+        0,
+      );
+      if (total - lancamento.valor > 0.01) {
+        throw new DomainError(EErrorCode.LANCAMENTO_DISTRIBUICAO_EXCEDE, 400);
+      }
+      for (const item of lancamento.distribuicao) {
+        const destino = await this.findOwnedCaixa(item.caixa, lancamento.user);
+        if (
+          destino.tipo !== ETipoCaixa.OBJETIVO &&
+          destino.tipo !== ETipoCaixa.ORCAMENTO
+        ) {
+          throw new DomainError(
+            EErrorCode.LANCAMENTO_DISTRIBUICAO_DESTINO_INVALID,
+            400,
+          );
+        }
+      }
     }
   }
 
@@ -314,6 +506,21 @@ export class LancamentoService implements ILancamentoService {
       lancamento.user,
     );
 
+    const isCartao = isPagamentoCartao(lancamento.meioPagamento);
+
+    if (lancamento.horizonte === EHorizonteLancamento.PRESENTE && !isCartao) {
+      const disponivel = caixaOrigem.saldo - (caixaOrigem.comprometido || 0);
+      if (disponivel + 0.01 < lancamento.valor) {
+        if (!lancamento.caixaCompensacao) {
+          throw new DomainError(EErrorCode.CAIXA_DISPONIVEL_INSUFICIENTE, 400);
+        }
+      }
+    }
+
+    if (isCartao) {
+      return [lancamento];
+    }
+
     if (lancamento.horizonte !== EHorizonteLancamento.PRESENTE) {
       return [lancamento];
     }
@@ -326,15 +533,28 @@ export class LancamentoService implements ILancamentoService {
       );
     const limite = orcamento?.valor ?? caixaOrigem.orcamentoMensal ?? 0;
     if (limite <= 0 || lancamento.valor <= limite) {
+      const disponivel = caixaOrigem.saldo - (caixaOrigem.comprometido || 0);
+      if (disponivel + 0.01 < lancamento.valor) {
+        throw new DomainError(EErrorCode.CAIXA_DISPONIVEL_INSUFICIENTE, 400);
+      }
       return [lancamento];
     }
 
     if (!lancamento.caixaCompensacao) {
       throw new DomainError(EErrorCode.LANCAMENTO_COMPENSACAO_REQUIRED, 400);
     }
-    await this.findOwnedCaixa(lancamento.caixaCompensacao, lancamento.user);
+    const caixaComp = await this.findOwnedCaixa(
+      lancamento.caixaCompensacao,
+      lancamento.user,
+    );
 
     const estouro = lancamento.valor - limite;
+    const disponivelOrigem = caixaOrigem.saldo - (caixaOrigem.comprometido || 0);
+    const disponivelComp = caixaComp.saldo - (caixaComp.comprometido || 0);
+    if (disponivelOrigem + 0.01 < limite || disponivelComp + 0.01 < estouro) {
+      throw new DomainError(EErrorCode.CAIXA_DISPONIVEL_INSUFICIENTE, 400);
+    }
+
     const principal = new Lancamento(
       '',
       lancamento.user,
@@ -346,6 +566,7 @@ export class LancamentoService implements ILancamentoService {
       lancamento.observacao,
       lancamento.caixaOrigem,
       lancamento.caixaCompensacao,
+      lancamento.meioPagamento,
       undefined,
       lancamento.parcelaRef,
       lancamento.parcelaNum,
@@ -367,6 +588,7 @@ export class LancamentoService implements ILancamentoService {
       undefined,
       lancamento.caixaCompensacao,
       undefined,
+      EMeioPagamento.CAIXA,
       undefined,
       undefined,
       undefined,
@@ -384,14 +606,16 @@ export class LancamentoService implements ILancamentoService {
 
   private async applySaldo(lancamento: ILancamento, factor: 1 | -1): Promise<void> {
     if (lancamento.horizonte !== EHorizonteLancamento.PRESENTE) return;
+    if (isPagamentoCartao(lancamento.meioPagamento)) {
+      return;
+    }
 
     if (lancamento.tipo === ETipoLancamento.ENTRADA) {
-      for (const item of lancamento.distribuicao ?? []) {
-        await this.caixaRepositoryWrite.incrementSaldoById(
-          item.caixa,
-          Number(item.valor) * factor,
-        );
-      }
+      if (!lancamento.caixaOrigem) return;
+      await this.caixaRepositoryWrite.incrementSaldoById(
+        lancamento.caixaOrigem,
+        Number(lancamento.valor) * factor,
+      );
       return;
     }
 
@@ -401,6 +625,33 @@ export class LancamentoService implements ILancamentoService {
         -Number(lancamento.valor) * factor,
       );
     }
+  }
+
+  /** Desfaz movimentos de distribuição gravados no lançamento de entrada. */
+  private async reverseDistribuicaoMovimentos(
+    lancamento: ILancamento,
+  ): Promise<void> {
+    if (lancamento.tipo !== ETipoLancamento.ENTRADA) return;
+    if (lancamento.horizonte !== EHorizonteLancamento.PRESENTE) return;
+    if (!lancamento.caixaOrigem || !lancamento.distribuicao?.length) return;
+
+    for (const item of lancamento.distribuicao) {
+      await this.caixaRepositoryWrite.incrementSaldoById(
+        item.caixa,
+        -Number(item.valor),
+      );
+      await this.caixaRepositoryWrite.incrementSaldoById(
+        lancamento.caixaOrigem,
+        Number(item.valor),
+      );
+    }
+  }
+
+  private somaDistribuicao(distribuicao?: IDistribuicaoLancamento[]): number {
+    return (distribuicao ?? []).reduce(
+      (sum, item) => sum + Number(item.valor),
+      0,
+    );
   }
 
   private validateDistribuicaoItem(item: IDistribuicaoLancamento): number {
@@ -438,6 +689,35 @@ export class LancamentoService implements ILancamentoService {
       requestRole,
     });
     return lancamento;
+  }
+
+
+  private toEntity(lancamento: ILancamento, overrides: Partial<ILancamento> = {}): Lancamento {
+    const merged = { ...lancamento, ...overrides };
+    return new Lancamento(
+      merged._id,
+      merged.user,
+      merged.tipo,
+      merged.horizonte,
+      merged.valor,
+      merged.descricao,
+      merged.competencia,
+      merged.observacao,
+      merged.caixaOrigem,
+      merged.caixaCompensacao,
+      merged.meioPagamento,
+      merged.distribuicao,
+      merged.parcelaRef,
+      merged.parcelaNum,
+      merged.totalParcelas,
+      merged.recorrente,
+      merged.competenciaInicial,
+      merged.duracaoMeses,
+      merged.ativo,
+      merged.mesesAbatidos,
+      merged.createdAt,
+      merged.updatedAt,
+    );
   }
 
   private ensureUserId(userId: string): void {

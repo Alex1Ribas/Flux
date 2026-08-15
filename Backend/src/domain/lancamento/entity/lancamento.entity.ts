@@ -1,5 +1,6 @@
 import type {
   EHorizonteLancamento,
+  EMeioPagamento,
   ETipoLancamento,
   IDistribuicaoLancamento,
 } from './interfaces/lancamento.interface.js';
@@ -16,6 +17,7 @@ export class Lancamento {
     public observacao?: string,
     public caixaOrigem?: string,
     public caixaCompensacao?: string,
+    public meioPagamento?: EMeioPagamento | 'caixa' | 'cartao',
     public distribuicao?: IDistribuicaoLancamento[],
     public parcelaRef?: string,
     public parcelaNum?: number,

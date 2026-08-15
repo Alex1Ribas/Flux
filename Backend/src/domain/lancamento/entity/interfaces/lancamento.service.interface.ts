@@ -1,5 +1,6 @@
 import type { EUserRole } from '../../../user/entity/interfaces/user.interface.js';
 import type {
+  IDistribuicaoLancamento,
   ILancamento,
   IListLancamentosFiltro,
   IParamsCreateLancamento,
@@ -14,9 +15,15 @@ import type { ILancamentoRepositoryWrite } from '../../repository/lancamento.rep
 export interface IParamsCreateLancamentoInput
   extends Omit<IParamsCreateLancamento, 'user'> {
   userId?: string;
+  /** Se true e houver regras em preferências, aplica distribuição automática após criar. */
+  distribuirAutomaticamente?: boolean;
 }
 
 export interface IParamsUpdateLancamentoInput extends IParamsUpdateLancamento {}
+
+export interface IParamsDistribuirLancamento {
+  itens: IDistribuicaoLancamento[];
+}
 
 export interface IParamsLancamentoService {
   lancamentoRepositoryRead: ILancamentoRepositoryRead;
@@ -30,7 +37,17 @@ export interface IParamsLancamentoService {
       tipo: 'entrada' | 'saida',
       categoria: string,
     ): Promise<void>;
+    obterRegrasDistribuicao?(
+      requestUserId: string,
+    ): Promise<IRegraDistribuicaoPreferencia[] | null>;
   };
+}
+
+export interface IRegraDistribuicaoPreferencia {
+  prioridade: number;
+  caixaId: string;
+  modo: 'valor_fixo' | 'completar_meta' | 'restante';
+  valorFixo?: number;
 }
 
 export interface ILancamentoService {
@@ -57,5 +74,11 @@ export interface ILancamentoService {
     id: string,
     requestUserId: string,
     requestRole: EUserRole,
+  ): Promise<ILancamento>;
+  distribuirLancamentoById(
+    id: string,
+    requestUserId: string,
+    requestRole: EUserRole,
+    params: IParamsDistribuirLancamento,
   ): Promise<ILancamento>;
 }
