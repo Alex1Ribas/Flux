@@ -32,6 +32,11 @@ export const lancamentoSchema = new Schema<IMLancamento>(
     observacao: { type: String, trim: true },
     caixaOrigem: { type: Schema.Types.ObjectId, ref: 'Caixa' },
     caixaCompensacao: { type: Schema.Types.ObjectId, ref: 'Caixa' },
+    meioPagamento: {
+      type: String,
+      enum: ['caixa', 'cartao'],
+      default: 'caixa',
+    },
     distribuicao: { type: [distribuicaoSchema], default: undefined },
     parcelaRef: { type: String, trim: true },
     parcelaNum: { type: Number },

@@ -21,6 +21,7 @@ export function toILancamento(document: IMLancamento): ILancamento {
     observacao: document.observacao,
     caixaOrigem: document.caixaOrigem?.toString(),
     caixaCompensacao: document.caixaCompensacao?.toString(),
+    meioPagamento: document.meioPagamento,
     distribuicao: document.distribuicao?.map((item) => ({
       caixa: item.caixa.toString(),
       valor: item.valor,
@@ -55,6 +56,7 @@ export function toPersistence(
     caixaCompensacao: lancamento.caixaCompensacao
       ? new Types.ObjectId(lancamento.caixaCompensacao)
       : undefined,
+    meioPagamento: lancamento.meioPagamento as ILancamento['meioPagamento'],
     distribuicao: lancamento.distribuicao?.map(toPersistenceDistribuicao),
     parcelaRef: lancamento.parcelaRef,
     parcelaNum: lancamento.parcelaNum,
