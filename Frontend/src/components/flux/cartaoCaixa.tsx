@@ -22,6 +22,8 @@ interface CartaoCaixaProps {
   aporteMensal?: number;
   orcamentoMensal?: number;
   diasNoMes?: number;
+  comprometido?: number;
+  disponivel?: number;
 }
 
 export function CartaoCaixa({
@@ -34,9 +36,14 @@ export function CartaoCaixa({
   aporteMensal = 0,
   orcamentoMensal = 0,
   diasNoMes = 30,
+  comprometido = 0,
+  disponivel,
 }: CartaoCaixaProps) {
   const cores = useCores();
   const isObjetivo = tipo === "objetivo";
+  const isOrigem = tipo === "origem";
+  const disponivelValor =
+    disponivel !== undefined ? disponivel : saldo - (Number(comprometido) || 0);
   const metaValor = Number(meta) || 0;
   const orcamentoValor = Number(orcamentoMensal) || 0;
   const faltam = isObjetivo ? Math.max(0, metaValor - saldo) : 0;
@@ -62,12 +69,18 @@ export function CartaoCaixa({
               {nome}
             </Text>
             <Text className="text-textMuted text-xs mt-0.5">
-              {isObjetivo ? "Objetivo" : "Orçamento"}
+              {isOrigem ? "Origem" : isObjetivo ? "Objetivo" : "Orçamento"}
             </Text>
           </View>
         </View>
         <Text className="text-text text-3xl font-semibold">{formatBRL(saldo)}</Text>
       </View>
+
+      {!isOrigem && Number(comprometido) > 0 ? (
+        <Text className="text-textMuted text-sm mb-2">
+          Comprometido {formatBRL(comprometido)} · disponível {formatBRL(disponivelValor)}
+        </Text>
+      ) : null}
 
       {isObjetivo && metaValor > 0 ? (
         <>
