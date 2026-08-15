@@ -111,6 +111,11 @@ export const useStore = create<StoreState>((set, get) => ({
         meta: caixa.meta,
         aporteMensal: caixa.aporteMensal,
         orcamentoMensal: caixa.orcamentoMensal,
+        comprometido: Number(caixa.comprometido) || 0,
+        disponivel:
+          caixa.disponivel !== undefined
+            ? Number(caixa.disponivel)
+            : Number(caixa.saldo) - (Number(caixa.comprometido) || 0),
       })),
       caixas: Object.fromEntries(caixas.map((caixa) => [caixa._id, Number(caixa.saldo) || 0])),
       lancamentos: lancamentosLocais,

@@ -21,6 +21,21 @@ export interface ParametrosHome {
   caixaInicial?: CaixaId;
 }
 
+
+function filtrarCaixasPorModo(
+  catalogo: CaixaCatalogoItem[],
+  modo: "entrada" | "saida",
+  papel: "selecao" | "destino",
+): CaixaCatalogoItem[] {
+  if (modo === "entrada" && papel === "selecao") {
+    return catalogo.filter((caixa) => caixa.tipo === "origem");
+  }
+  if (modo === "entrada" && papel === "destino") {
+    return catalogo.filter((caixa) => caixa.tipo !== "origem");
+  }
+  return catalogo.filter((caixa) => caixa.tipo !== "origem");
+}
+
 function obterCaixaPadrao(
   caixasCatalogo: CaixaCatalogoItem[],
   caixas: Caixas,
@@ -59,6 +74,7 @@ export function useTelaInicio({
   const [caixaSelecionada, setCaixaSelecionada] = useState<CaixaId>(() =>
     obterCaixaPadrao(caixasCatalogo, caixas, caixaInicial)
   );
+  const [caixaDestino, setCaixaDestino] = useState<CaixaId>("");
   const [modo, setModo] = useState<"entrada" | "saida">(modoInicial);
   const [dataLancamento, setDataLancamento] = useState(dataInicial);
   const [valor, setValor] = useState("");
@@ -69,11 +85,20 @@ export function useTelaInicio({
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    if (caixasCatalogo.length === 0) return;
-    const existeSelecionada = caixasCatalogo.some((caixa) => caixa.id === caixaSelecionada);
-    if (existeSelecionada) return;
-    setCaixaSelecionada(obterCaixaPadrao(caixasCatalogo, caixas, caixaInicial));
-  }, [caixasCatalogo, caixas, caixaInicial, caixaSelecionada]);
+    const catalogoSelecao = filtrarCaixasPorModo(caixasCatalogo, modo, "selecao");
+    if (catalogoSelecao.length === 0) return;
+    const existeSelecionada = catalogoSelecao.some((caixa) => caixa.id === caixaSelecionada);
+    if (!existeSelecionada) {
+      setCaixaSelecionada(obterCaixaPadrao(catalogoSelecao, caixas, caixaInicial));
+    }
+    if (modo === "entrada") {
+      const catalogoDestino = filtrarCaixasPorModo(caixasCatalogo, modo, "destino");
+      const existeDestino = catalogoDestino.some((caixa) => caixa.id === caixaDestino);
+      if (!existeDestino) {
+        setCaixaDestino(catalogoDestino[0]?.id ?? "");
+      }
+    }
+  }, [caixasCatalogo, caixas, caixaInicial, caixaSelecionada, caixaDestino, modo]);
 
   const horizonte = derivarHorizonteDaData(dataLancamento, hoje);
   const valorNum = Number(valor) || 0;
@@ -104,6 +129,7 @@ export function useTelaInicio({
       tipo,
       competencia: dataLancamento,
       caixaSelecionada,
+      caixaDestino: modo === "entrada" ? caixaDestino : undefined,
       caixaCompensacao,
       orcamentoCaixa,
       recorrente,
@@ -142,12 +168,21 @@ export function useTelaInicio({
 
   const nomeCaixaSelecionada = obterNomeCaixa(caixasCatalogo, caixaSelecionada);
 
+  const catalogoSelecao = filtrarCaixasPorModo(caixasCatalogo, modo, "selecao");
+  const catalogoDestino = filtrarCaixasPorModo(caixasCatalogo, modo, "destino");
+  const nomeCaixaDestino = obterNomeCaixa(caixasCatalogo, caixaDestino);
+
   return {
     caixas,
     caixasCatalogo,
+    catalogoSelecao,
+    catalogoDestino,
     caixaSelecionada,
     setCaixaSelecionada,
+    caixaDestino,
+    setCaixaDestino,
     nomeCaixaSelecionada,
+    nomeCaixaDestino,
     modo,
     setModo,
     horizonte,
