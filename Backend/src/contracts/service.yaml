@@ -79,7 +79,7 @@ components:
           type: number
         tipo:
           type: string
-          enum: [objetivo, orcamento]
+          enum: [objetivo, orcamento, origem]
         meta:
           type: number
         aporteMensal:
@@ -96,13 +96,41 @@ components:
           type: number
         tipo:
           type: string
-          enum: [objetivo, orcamento]
+          enum: [objetivo, orcamento, origem]
         meta:
           type: number
         aporteMensal:
           type: number
         orcamentoMensal:
           type: number
+    CaixaResponse:
+      type: object
+      additionalProperties: false
+      required: [id, nome, saldo, tipo, comprometido, disponivel]
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        saldo:
+          type: number
+        tipo:
+          type: string
+          enum: [objetivo, orcamento, origem]
+        comprometido:
+          type: number
+        disponivel:
+          type: number
+        meta:
+          type: number
+        aporteMensal:
+          type: number
+        orcamentoMensal:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
     ContaRequest:
       type: object
       additionalProperties: false
@@ -159,6 +187,12 @@ components:
           type: string
         caixaCompensacao:
           type: string
+        distribuicao:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistribuicaoLancamento'
+        distribuirAutomaticamente:
+          type: boolean
     ContasListaPaginada:
       type: object
       additionalProperties: false
@@ -230,6 +264,23 @@ components:
           type: boolean
         mesesAbatidos:
           type: number
+        distribuirAutomaticamente:
+          type: boolean
+          description: Applies configured auto-distribution rules after income is credited to origin box
+        meioPagamento:
+          type: string
+          enum: [caixa, cartao]
+          description: cartao creates commitment without immediate debit
+    DistribuirLancamentoRequest:
+      type: object
+      additionalProperties: false
+      required: [itens]
+      properties:
+        itens:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DistribuicaoLancamento'
     LancamentoUpdateRequest:
       type: object
       additionalProperties: false
@@ -897,6 +948,49 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+
+  /api/emprestimos:
+    post:
+      tags: [Emprestimos]
+      operationId: criarEmprestimo
+      summary: Register loan inflow and future installment obligations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [valorTotal, duracaoMeses, dataPrimeiroPagamento, caixaOrigem, caixaParcelas]
+              properties:
+                valorTotal:
+                  type: number
+                duracaoMeses:
+                  type: integer
+                  minimum: 1
+                dataPrimeiroPagamento:
+                  type: string
+                caixaOrigem:
+                  type: string
+                caixaParcelas:
+                  type: string
+                descricao:
+                  type: string
+                distribuicao:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DistribuicaoLancamento'
+                distribuirAutomaticamente:
+                  type: boolean
+      responses:
+        '201':
+          description: Loan created
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
   /api/caixas:
     post:
       summary: Create caixa
@@ -1261,6 +1355,35 @@ paths:
           description: Unauthorized
         '404':
           description: Not Found
+  /api/lancamentos/{id}/distribuir:
+    post:
+      tags: [Lancamentos]
+      operationId: distribuirLancamento
+      summary: Distribute income from origin box to allocation boxes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistribuirLancamentoRequest'
+      responses:
+        '200':
+          description: Updated income entry with distribution
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
   /api/orcamentos/{competencia}:
     get:
       summary: List orcamentos by competencia
