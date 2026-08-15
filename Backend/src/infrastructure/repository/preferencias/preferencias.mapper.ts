@@ -12,6 +12,17 @@ export function toIPreferencias(document: IMPreferencias): IPreferencias {
       global: { ...document.limitesRisco.global },
       porCaixa: { ...(document.limitesRisco.porCaixa ?? {}) },
     },
+    distribuicaoAutomatica: document.distribuicaoAutomatica
+      ? {
+          ativo: Boolean(document.distribuicaoAutomatica.ativo),
+          regras: (document.distribuicaoAutomatica.regras ?? []).map((regra) => ({
+            prioridade: Number(regra.prioridade),
+            caixaId: String(regra.caixaId),
+            modo: regra.modo,
+            valorFixo: regra.valorFixo,
+          })),
+        }
+      : undefined,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,
   };
@@ -25,5 +36,6 @@ export function toPersistence(
     tiposEntrada: preferencias.tiposEntrada,
     tiposSaida: preferencias.tiposSaida,
     limitesRisco: preferencias.limitesRisco,
+    distribuicaoAutomatica: preferencias.distribuicaoAutomatica,
   };
 }

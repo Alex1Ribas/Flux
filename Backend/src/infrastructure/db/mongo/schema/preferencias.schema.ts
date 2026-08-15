@@ -9,6 +9,20 @@ const limitesRiscoSchema = new Schema(
   { _id: false },
 );
 
+const regraDistribuicaoSchema = new Schema(
+  {
+    prioridade: { type: Number, required: true },
+    caixaId: { type: String, required: true },
+    modo: {
+      type: String,
+      required: true,
+      enum: ['valor_fixo', 'completar_meta', 'restante'],
+    },
+    valorFixo: { type: Number, min: 0 },
+  },
+  { _id: false },
+);
+
 export const preferenciasSchema = new Schema<IMPreferencias>(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
@@ -17,6 +31,10 @@ export const preferenciasSchema = new Schema<IMPreferencias>(
     limitesRisco: {
       global: { type: limitesRiscoSchema, required: true },
       porCaixa: { type: Schema.Types.Mixed, required: true, default: {} },
+    },
+    distribuicaoAutomatica: {
+      ativo: { type: Boolean, default: false },
+      regras: { type: [regraDistribuicaoSchema], default: [] },
     },
   },
   { timestamps: true },
