@@ -47,20 +47,23 @@ Stack: Expo 57, React Native, TypeScript, NativeWind 4, Zustand e TanStack Query
 
 ## Filosofia de negócio — Caixas
 
-As Caixas **não são categorias de gastos**. Cada caixa representa uma reserva de dinheiro, uma parte do patrimônio ou um objetivo financeiro.
+As Caixas **não são categorias de gastos**. Separar claramente: receita, origem, distribuição, orçamento, comprometimento, obrigação e movimentação.
 
-Há **dois tipos** de caixa:
+Há **três tipos** de caixa:
 
+- **Origem:** ponto de entrada da receita (ex.: Salário). A efetivação credita primeiro aqui.
 - **Objetivo:** meta de acúmulo + aporte mensal planejado (prazo estimado = meta / aporte).
-- **Orçamento:** limite mensal de gastos daquela parte do patrimônio (limites diário/semanal derivados).
+- **Orçamento:** envelope de alocação com limite mensal de gastos (limites diário/semanal derivados).
 
 O usuário deve pensar:
 
-- Entrada: "Para qual caixa esse dinheiro vai?"
-- Saída: "De qual caixa esse dinheiro saiu?"
+- Entrada: "De qual origem veio o dinheiro?" → depois "Para quais caixas alocar?"
+- Distribuição: organiza dinheiro já recebido (não é despesa nem conta a pagar).
+- Saída: "De qual caixa de alocação esse dinheiro saiu?" (respeitando disponível = saldo − comprometido)
+- Orçamento: limite planejado, não saldo.
+- Comprometimento: parte do saldo já reservada por obrigações abertas do mês.
 - Caixas: "Onde meu patrimônio está organizado?"
-- Painel: "Qual objetivo está no prazo e quanto resta em cada orçamento?"
-- Acompanhamento: "Como minhas decisões impactam o risco do mês?"
+- Acompanhamento: "Como minhas decisões impactam o risco do mês?" (fórmula de risco inalterada)
 
 A pergunta principal do app não é "Com o que você gastou?", e sim "De qual parte do patrimônio esse dinheiro saiu?".
 
@@ -70,13 +73,14 @@ Recorrentes e avulsos ficam na **mesma coleção** de lançamentos, diferenciado
 
 Ao criar ou alterar fluxos:
 
-- Toda entrada presente deve aumentar uma ou mais caixas por `distribuicao`.
-- Toda saída presente deve reduzir obrigatoriamente uma caixa por `caixaOrigem`.
-- Entradas, saídas, parcelamentos e recorrências futuras devem preservar, sempre que aplicável, a caixa planejada de destino ou origem.
-- Textos de UI devem reforçar reserva, objetivo, origem, destino e patrimônio organizado.
-- Evitar usar "categoria" como pergunta principal do fluxo. Quando houver tipo/descrição da movimentação, deixar claro que isso é apenas o motivo do lançamento, não a caixa.
-- Dashboard/Painel deve comunicar saúde de caixas (progressão de objetivo / restante de orçamento), não ranking de categorias de gasto.
-- Acompanhamento calcula risco mensal por competência a partir de lançamentos `recorrente` e avulsos; a composição do gráfico unificado mostra compromissos recorrentes, não pizza por categoria de consumo.
+- Toda entrada presente exige `caixaOrigem` (tipo origem) e credita só essa caixa.
+- Distribuição (`POST /lancamentos/:id/distribuir`) move da origem para caixas de alocação.
+- Toda saída presente (exceto cartão) reduz a caixa de alocação por `caixaOrigem`, validando disponível.
+- Compra no cartão (`meioPagamento: cartao`) não debita na hora; gera obrigação/comprometimento.
+- Conta a pagar aberta compromete saldo; liquidar debita e libera comprometimento.
+- Textos de UI devem reforçar origem → distribuição → alocação → pagamento.
+- Evitar usar "categoria" como pergunta principal do fluxo.
+- Acompanhamento calcula risco mensal pela fórmula existente; `caixasResumo` só enriquece a visão de saldos.
 
 ## Configuração de build (não remover)
 
