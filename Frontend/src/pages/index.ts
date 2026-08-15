@@ -1,7 +1,6 @@
 export { TelaInicio } from "./telaInicio";
 export { TelaPrevisao } from "./telaPrevisao";
 export { TelaCaixas } from "./telaCaixas";
-export { TelaBoasVindas } from "./telaBoasVindas";
 export { TelaAuth } from "./telaAuth";
 export { TelaParcelamento } from "./telaParcelamento";
 export { TelaConfigurar } from "./telaConfigurar";

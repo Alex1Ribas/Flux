@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { ActivityIndicator, Pressable, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,7 +9,6 @@ import {
   TelaContas,
   TelaInicio,
   TelaAuth,
-  TelaBoasVindas,
   TelaParcelamento,
   TelaPrevisao,
   TelaRecorrentes,
@@ -25,9 +24,6 @@ import {
 import { useTema } from "@/shared/tema";
 import type { NavParams, TelaId } from "@/types/navigation";
 import { TELAS_COM_NAV } from "@/types/navigation";
-import { getItem, setItem } from "@/utils/storage";
-
-const chaveBoasVindas = (usuarioId: string) => `boas_vindas_concluidas:${usuarioId}`;
 
 export default function App() {
   const [tela, setTelaState] = useState<TelaId>("inicio");
@@ -93,48 +89,8 @@ function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
   const { isDark, cores } = useTema();
   const erroSincronizacao = useEstadoSincronizacaoFinance((state) => state.erro);
   const tentarSincronizar = useRetrySincronizacaoFinance();
-  const [onboardingPronto, setOnboardingPronto] = useState(false);
-  const [onboardingConcluido, setOnboardingConcluido] = useState(false);
 
-  useEffect(() => {
-    let cancelado = false;
-
-    if (!sessao?.usuarioId) {
-      setOnboardingPronto(true);
-      setOnboardingConcluido(false);
-      return;
-    }
-
-    setOnboardingPronto(false);
-    const chave = chaveBoasVindas(sessao.usuarioId);
-    Promise.all([getItem(chave), getItem("boas_vindas_concluidas")])
-      .then(async ([valor, legado]) => {
-        const concluido = valor === "true" || legado === "true";
-        if (concluido && valor !== "true") {
-          await setItem(chave, "true");
-        }
-        if (!cancelado) {
-          setOnboardingConcluido(concluido);
-        }
-      })
-      .finally(() => {
-        if (!cancelado) {
-          setOnboardingPronto(true);
-        }
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [sessao?.usuarioId]);
-
-  const concluirOnboarding = async () => {
-    if (!sessao?.usuarioId) return;
-    await setItem(chaveBoasVindas(sessao.usuarioId), "true");
-    setOnboardingConcluido(true);
-  };
-
-  if (carregando || (sessao && !onboardingPronto)) {
+  if (carregando) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator
@@ -147,15 +103,6 @@ function AppAutenticado({ tela, setTela, renderTela }: AppAutenticadoProps) {
 
   if (!sessao) {
     return <TelaAuth />;
-  }
-
-  if (!onboardingConcluido) {
-    return (
-      <TelaBoasVindas
-        setTela={setTela}
-        onConcluir={concluirOnboarding}
-      />
-    );
   }
 
   const showNav = TELAS_COM_NAV.includes(tela as (typeof TELAS_COM_NAV)[number]);
