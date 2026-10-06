@@ -1,4 +1,0 @@
-# Dependências e builds — evita o TS/Cursor indexar tsconfigs internos do Expo
-**/node_modules/
-**/.expo/
-**/dist/
