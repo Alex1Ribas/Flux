@@ -10,7 +10,6 @@ export default {
   testEnvironment: 'node',
   rootDir: '../',
   testMatch: ['<rootDir>/src/__tests__/**/*.unit.test.ts'],
-  setupFiles: ['<rootDir>/jest/setup-tests.ts'],
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
