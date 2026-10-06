@@ -1,0 +1,48 @@
+---
+description: Convenções de controllers Express — IController, get*, IParams*Input, sem validação
+globs: Backend/src/application/controllers/**/*.ts
+alwaysApply: false
+---
+
+# Controllers Express
+
+## Estrutura
+
+- `class XController implements IController` com `readonly router` e `initRoutes()`.
+- Dependências por objeto no construtor: `constructor({ cardService }: IParamsCardController)`.
+- Rotas com `:id` usam `validateObjectIdMiddleware`.
+
+## Naming
+
+- Coleção / recurso GET → `getCards`, `getEntries`, `getCycle` (nunca `list*`).
+- `create*` / `update*` / ações mantêm o verbo e o recurso: `createCard`, `registerCardUsage`.
+- Inputs HTTP: `IParams{Ação}{Recurso}Input` em `<feature>.service.interface.ts`.
+
+## Whitelist tipada
+
+- **Nunca** passar `req.body` ou `req.params` direto ao service.
+- Montar um único `IParams*Input` (inclui `id` da rota via `paramId(req.params.id)`).
+- Sem validação/parse no controller — isso fica no service.
+
+```ts
+createCard = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = req.body as IParamsCreateCardInput;
+    const params: IParamsCreateCardInput = {
+      name: body.name,
+      limit: body.limit,
+      color: body.color,
+      dueDay: body.dueDay,
+    };
+    const result = await this.cardService.createCard(params);
+    res.status(201).json(result);
+  } catch (error) {
+    handleTranslatedError(error, ErrorCatalog, res, req);
+  }
+};
+```
+
+## Escopo
+
+- Só HTTP: whitelist → service → status + body; erros via `handleTranslatedError`.
+- Sem regra de negócio, Mongoose ou validação inline.
