@@ -1,9 +1,0 @@
-export { TelaInicio } from "./telaInicio";
-export { TelaPrevisao } from "./telaPrevisao";
-export { TelaCaixas } from "./telaCaixas";
-export { TelaAuth } from "./telaAuth";
-export { TelaParcelamento } from "./telaParcelamento";
-export { TelaConfigurar } from "./telaConfigurar";
-export { TelaRecorrentes } from "./telaRecorrentes";
-export { TelaContas } from "./telaContas";
-export { TelaSimulacao } from "./telaSimulacao";

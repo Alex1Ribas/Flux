@@ -1,251 +1,299 @@
-# flux — instruções para agentes
+# Agents.md – Frontend (React Native + TypeScript)
 
-## Documentação Expo
+Guia de arquitetura e contribuição para humanos e agentes de IA neste repositório.
+Stack e princípios obrigatórios: **FSD**, **TanStack Query**, **React Native**, **Zustand**.
 
-Leia a documentação versionada antes de escrever código:
-https://docs.expo.dev/versions/v57.0.0/
+Alinhado ao boilerplate `st-app-rn` e à simetria com o backend (`Agents.md` do BE).
 
-## Estrutura do projeto
+---
 
-```
-src/
-├── app/              # Rotas Expo Router (index.tsx, _layout.tsx)
-├── components/
-│   ├── ui/           # Implementação base de UI (compatibilidade)
-│   ├── home/         # Agrupamentos visuais da Home
-│   ├── dashboard/    # Agrupamentos visuais do Dashboard
-│   ├── acompanhamento/ # Agrupamentos visuais da Previsão/Acompanhamento
-│   ├── flux/    # Componentes visuais de domínio
-│   ├── onboarding/   # Carrossel onboarding
-│   └── navigation/   # NavBar
-├── pages/            # Páginas: composição de agrupamentos + navegação
-├── shared/
-│   ├── components/   # UI global: botões, campos, cards, modais, badges
-│   ├── design-tokens.ts
-│   ├── icons.tsx
-│   └── caixa-styles.ts
-├── service/          # Regras de negócio puras por feature
-│   ├── home/
-│   ├── caixas/
-│   ├── configurar/
-│   ├── dashboard/
-│   ├── acompanhamento/
-│   ├── parcelamento/
-│   ├── planilhas/
-│   ├── previsao/
-│   ├── risco/
-│   └── store/
-├── entities/         # Zustand, estado de tela/componente, selectors e effects
-├── hooks/            # Hooks reutilizáveis, não específicos de uma única tela
-├── api/              # Clients/adapters HTTP futuros
-├── queries/          # TanStack Query: provider, query keys e hooks remotos futuros
-├── types/            # Tipos TypeScript
-└── utils/            # helpers, risco, previsao
+## 0. Stack
+
+| Peça | Uso |
+| ---- | --- |
+| **React Native** | UI nativa (iOS/Android); sem DOM web APIs |
+| **FSD** | Camadas `app → pages → widgets → features → entities → shared` |
+| **TanStack Query** (`@tanstack/react-query` v5) | **Server state**: fetch, cache, invalidação, mutations |
+| **Zustand** | **Client state**: sessão, UI, filtros, drafts — não cache de API |
+
+---
+
+## 1. FSD – Camadas e imports
+
+Uma camada só importa de camadas **abaixo**. Cross-import entre slices da mesma camada é proibido (exceto `@x` pontual documentado).
+
+```text
+app/        → bootstrap, providers, routing
+pages/      → telas / composição de rota
+widgets/    → blocos compostos (usar com parcimônia)
+features/   → interações do usuário (login, lançar entrada, filtros)
+entities/   → modelos de domínio + UI/API/store da entidade
+shared/     → UI kit, api client, lib, utils (sem regra de negócio)
 ```
 
-Stack: Expo 57, React Native, TypeScript, NativeWind 4, Zustand e TanStack Query.
+| Camada | Path | Responsabilidade |
+| ------ | ---- | ---------------- |
+| **App** | `src/app` | Providers (QueryClient, theme), rotas, init de SDKs |
+| **Pages** | `src/pages` | Orquestra features/entities; sem axios direto |
+| **Widgets** | `src/widgets` | Composição reutilizável de UI (evitar se o bloco carrega muita lógica) |
+| **Features** | `src/features/<slice>` | Casos de uso: mutations, forms, ações |
+| **Entities** | `src/entities/<slice>` | Tipos `I*`, cards, stores de entidade, queries de leitura |
+| **Shared** | `src/shared` | `ui`, `api`, `design`, `lib`, `utils`, `config` |
 
-## Filosofia de negócio — Caixas
+### Segmentos por slice
 
-As Caixas **não são categorias de gastos**. Separar claramente: receita, origem, distribuição, orçamento, comprometimento, obrigação e movimentação.
-
-Há **três tipos** de caixa:
-
-- **Origem:** ponto de entrada da receita (ex.: Salário). A efetivação credita primeiro aqui.
-- **Objetivo:** meta de acúmulo + aporte mensal planejado (prazo estimado = meta / aporte).
-- **Orçamento:** envelope de alocação com limite mensal de gastos (limites diário/semanal derivados).
-
-O usuário deve pensar:
-
-- Entrada: "De qual origem veio o dinheiro?" → depois "Para quais caixas alocar?"
-- Distribuição: organiza dinheiro já recebido (não é despesa nem conta a pagar).
-- Saída: "De qual caixa de alocação esse dinheiro saiu?" (respeitando disponível = saldo − comprometido)
-- Orçamento: limite planejado, não saldo.
-- Comprometimento: parte do saldo já reservada por obrigações abertas do mês.
-- Caixas: "Onde meu patrimônio está organizado?"
-- Acompanhamento: "Como minhas decisões impactam o risco do mês?" (fórmula de risco inalterada)
-
-A pergunta principal do app não é "Com o que você gastou?", e sim "De qual parte do patrimônio esse dinheiro saiu?".
-
-### Lançamentos e recorrência
-
-Recorrentes e avulsos ficam na **mesma coleção** de lançamentos, diferenciados por `recorrente: true/false`. Quando `recorrente` é true, use também `competenciaInicial`, `duracaoMeses` e `ativo` para o planejamento mensal.
-
-Ao criar ou alterar fluxos:
-
-- Toda entrada presente exige `caixaOrigem` (tipo origem) e credita só essa caixa.
-- Distribuição (`POST /lancamentos/:id/distribuir`) move da origem para caixas de alocação.
-- Toda saída presente (exceto cartão) reduz a caixa de alocação por `caixaOrigem`, validando disponível.
-- Compra no cartão (`meioPagamento: cartao`) não debita na hora; gera obrigação/comprometimento.
-- Conta a pagar aberta compromete saldo; liquidar debita e libera comprometimento.
-- Textos de UI devem reforçar origem → distribuição → alocação → pagamento.
-- Evitar usar "categoria" como pergunta principal do fluxo.
-- Acompanhamento calcula risco mensal pela fórmula existente; `caixasResumo` só enriquece a visão de saldos.
-
-## Configuração de build (não remover)
-
-Estes arquivos na raiz são **obrigatórios** para o app funcionar:
-
-| Arquivo                       | Função                                                                                           |
-| ----------------------------- | ------------------------------------------------------------------------------------------------ |
-| `babel.config.js`             | Preset Expo + plugin NativeWind                                                                  |
-| `metro.config.js`             | Bundler + processamento do `global.css`                                                          |
-| `tailwind.config.js`          | **Fonte única de estilização** — cores, spacing, radius, fontes + `colorsFlat` exportado para RN |
-| `src/shared/design-tokens.ts` | Reexporta tokens tipados (importa de `tailwind.config.js`)                                       |
-| `nativewind-env.d.ts`         | Tipagem TypeScript para `className`                                                              |
-
-## Arquivos gerados automaticamente (não commitar)
-
-| Item            | O que é                                                            |
-| --------------- | ------------------------------------------------------------------ |
-| `.expo/`        | Cache local do Expo (já no `.gitignore`)                           |
-| `expo-env.d.ts` | Tipos gerados pelo Expo ao rodar `expo start` (já no `.gitignore`) |
-
-Não editar nem versionar. O Expo recria ao iniciar o dev server.
-
-## Editor
-
-Recomenda-se a extensão **Expo Tools** (`expo.vscode-expo-tools`) no VS Code/Cursor.
-
-Ativar **Format on Save** com Prettier como formatador padrão.
-
-### Hooks Git (recomendado)
-
-```bash
-git config core.hooksPath .githooks
+```text
+src/features/<nome>/
+  ui/
+    *.tsx
+    __tests__/          # testes do segmento ui
+  model/
+    *.ts
+    __tests__/          # testes do segmento model
+  api/
+    *.ts
+    __tests__/          # testes do segmento api
 ```
 
-O hook `commit-msg` bloqueia commits com `Co-authored-by: Cursor`.
+Exemplos: `features/auth/api/__tests__/...`, `entities/account/model/__tests__/...`, `features/login/ui/__tests__/...`.
 
-## Formatação (Prettier)
+Em pastas `ui/` (de qualquer slice — `features`, `entities`, `widgets`, `shared`): **apenas arquivos `.tsx`**. Sem `.ts` puro em `ui/`. Hooks, stores, utils, types e api ficam em `model/`, `api/` ou outros segmentos. Testes **não** ficam ao lado do arquivo-fonte — sempre em `__tests__/` dentro do segmento.
 
-Configuração em `.prettierrc` — principalmente `singleAttributePerLine: true`.
+Public API do slice: exportar só o necessário via `index.ts` (ou imports diretos estáveis do projeto).
 
-```bash
-yarn format        # formata o projeto
-yarn format:check  # verifica sem alterar
-yarn validate      # typecheck + format:check + lint (antes de PR)
-yarn ci            # validação completa incluindo build (espelha o CI)
-```
+### Simetria com o backend
 
-### Padrão JSX (referência: `src/pages/ConfigurarScreen.tsx`)
+| Backend | Frontend (FSD) |
+| ------- | -------------- |
+| Domain | `entities` (`IAccount`, UI da entidade) |
+| Service / use case | `features` (ações + mutations) |
+| Controller | `pages` / `widgets` (orquestração) |
+| Infrastructure HTTP | `shared/api` + `shared/lib/react-query` |
+| Configuration | `app` (providers, routes) |
 
-Componentes com 2+ props: **uma prop por linha**, nesta ordem:
+---
 
-1. `label` / `title` / `key`
-2. `icon` / `value` / `children`
-3. `onPress` / `onChangeText` / handlers
-4. `size` / `variant` / `className`
-5. `style` por último
+## 2. React Native
+
+- Componentes: `View`, `Text`, `Pressable`, etc. — **não** `div`/`span`.
+- Estilos via Design System (Tailwind/NativeWind do projeto); evitar `StyleSheet`/`inline` salvo animação, valor dinâmico ou API nativa.
+- Navegação: React Navigation / Expo Router conforme o repo; rotas finas em `app`/`pages`, lógica em features.
+- Sem `window`/`document`; foco/rede: `AppState`, NetInfo se o projeto já usar.
+- Strings de UI via i18n (`react-i18next`) — sem hardcode de copy.
+- Arquivos: `kebab-case.ts(x)`; componentes exportados em PascalCase.
+- Em `ui/`: somente `.tsx` (componentes). Lógica em `model/` / `api/` / `lib` — nunca `.ts` dentro de `ui/`.
+
+Correto (RN + design system + i18n):
 
 ```tsx
-<Btn
-  label={salvo ? "Salvo!" : "Salvar Configurações"}
-  icon={salvo ? Check : undefined}
-  onPress={salvar}
-  size="lg"
-  variant={salvo ? "success" : "primary"}
-  style={{ marginTop: 12 }}
-/>
+import { View, Text } from "react-native";
+
+<View className="flex-1 bg-background p-4">
+  <Text className="text-foreground text-base">{t("accounts.title")}</Text>
+</View>
 ```
 
-Ver também `.cursor/rules/formato-jsx.mdc`.
+Evitar: `StyleSheet` / cores hardcoded / `axios` dentro da page.
 
-## Navegação — 4 pilares
+---
 
-O app usa navegação interna em [`src/app/index.tsx`](src/app/index.tsx) (não rotas Expo Router para telas principais).
+## 3. TanStack Query – Server state (API)
 
-| Aba        | Tela              | Pergunta                                                       |
-| ---------- | ----------------- | -------------------------------------------------------------- |
-| Movimentar | `HomeScreen`      | Para qual caixa esse dinheiro vai? De qual caixa ele saiu?     |
-| Previsão   | `PrevisaoScreen`  | Como minhas decisões, parcelas e recorrências impactam o mês?  |
-| Caixas     | `CaixasScreen`    | Onde meu patrimônio está organizado agora?                     |
-| Planilhas  | `PlanilhasScreen` | Como os movimentos fecham o histórico e a evolução financeira? |
+**Tudo que vem do backend** passa por TanStack Query. Não espelhar listas/detalhes da API no Zustand.
 
-Onboarding em carrossel na primeira abertura (`OnboardingScreen` + AsyncStorage).
+### Onde vive
 
-Telas empilhadas (sem tab bar): `parcelamento`, `configurar`. Lançamentos (entrada/saída) ficam na `HomeScreen`.
+| Artefato | Onde |
+| -------- | ---- |
+| `QueryClient` + defaults | `shared/lib/react-query` |
+| `QueryClientProvider` | `app/providers` |
+| HTTP client (axios) | `shared/api` |
+| `queryFn` / `useQuery` / keys | `entities/*/api` ou `features/*/api` |
+| `useMutation` + invalidate | `features/*/api` |
 
-**Store único** ([`store.ts`](src/entities/store/store.ts)): toda movimentação atualiza `caixas` ou `lancamentos`; entities derivam modelos de tela e chamam `service` para decisões de negócio.
+### Defaults recomendados (RN)
 
-## Arquitetura de camadas
+Em `shared/lib/react-query.ts` (`refetchOnWindowFocus: false` — RN sem window focus clássico):
 
-| Camada                  | Responsabilidade                                                         |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `pages/`                | Telas completas, navegação e composição dos agrupamentos                 |
-| `components/<feature>/` | Agrupamentos visuais de uma tela ou domínio                              |
-| `shared/components/`    | UI global reutilizável: botões, campos, cards, modais, badges, headers   |
-| `service/<feature>/`    | Regra de negócio pura: montar, validar, executar, calcular               |
-| `entities/<feature>/`   | Zustand, estado de tela/componente, selectors, `useEffect`, orquestração |
-| `hooks/`                | Hooks reutilizáveis e genéricos entre telas/componentes                  |
-| `api/`                  | Clients/adapters HTTP e DTOs futuros                                     |
-| `queries/`              | TanStack Query: provider, query keys, hooks remotos e invalidações       |
-| `utils/`                | Funções genéricas sem domínio forte                                      |
+```ts
+export const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        staleTime: 60 * 1000,
+        retry: 1,
+      },
+    },
+  });
 
-Direção de dependência:
-
-```txt
-pages -> components/entities
-components -> shared/types
-entities -> hooks/service/store/queries
-queries -> api
-service -> utils/types/shared
+export const queryClient = createQueryClient();
 ```
 
-`service` não importa React, Zustand nem componentes. Componentes visuais não devem importar `useStore`; receba dados por props.
+### Query factory / keys
 
-## Regras de negócio (`src/service/`)
+Centralizar keys para invalidar e prefetch sem strings mágicas (`entities/account/api/account-queries.ts`):
 
-Lógica de **decisão** (validar, montar input, executar) fica em pastas por feature — **não** em `pages/`.
+```ts
+import { queryOptions } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api/api-client";
+import type { IAccount } from "../model/account";
 
+export const accountQueries = {
+  all: () => ["accounts"] as const,
+  detail: (accountId: string) =>
+    queryOptions({
+      queryKey: [...accountQueries.all(), accountId],
+      queryFn: () =>
+        apiClient
+          .get<IAccount>(`/accounts/${accountId}`)
+          .then((response) => response.data),
+    }),
+};
+
+const { data } = useQuery(accountQueries.detail(accountId));
 ```
-src/service/
-├── home/                 # Movimentações da Home
-├── caixas/               # CRUD e validação de caixas
-├── configurar/           # Edição em lote de saldos/orçamentos
-├── dashboard/            # Métricas e visual de risco por caixa
-├── acompanhamento/       # Risco mensal, impactos e recorrentes
-├── parcelamento/         # Criação de parcelamentos
-├── planilhas/            # Filtros e cálculos de planilha
-├── previsao/             # Regras legadas/futuras de previsão
-├── risco/                # Classificação compartilhada de risco
-└── store/                # Funções puras usadas pelo Zustand
+
+### Mutations
+
+```ts
+export const useCreateEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ICreateEntryBody) =>
+      apiClient.post("/entries", body).then((response) => response.data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: accountQueries.all() });
+    },
+  });
+};
 ```
 
-| Pasta             | Uso                                                        |
-| ----------------- | ---------------------------------------------------------- |
-| `home/`           | Registrar entrada/saída; últimos lançamentos               |
-| `caixas/`         | Validar/criar/editar caixas                                |
-| `configurar/`     | Saldos e orçamentos em lote                                |
-| `dashboard/`      | Risco por caixa                                            |
-| `acompanhamento/` | Acompanhamento mensal e recorrentes                        |
-| `planilhas/`      | Filtrar lançamentos; líquido do mês                        |
-| `parcelamento/`   | Criar parcelamento                                         |
-| `previsao/`       | Salvar salário previsto legado/futuro                      |
-| `risco/`          | Classificação por limites                                  |
-| `store/`          | Impacto de lançamentos em saldos; geração pura de parcelas |
+### Regras
 
-Padrão: `montar*` → `validar*` → `executar*` (ou `validarE*` que orquestra). Entities importam de `@/service/<feature>` ou do barrel `@/service`. Pages não devem importar regra de negócio diretamente quando houver estado/orquestração em `entities`.
+1. Pages/widgets **não** chamam `apiClient` direto — só hooks da feature/entity.
+2. Tipagem da resposta alinhada aos `I*` do backend (OpenAPI / domain).
+3. Após mutation: `invalidateQueries` ou `setQueryData` — não duplicar no Zustand.
+4. Listas longas: `useInfiniteQuery` + `infiniteQueryOptions`.
+5. Loading/error/empty tratados na UI da feature/page, não no store global.
 
-## Server state e API
+---
 
-O app já fica preparado para API com TanStack Query:
+## 4. Zustand – Client state
 
-- `src/api/`: client HTTP e adapters de DTO.
-- `src/queries/`: `AppQueryProvider`, query keys e futuros hooks `use*Query`/`use*Mutation`.
-- Zustand continua para client state: formulários, UI, navegação interna, preferências locais.
-- TanStack Query fica para server state: cache remoto, loading, retry, refetch, mutations e invalidações.
+Use Zustand para estado **do cliente**, não para dados remotos.
 
-## Convenções de código
+| Sim → Zustand | Não → TanStack Query |
+| ------------- | -------------------- |
+| Auth tokens / sessão hidratada | Lista de contas da API |
+| Theme, locale, flags de UI | Detalhe de cartão |
+| Filtros, seleção, wizard step | Extrato / ledger |
+| Draft de formulário offline-ish | Qualquer GET cacheável |
 
-- Responder e documentar em português BR.
-- Usar NativeWind (`className`) em componentes UI; `style` só para valores dinâmicos (cores de caixa, largura de progress bar).
-- Tokens de estilo: **somente** em `tailwind.config.js`. `design-tokens.ts` importa `colorsFlat` de lá para ícones/progress bar dinâmicos.
-- Importar via alias `@/` (mapeado em `tsconfig.json`).
-- Não recriar monolito em `index.tsx` — manter separação em `pages/` e `components/`.
-- Não adicionar co-author do Cursor em commits.
-- **Nomenclatura**: variáveis devem ser descritivas — proibido `c`, `d`, `v`, `a`, `e`, `s`, `l`, `m` soltos. Usar `caixaId`, `dadosCaixa`, `valorTexto`, `erros`, `estado`, `lancamento`, `competencia`, etc. Ver `.cursor/rules/nomenclatura.mdc`.
+### Onde vive o store
 
-## Plugin Expo (Claude Code CLI)
+- Entidade compartilhada: `entities/<slice>/model/*-store.ts`
+- Fluxo de feature: `features/<slice>/model/*-store.ts`
+- App-wide mínimo: tema/auth só se realmente global
 
-Se usar Claude Code CLI, habilitar o plugin oficial Expo (`expo@claude-plugins-official`) para consulta de docs versionadas.
+Em `entities/session/model/session-store.ts`:
+
+```ts
+import { create } from "zustand";
+
+interface SessionState {
+  isOnboarded: boolean;
+  selectedAccountId: string | null;
+  setSelectedAccountId: (accountId: string | null) => void;
+  setOnboarded: (value: boolean) => void;
+}
+
+export const useSessionStore = create<SessionState>((set) => ({
+  isOnboarded: false,
+  selectedAccountId: null,
+  setSelectedAccountId: (accountId) => set({ selectedAccountId: accountId }),
+  setOnboarded: (value) => set({ isOnboarded: value }),
+}));
+```
+
+### Regras
+
+1. Selectors finos: `useSessionStore((state) => state.selectedAccountId)` — evita re-render.
+2. Persistência (AsyncStorage/MMKV) só para o que precisa sobreviver ao kill do app (auth, preferências).
+3. Não guardar `IAccount[]` da API no store; guardar no máximo IDs/seleção e buscar com Query.
+4. Actions síncronas/simples no store; side effects de rede nas mutations do TanStack.
+
+---
+
+## 5. Divisão de estado (resumo)
+
+```text
+UI local de um componente     → useState
+Fluxo / draft da feature      → Zustand (features/*/model)
+Seleção / sessão / preferência→ Zustand (entities ou app)
+Dados do servidor             → TanStack Query (api/)
+```
+
+---
+
+## 6. Naming e estilo de código
+
+| Tipo | Forma | Exemplo |
+| ---- | ----- | ------- |
+| Interface de domínio | `I` + PascalCase | `IAccount`, `IEntry` |
+| Enum | `E` + PascalCase | `EEntryType.SALARY` |
+| Arquivo | kebab-case | `ui/account-card.tsx`; `model/use-session-store.ts` |
+| Componente | PascalCase | `AccountCard` |
+| Hook | `use` + camelCase | `useCreateEntry`, `useSessionStore` |
+| Query key factory | camelCase + `Queries` | `accountQueries` |
+
+Tipos da API devem espelhar o contrato OpenAPI / domain do backend.
+
+- **Sem comentários no código** (`//`, `/* */`, JSDoc desnecessários). Preferir nomes claros e código autoexplicativo.
+- **Sem variáveis de uma letra** (`i`, `e`, `r`, etc.). Usar nomes descritivos (`index`, `error`, `response`, `accountId`).
+- **Preferir `if`/`else` ou early return** em vez de operador ternário. Evitar ternários aninhados. Ternário só é aceitável em atribuição trivial de um valor simples em uma linha — a preferência forte do time é `if` por legibilidade.
+
+---
+
+## 7. Testes (Jest)
+
+**Local físico obrigatório:** testes do frontend ficam em `<segmento>/__tests__/`, nunca ao lado do arquivo-fonte nem em `__tests__` na raiz do slice.
+
+| Tipo | Extensão | Local |
+| ---- | -------- | ----- |
+| Unit | `*.test.ts(x)` | `<segmento>/__tests__/` (ex.: `api/__tests__/`, `model/__tests__/`, `ui/__tests__/`) |
+| Integration | `*.spec.ts(x)` | Mesmo padrão: `<segmento>/__tests__/` do segmento sob teste |
+| E2E | — | `e2e/` (fora de `src`) |
+
+Exemplos de path:
+
+```text
+features/auth/api/__tests__/use-login.test.ts
+features/auth/ui/__tests__/login-form.spec.tsx
+entities/account/model/__tests__/account-store.test.ts
+entities/account/api/__tests__/account-queries.test.ts
+```
+
+- Unit vs integration: a distinção é pela extensão (`*.test` vs `*.spec`); o diretório é sempre `__tests__` no segmento correspondente (`api`, `model`, `ui`, etc.).
+- Um `it` por `describe`.
+- Descrições em inglês: `describe("When...")` / `it("should...")`.
+- Mockar `apiClient` / `queryClient` em unit; não bater API real.
+- Cobertura alvo ≥ 80%.
+
+---
+
+## 8. Checklist do agente ✅
+
+1. Respeitar FSD (imports só para baixo; sem axios em `pages`).
+2. Server state → **TanStack Query**; client state → **Zustand**.
+3. Não duplicar cache da API no Zustand.
+4. Query keys centralizadas; mutations invalidam as keys certas.
+5. UI React Native + design system; i18n para copy.
+6. Em pastas `ui/`: só `.tsx` — sem `.ts` puro (lógica em `model/` / `api` / etc.).
+7. Tipagem `I*` alinhada ao backend; sem variáveis de uma letra.
+8. Sem comentários no código — nomes claros e código autoexplicativo.
+9. Preferir `if`/`else` ou early return em vez de ternário (evitar ternários aninhados).
+10. Testes Jest em `<segmento>/__tests__/` (ex.: `api/__tests__`, `model/__tests__`, `ui/__tests__`) — nunca co-location ao lado do fonte.
+11. Escopo isolado: mudanças mínimas e localizadas — **não** alterar APIs públicas, contratos, assinaturas, exports ou comportamento compartilhado de forma que quebre ou mude outros consumers do mesmo módulo/camada/slice — a menos que isso seja o pedido explícito. Preferir extensão local (nova função/arquivo/path) a modificar código compartilhado usado por vários lugares. Em refactors, não “melhorar de passagem” outros consumers.
+
+Seguir este guia mantém o app **escalável, previsível e alinhado ao backend** para humanos e agentes.

@@ -24,7 +24,7 @@ export function createRateLimitMiddleware(): RequestHandler {
     }
 
     if (entry.count >= max) {
-      res.status(429).json({ message: 'Too many requests. Please try again later.' });
+      res.status(429).json({ message: 'Muitas tentativas. Tente novamente em alguns minutos.' });
       return;
     }
 

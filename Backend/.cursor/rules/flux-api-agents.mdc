@@ -1,0 +1,28 @@
+---
+description: Governança flux-api — consultar AGENTS.md e rules antes de qualquer alteração
+alwaysApply: true
+---
+
+# flux-api — governança
+
+Antes de criar, mover ou refatorar código neste pacote:
+
+1. Leia **`AGENTS.md`** na raiz do backend.
+2. Respeite **`.cursor/rules/domain-contratos-flux-api.mdc`** (interfaces, enums, `entity/interfaces/`).
+3. Respeite **`../.cursor/rules/backend-controller-conventions.mdc`** ao tocar em controllers.
+
+## Não improvisar
+
+| Proibido | Use em vez disso |
+|----------|------------------|
+| `domain/common/enums/E*.ts` (entidade) | `entity/interfaces/<feature>.interface.ts` |
+| `domain/<feature>/enums/E*.ts` | `entity/interfaces/<feature>.interface.ts` |
+| `routes/` separado do controller | `application/controllers/*.controller.ts` + `initRoutes()` |
+| Endpoint fora do `contracts/service.yaml` | Atualizar o contrato no mesmo PR |
+| Endpoint que o frontend não consome | Só criar quando houver tela/feature usando |
+
+## Ao finalizar
+
+```bash
+yarn build && yarn test:unit && yarn test:int
+```

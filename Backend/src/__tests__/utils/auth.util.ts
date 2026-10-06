@@ -1,105 +1,32 @@
-import type { Express } from 'express';
 import request from 'supertest';
-import type { IParamsCreateUser } from '../../domain/user/entity/interfaces/user.interface.js';
-import { EUserRole } from '../../domain/user/entity/interfaces/user.interface.js';
+import type { Express } from 'express';
 
-export const defaultTitularPayload: IParamsCreateUser = {
-  name: 'Titular Test',
-  email: 'titular@test.com',
-  password: 'password123',
-  confPassword: 'password123',
+export const TEST_USER = {
+  name: 'Titular',
+  email: 'titular@flux.test',
+  password: 'senha-segura-1',
+  confPassword: 'senha-segura-1',
 };
-
-export const defaultDependentePayload: IParamsCreateUser = {
-  name: 'Dependente Test',
-  email: 'dependente@test.com',
-  password: 'password123',
-  confPassword: 'password123',
-};
-
-/** @deprecated use defaultTitularPayload */
-export const defaultAdminPayload = defaultTitularPayload;
-
-export function authHeader(token: string): { Authorization: string } {
-  return { Authorization: `Bearer ${token}` };
-}
-
-export async function registerUser(
-  app: Express,
-  payload: IParamsCreateUser = defaultTitularPayload,
-) {
-  return request(app).post('/api/users/register').send(payload);
-}
-
-export async function loginUser(
-  app: Express,
-  email: string,
-  password: string,
-) {
-  return request(app).post('/api/users/login').send({ email, password });
-}
 
 export async function registerAndGetToken(
   app: Express,
-  payload: IParamsCreateUser = defaultTitularPayload,
+  user: typeof TEST_USER = TEST_USER,
 ): Promise<string> {
-  await registerUser(app, payload);
-  const loginRes = await loginUser(app, payload.email, payload.password);
-  return loginRes.body.token as string;
+  await request(app).post('/api/users/register').send(user).expect(201);
+  const login = await request(app)
+    .post('/api/users/login')
+    .send({ email: user.email, password: user.password })
+    .expect(200);
+  return login.body.token as string;
 }
 
-export async function registerFirstTitular(
-  app: Express,
-  payload: IParamsCreateUser = defaultTitularPayload,
-): Promise<{ token: string; userId: string }> {
-  const registerRes = await registerUser(app, payload);
-  const loginRes = await loginUser(app, payload.email, payload.password);
-  return {
-    token: loginRes.body.token as string,
-    userId: registerRes.body.user._id as string,
-  };
-}
+export const OTHER_USER = {
+  name: 'Outra pessoa',
+  email: 'outra@flux.test',
+  password: 'outra-senha-1',
+  confPassword: 'outra-senha-1',
+};
 
-export async function createDependente(
-  app: Express,
-  titularToken: string,
-  payload: IParamsCreateUser = defaultDependentePayload,
-) {
-  return request(app)
-    .post('/api/users')
-    .set(authHeader(titularToken))
-    .send(payload);
-}
-
-export async function createDependenteAndGetToken(
-  app: Express,
-  titularToken: string,
-  payload: IParamsCreateUser = defaultDependentePayload,
-): Promise<{ token: string; userId: string }> {
-  const registerRes = await createDependente(app, titularToken, payload);
-  const loginRes = await loginUser(app, payload.email, payload.password);
-  return {
-    token: loginRes.body.token as string,
-    userId: registerRes.body.user._id as string,
-  };
-}
-
-export async function registerSecondPublic(
-  app: Express,
-  payload: IParamsCreateUser = {
-    name: 'Outro',
-    email: 'outro@test.com',
-    password: 'password123',
-    confPassword: 'password123',
-  },
-) {
-  return registerUser(app, payload);
-}
-
-export function expectRoleTitular(role: string): void {
-  expect(role).toBe(EUserRole.USER);
-}
-
-export function expectRoleDependente(role: string): void {
-  expect(role).toBe(EUserRole.DEPENDENT);
+export function authHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
 }

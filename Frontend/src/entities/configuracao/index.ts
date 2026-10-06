@@ -1,1 +1,0 @@
-export { useTelaConfigurarCaixas } from "./useTelaConfigurarCaixas";

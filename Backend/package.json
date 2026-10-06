@@ -1,26 +1,23 @@
 {
   "name": "flux-api",
   "version": "1.0.0",
-  "description": "Flux API — Clean Architecture",
+  "description": "Flux API \u2014 Clean Architecture",
   "type": "module",
   "main": "dist/main.js",
+  "private": true,
   "scripts": {
     "dev": "tsx watch --env-file=.env src/main.ts",
     "build": "tsc -p tsconfig.build.json && mkdir -p dist/contracts && cp src/contracts/service.yaml dist/contracts/",
     "start": "node dist/main.js",
     "test": "yarn test:unit && yarn test:int",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.config.mjs",
-    "test:int": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.int-config.mjs",
-    "migrate:fluxo-financeiro": "tsx --env-file=.env scripts/migrate-fluxo-financeiro.ts",
-    "migrate:fluxo-financeiro:dry": "tsx --env-file=.env scripts/migrate-fluxo-financeiro.ts --dry-run"
+    "test:int": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit --config ./jest/jest.int-config.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-openapi-validator": "^5.5.7",
-    "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.3"
   },

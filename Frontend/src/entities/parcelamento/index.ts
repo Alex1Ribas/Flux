@@ -1,1 +1,0 @@
-export { useTelaParcelamento } from "./useTelaParcelamento";

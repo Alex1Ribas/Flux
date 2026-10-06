@@ -1,122 +1,107 @@
-# AGENTS.md — finance-api
+# AGENTS.md — flux-api
 
 Contrato de arquitetura para humanos e agentes de IA. **Consulte este arquivo antes de qualquer alteração.**
+
+A API existe para servir o app (`../Frontend`). Só expomos o que o frontend consome.
+
+## Endpoints (prefixo `/api`)
+
+| Método | Rota | Auth | Feature do frontend |
+|--------|------|------|---------------------|
+| GET | `/health` | — | — |
+| POST | `/users/register` | — | `features/auth` (tela de registro; e-mail único; rate limit) |
+| POST | `/users/login` | — | `features/auth` (rate limit) |
+| GET | `/users/me` | JWT | `entities/user` (menu lateral) |
+| GET | `/planning?from&months` | JWT | `widgets/planning-board` (1–60 meses, padrão 6 a partir do mês atual em São Paulo) |
+| PATCH | `/planning/settings` | JWT | `features/edit-plan-settings` (reserva % e reserva atual) |
+| POST | `/planning/income-sources` | JWT | `features/edit-plan-settings` (adicionar renda) |
+| PATCH | `/planning/income-sources/:id` | JWT | `features/edit-plan-settings` |
+| POST | `/planning/expenses` | JWT | `features/create-expense` |
+| PATCH | `/planning/expenses/:id` | JWT | (encerrar/editar conta) |
+| PUT | `/planning/expenses/:id/months/:month` | JWT | `features/edit-expense-month` (valor/fonte só daquele mês) |
+| POST | `/decisions/simulate` | JWT | `features/simulator` (usa o mês em curso do planejamento) |
+
+Cadastro aberto: cada usuário tem o próprio planejamento (`user` em `PlanningSettings`, `IncomeSource` e `Expense`). Services recebem `(userId, params)` e os repositórios sempre filtram por `user`; recurso de outro usuário responde 404. Mesma coleção `users` do Flux (bcrypt e JWT compatíveis).
+
+### Modelo do planejamento
+
+- `IncomeSource` (nome, dia do pagamento, valor) · `PlanningSettings` (reserva % sobre a sobra, reserva atual) · `Expense` (valor padrão, fonte padrão, `startMonth`, `endMonth` opcional, `monthOverrides[]`).
+- Mês = contas ativas (`startMonth ≤ mês ≤ endMonth`) com override do mês → `sobra = renda − gastos`, `reserva = max(0, sobra) × %`, `livre = sobra − reserva`, reserva acumulada a partir da reserva atual.
+- Fonte padrão de conta nova: última renda paga até o dia do vencimento; antes da primeira renda do mês (ou sem dia) → a renda de dia mais tarde.
 
 ## Camadas e responsabilidades
 
 | Camada | Pasta | Pode | Não pode |
 |--------|-------|------|----------|
-| **Domain** | `src/domain/` | Entidades, interfaces, contratos de repository, services, `EErrorCode`, `DomainError`, helpers puros | Express, Mongoose, `ErrorCatalog`, env, HTTP |
-| **Infrastructure** | `src/infrastructure/` | Schemas `IM*`, models `M*`, repos, mappers, JWT/bcrypt, `error-catalog`, `handleTranslatedError` | Regras de negócio, rotas HTTP |
-| **Application** | `src/application/` | Controllers (`IController` + `initRoutes`), middlewares | Mongoose/models direto; lógica de negócio |
-| **Configurations** | `src/configurations/` | `env`, factories (composition root) | Lógica de domínio ou handlers |
-| **Contracts** | `src/contracts/` | `service.yaml` (OpenAPI) | Código executável |
-| **Tests** | `src/__tests__/` | Testes por camada | Lógica de produção |
+| **Domain** | `src/domain/` | Interfaces, contratos de repository, services, helpers puros, `EErrorCode`, `DomainError` | Express, Mongoose, `ErrorCatalog`, env, HTTP |
+| **Infrastructure** | `src/infrastructure/` | Schemas, models `M*`/`IM*`, repos, mappers, `error-catalog`, `handleTranslatedError` | Regras de negócio, rotas HTTP |
+| **Application** | `src/application/` | Controllers (`IController` + `initRoutes`), middlewares, `Server` | Models/repos concretos; lógica de negócio |
+| **Configurations** | `src/configurations/` | `env`, factories (composition root), `app.factory` | Lógica de domínio ou handlers |
+| **Contracts** | `src/contracts/` | `service.yaml` (OpenAPI, validado em runtime) | Código executável |
+| **Tests** | `src/__tests__/` | Unit (services/helpers com fakes) e integração (supertest + mongodb-memory-server) | Lógica de produção |
 
 ## Matriz de dependências
 
 ```
-application     →  domain, infrastructure (i18n helpers, middlewares)
+application     →  domain, infrastructure (i18n helpers)
 configurations  →  domain, infrastructure, application
 infrastructure  →  domain
 domain          →  domain apenas
 __tests__       →  qualquer camada
 ```
 
-**Proibido:** `domain` importar `express`, `mongoose`, `application`, `infrastructure`; controllers importarem `M*` ou repos concretos; factories fora de `configurations/factory`; pasta `routes/` separada de controllers.
+## Estrutura por feature
+
+```
+src/domain/<feature>/
+  entity/interfaces/<feature>.interface.ts          # E*, I*, IParamsCreate* (persistência)
+  entity/interfaces/<feature>.service.interface.ts  # I*Service, IParams*Input (HTTP), results
+  repository/<feature>.repository.read.ts
+  repository/<feature>.repository.write.ts
+  service/<feature>.service.ts
+  service/<feature>.helper.ts                       # cálculos puros
+src/infrastructure/
+  db/mongo/schema/<feature>.schema.ts
+  db/mongo/models/<feature>.model.ts
+  repository/<feature>/<feature>.mapper.ts | .repository.read.ts | .repository.write.ts
+src/configurations/factory/<feature>.service.factory.ts | <feature>.controller.factory.ts
+src/application/controllers/<feature>.controller.ts
+```
 
 ## Nomenclatura
 
-- `I*` interface · `IM*` Mongoose doc · `E*` enum · `M*` model
-- Controller: `*.controller.ts`, `implements IController`, `router` + `initRoutes()`
+- `I*` interface · `IM*` documento Mongo · `E*` enum · `M*` model.
+- Domínio expõe `id: string`; `_id` fica no mapper.
+- Imports ESM com sufixo `.js`; `import type` para tipos.
+- Valores de enum iguais ao contrato persistido; aliases PT (ex.: `roxo` → `purple`) são normalizados no service.
 
-## Contratos de domínio: persistência vs caso de uso
+## Fluxo de uma requisição
 
-**Sempre dois arquivos** em `entity/interfaces/` (ver [`.cursor/rules/domain-contratos-finance-api.mdc`](.cursor/rules/domain-contratos-finance-api.mdc)):
+1. `express-openapi-validator` valida contra `service.yaml` (400 se violar o contrato).
+2. Controller monta `IParams*Input` por whitelist e chama o service.
+3. Service valida regras e lança `DomainError(EErrorCode.X, status)`.
+4. Controller captura → `handleTranslatedError(error, ErrorCatalog, res, req)` (pt-BR, en, es).
 
-| Arquivo | Conteúdo |
-|---------|----------|
-| `<feature>.interface.ts` | Entidade: `E*`, `I*`, `IParams*` que **criam/persistem** o agregado |
-| `<feature>.service.interface.ts` | Caso de uso: `I*Service`, `IParams*` de fluxos (login, update, …), ports, results |
+## Persistência
 
-- `user.interface.ts` **não** importa `user.service.interface.ts`.
-- `IParamsCreateUser` → entidade; `IParamsLoginUser` / `IParamsUpdateUser` → service.
-
-## Enums (`E*`) — localização obrigatória
-
-**Nunca** criar pasta `src/domain/common/enums/` para enums de entidade (ex.: `EPaymentMethod`, `ETransactionStatus`). **Nunca** `src/domain/<feature>/enums/E*.ts`.
-
-| Tipo de enum | Onde declarar | Exemplo |
-|--------------|---------------|---------|
-| **Persistência / entidade** | `entity/interfaces/<feature>.interface.ts` | `EUserRole`, `EPaymentMethod`, `ETransactionStatus` |
-| **Caso de uso / fluxo** | `entity/interfaces/<feature>.service.interface.ts` | `EReportType`, `ECredentialVerifyStatus` |
-| **Erros cross-cutting** | `domain/common/errors/enums/EErrorCode.ts` | única exceção em `common/` |
-
-### Regras
-
-1. Enum usado em `I*`, `IParamsCreate*` ou schema do agregado → **sempre** em `<feature>.interface.ts` (junto com a entidade).
-2. Enum só de fluxo (relatório, login, port) → `<feature>.service.interface.ts`.
-3. **Proibido** extrair enums de entidade para `domain/common/enums/` “porque são compartilhados” entre features. Se income e expense usam os mesmos valores, **declare em cada** `income.interface.ts` e `expense.interface.ts` (valores idênticos ao contrato persistido / TCC).
-4. Infrastructure importa enums de entidade **do** `domain/<feature>/entity/interfaces/<feature>.interface.ts` do agregado correspondente (ex.: schema de Income → `income.interface.ts`).
-5. Precedente: `EUserRole` em `user.interface.ts` — siga o mesmo padrão.
-
-Detalhes e checklist: [`.cursor/rules/domain-contratos-finance-api.mdc`](.cursor/rules/domain-contratos-finance-api.mdc).
-
-## Segurança em repositories
-
-Ver [`.cursor/rules/domain-seguranca-repositorio.mdc`](.cursor/rules/domain-seguranca-repositorio.mdc):
-
-- **Proibido** métodos como `findUserByEmailWithPassword` (ou similares) em contratos `repository/`.
-- Login: port `IUserCredentialsPort` em `user.service.interface.ts`; implementação só em `infrastructure/`.
-- `IUserRepositoryRead` retorna apenas `IUser` (sem senha/hash).
-
-## Segurança HTTP e autorização
-
-Ver [`.cursor/rules/seguranca-api-finance-api.mdc`](.cursor/rules/seguranca-api-finance-api.mdc) e [`SECURITY.md`](SECURITY.md).
-
-### Papéis (`EUserRole`)
-
-| Enum | Papel | Escopo |
-|------|-------|--------|
-| `USER` | Titular | CRUD global; cria dependentes via `POST /users` |
-| `DEPENDENT` | Dependente | Só recursos próprios (`record.user === jwt._id`) |
-
-### Matriz resumida
-
-| Tipo | Exemplos |
-|------|----------|
-| Pública | `POST /users/register` (1º titular), `POST /users/login` |
-| JWT qualquer | `GET/PUT /incomes\|expenses/:id` (com ownership no service), `POST /reports`, `GET /users/:id` (self ou titular) |
-| Só titular | `POST /users`, `GET /users`, `POST/GET/DELETE /incomes\|expenses` |
-
-### Checklist antes de merge (endpoint novo)
-
-- [ ] Ownership validado no **service** (`assertResourceAccess`) para rotas `:id`
-- [ ] OpenAPI atualizado (`403`, sem campos privilegiados em register)
-- [ ] Testes em `__tests__/integration/security/` se houver auth cross-user
+- MongoDB via Mongoose; conexão cacheada em `globalThis` (serverless Vercel).
+- `reserve` e `cycle-settings` são documentos únicos (`key: 'default'`), criados com valores padrão na primeira leitura.
+- Sem seed: o banco começa vazio. Configuração padrão criada na primeira leitura: reserva de 30% da sobra e reserva atual R$ 0.
 
 ## Nova feature (ordem obrigatória)
 
-1. Domain (`entity/interfaces/<feature>.interface.ts` + `<feature>.service.interface.ts` · `entity/` · `repository/` · `service/`)
-2. Infrastructure (schema, model, mapper, repository impl)
-3. Configurations (service + controller factories)
-4. Application (`*.controller.ts`)
-5. `contracts/service.yaml`
-6. Testes: `*.unit.test.ts` (schema) + `*.int.test.ts` (endpoint)
-
-## Testes por camada
-
-| Alteração | Teste | Sufixo |
-|-----------|-------|--------|
-| Schema Mongoose | Unit | `*.unit.test.ts` em `__tests__/unit/.../schema/` |
-| Endpoint HTTP | Integração E2E | `*.int.test.ts` em `__tests__/integration/<feature>/` |
-| Auth / IDOR | Segurança E2E | `*.security.int.test.ts` em `__tests__/integration/security/` |
+1. Confirmar que o frontend consome o endpoint.
+2. Domain (`entity/interfaces` · `repository` · `service`).
+3. Infrastructure (schema, model, mapper, repository).
+4. Configurations (service + controller factories, registrar em `app.factory.ts`).
+5. Application (`*.controller.ts`).
+6. `contracts/service.yaml`.
+7. Testes: `*.unit.test.ts` (service/helper) + `*.int.test.ts` (endpoint).
 
 ## Erros
 
-- Domain: `throw new DomainError(EErrorCode.X, status)`
-- Application: `catch` → `handleTranslatedError(error, ErrorCatalog, res, req)`
-- Novo código: `EErrorCode.ts` + `error-catalog.ts` (pt-BR, en, es)
+- Domain: `throw new DomainError(EErrorCode.X, status)`.
+- Novo código: `EErrorCode.ts` + `error-catalog.ts` (pt-BR, en, es).
 
 ## Comandos antes de concluir
 
@@ -125,9 +110,3 @@ yarn build
 yarn test:unit
 yarn test:int
 ```
-
-## Regra para IA
-
-1. **Leia este arquivo** e as rules em [`.cursor/rules/`](.cursor/rules/) antes de criar ou mover arquivos em `src/`.
-2. Se a mudança violar contratos (enums, interfaces, repositories, camadas), **pare** e corrija — não improvise `common/enums/`, `routes/` ou pastas `enums/` por feature.
-3. Ao adicionar enum novo, classifique: persistência → `*.interface.ts`; caso de uso → `*.service.interface.ts`; erro → `EErrorCode` apenas.

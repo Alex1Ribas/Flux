@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-on-primary: #ffffff;
+  --color-positive-green: #15803d;
+  --color-danger-soft: #fee2e2;
+  --color-brand-blue-text: #1e3a8a;
+  --color-secondary: #575e70;
+  --color-muted: #667085;
+  --color-dark-sidebar-active: #1e40af;
+  --color-brand-blue-hover: #1d4ed8;
+  --color-brand-blue-soft: #eff6ff;
+  --color-dark-sidebar: #111827;
+  --color-danger-text: #991b1b;
+  --color-text-primary: #172033;
+  --color-surface-container-lowest: #ffffff;
+  --color-app-bg: #f4f7fb;
+  --color-positive-soft: #dcfce7;
+  --color-warning-text: #854d0e;
+  --color-dark-sidebar-muted: #94a3b8;
+  --color-primary: #004ac6;
+  --color-warning-amber: #a16207;
+  --color-danger-red: #b91c1c;
+  --color-dark-sidebar-border: #334155;
+  --color-card-bg: #ffffff;
+  --color-dark-sidebar-hover: #1f2937;
+  --color-brand-blue-border: #bfdbfe;
+  --color-border-subtle: #e5e7eb;
+  --color-surface: #f9f9ff;
+  --color-primary-container: #2563eb;
+  --color-warning-soft: #fef3c7;
+  --color-warning-border: #fde68a;
+  --color-danger-border: #fecaca;
+  --color-on-primary-container: #eeefff;
+  --color-purple-flow: #6b21a8;
+  --color-purple-soft: #f3e8ff;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1rem;
+  --spacing-space-xl: 1.25rem;
+  --spacing-margin: 1.75rem;
+  --spacing-margin-mobile: 1rem;
+}

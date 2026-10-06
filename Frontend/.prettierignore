@@ -1,7 +1,0 @@
-node_modules
-.expo
-dist
-web-build
-coverage
-yarn.lock
-package-lock.json

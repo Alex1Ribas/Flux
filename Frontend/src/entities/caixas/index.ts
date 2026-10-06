@@ -1,1 +1,0 @@
-export { useTelaCaixas } from "./useTelaCaixas";

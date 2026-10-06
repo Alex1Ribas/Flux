@@ -1,279 +1,105 @@
-/** Hex Tailwind de referência */
-const SLATE = {
-  50: "#F1F1F1",
-  100: "#FCFCFC",
-  200: "#e2e8f0",
-  400: "#94a3b8",
-  500: "#64748b",
-  800: "#1e293b",
-  900: "#0f172a",
-  950: "#020617",
-};
-
-const VIOLET = {
-  400: "#a78bfa",
-  500: "#8b5cf6",
-  600: "#7c3aed",
-  700: "#6d28d9",
-  950: "#2e1065",
-};
-
-const EMERALD = {
-  400: "#34d399",
-  500: "#10b981",
-  100: "#d1fae5",
-  900: "#064e3b",
-};
-
-const ROSE = {
-  400: "#fb7185",
-  500: "#f43f5e",
-  100: "#ffe4e6",
-  950: "#4c0519",
-};
-
-/**
- * Design tokens semânticos — fonte única do tema Flux.
- * Light é o default do produto.
- */
-const themes = {
-  light: {
-    bg: SLATE[50],
-    surface: "#ffffff",
-    surface2: SLATE[100],
-    surface3: SLATE[200],
-    border: SLATE[200],
-    divider: SLATE[200],
-    text: SLATE[900],
-    textMuted: SLATE[500],
-    textFaint: `${SLATE[500]}99`,
-    white: "#FFFFFF",
-    primary: VIOLET[600],
-    primaryHover: VIOLET[700],
-    primaryHighlight: "#ede9fe",
-    success: EMERALD[500],
-    successHighlight: EMERALD[100],
-    error: ROSE[500],
-    errorHighlight: ROSE[100],
-    warning: "#f59e0b",
-    warningHighlight: "#fef3c7",
-    // aliases de compat
-    gold: VIOLET[600],
-    goldHighlight: "#ede9fe",
-    blue: "#6366f1",
-    blueHighlight: "#e0e7ff",
-    purple: VIOLET[400],
-    purpleHighlight: "#ede9fe",
-  },
-  dark: {
-    bg: SLATE[950],
-    surface: SLATE[900],
-    surface2: SLATE[800],
-    surface3: "#334155",
-    border: SLATE[800],
-    divider: SLATE[800],
-    text: SLATE[50],
-    // Branco com opacidade — contraste AA sobre fundo azul-marinho
-    textMuted: "rgba(255, 255, 255, 0.65)",
-    textFaint: "rgba(255, 255, 255, 0.45)",
-    white: "#FFFFFF",
-    primary: VIOLET[500],
-    primaryHover: VIOLET[600],
-    primaryHighlight: VIOLET[950],
-    success: EMERALD[400],
-    successHighlight: EMERALD[900],
-    error: ROSE[400],
-    errorHighlight: ROSE[950],
-    warning: "#fbbf24",
-    warningHighlight: "#422006",
-    gold: VIOLET[500],
-    goldHighlight: VIOLET[950],
-    blue: "#818cf8",
-    blueHighlight: "#1e1b4b",
-    purple: VIOLET[400],
-    purpleHighlight: VIOLET[950],
-  },
-};
-
-/** Classes Tailwind semânticas por modo (consumo opcional via hook) */
-const themeClasses = {
-  light: {
-    background: "bg-bg",
-    surface: "bg-surface",
-    primary: "bg-primary",
-    primaryText: "text-primary",
-    border: "border-border",
-    textPrimary: "text-text",
-    textSecondary: "text-textMuted",
-    success: "text-success",
-    successBg: "bg-success",
-    danger: "text-error",
-    dangerBg: "bg-error",
-  },
-  dark: {
-    background: "bg-bg",
-    surface: "bg-surface",
-    primary: "bg-primary",
-    primaryText: "text-primary",
-    border: "border-border",
-    textPrimary: "text-text",
-    textSecondary: "text-textMuted",
-    success: "text-success",
-    successBg: "bg-success",
-    danger: "text-error",
-    dangerBg: "bg-error",
-  },
-};
-
-/** Vars NativeWind a partir da paleta (raiz do app) */
-function temaParaVars(paleta) {
-  const out = {};
-  for (const [chave, valor] of Object.entries(paleta)) {
-    out[`--color-${chave}`] = valor;
-  }
-  return out;
-}
-
-const themeVars = {
-  light: temaParaVars(themes.light),
-  dark: temaParaVars(themes.dark),
-};
-
-/** @type {import('tailwindcss').Config['theme']['extend']} */
-const themeExtend = {
-  colors: {
-    // Tokens semânticos via CSS vars — trocam com o ThemeProvider
-    bg: "var(--color-bg)",
-    surface: "var(--color-surface)",
-    surface2: "var(--color-surface2)",
-    surface3: "var(--color-surface3)",
-    border: "var(--color-border)",
-    divider: "var(--color-divider)",
-    text: "var(--color-text)",
-    textMuted: "var(--color-textMuted)",
-    textFaint: "var(--color-textFaint)",
-    white: "var(--color-white)",
-    primary: {
-      DEFAULT: "var(--color-primary)",
-      hover: "var(--color-primaryHover)",
-      highlight: "var(--color-primaryHighlight)",
-    },
-    success: {
-      DEFAULT: "var(--color-success)",
-      highlight: "var(--color-successHighlight)",
-    },
-    error: {
-      DEFAULT: "var(--color-error)",
-      highlight: "var(--color-errorHighlight)",
-    },
-    warning: {
-      DEFAULT: "var(--color-warning)",
-      highlight: "var(--color-warningHighlight)",
-    },
-    gold: {
-      DEFAULT: "var(--color-gold)",
-      highlight: "var(--color-goldHighlight)",
-    },
-    blue: {
-      DEFAULT: "var(--color-blue)",
-      highlight: "var(--color-blueHighlight)",
-    },
-    purple: {
-      DEFAULT: "var(--color-purple)",
-      highlight: "var(--color-purpleHighlight)",
-    },
-  },
-  spacing: {
-    half: 2,
-    one: 4,
-    two: 8,
-    three: 16,
-    four: 24,
-    five: 32,
-    six: 64,
-  },
-  borderRadius: {
-    DEFAULT: 12,
-    lg: 14,
-    xl: 16,
-    "2xl": 20,
-    "3xl": 24,
-    full: 9999,
-  },
-  fontSize: {
-    "2xs": 10,
-    xs: 11,
-    sm: 12,
-    base: 13,
-    md: 14,
-    lg: 15,
-    xl: 18,
-    "2xl": 20,
-    "3xl": 28,
-  },
-  fontFamily: {
-    sans: ["Spline Sans", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-    serif: ["Georgia", "Times New Roman", "ui-serif", "serif"],
-    rounded: ["SF Pro Rounded", "Hiragino Maru Gothic ProN", "Meiryo", "sans-serif"],
-    mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
-  },
-  maxWidth: {
-    content: 800,
-  },
-  iconSize: {
-    xs: 14,
-    sm: 16,
-    md: 18,
-    lg: 22,
-    xl: 40,
-  },
-  boxShadow: {
-    soft: "0 20px 25px -5px rgb(226 232 240 / 0.5), 0 8px 10px -6px rgb(226 232 240 / 0.5)",
-  },
-};
-
-const { spacing } = themeExtend;
-
-/** Flat light (default) — usado por COLORS estático e fallback */
-const colorsFlat = {
-  ...themes.light,
-  successLight: themes.light.success,
-  errorLight: themes.light.error,
-  bgLight: themes.light.bg,
-  surfaceLight: themes.light.surface,
-  textMutedLight: themes.light.textMuted,
-};
-
-const colorsFlatDark = {
-  ...themes.dark,
-  successLight: themes.dark.success,
-  errorLight: themes.dark.error,
-  bgLight: themes.light.bg,
-  surfaceLight: themes.light.surface,
-  textMutedLight: themes.light.textMuted,
-};
-
 /** @type {import('tailwindcss').Config} */
-const config = {
-  darkMode: "class",
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [require("nativewind/preset")],
+module.exports = {
+  content: ['./App.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
+  presets: [require('nativewind/preset')],
+  darkMode: 'class',
   theme: {
-    extend: themeExtend,
+    extend: {
+      colors: {
+        'on-primary': 'var(--color-on-primary)',
+        'positive-green': 'var(--color-positive-green)',
+        'danger-soft': 'var(--color-danger-soft)',
+        'brand-blue-text': 'var(--color-brand-blue-text)',
+        secondary: 'var(--color-secondary)',
+        muted: 'var(--color-muted)',
+        'dark-sidebar-active': 'var(--color-dark-sidebar-active)',
+        'brand-blue-hover': 'var(--color-brand-blue-hover)',
+        'brand-blue-soft': 'var(--color-brand-blue-soft)',
+        'dark-sidebar': 'var(--color-dark-sidebar)',
+        'danger-text': 'var(--color-danger-text)',
+        'text-primary': 'var(--color-text-primary)',
+        'surface-container-lowest': 'var(--color-surface-container-lowest)',
+        'app-bg': 'var(--color-app-bg)',
+        'positive-soft': 'var(--color-positive-soft)',
+        'warning-text': 'var(--color-warning-text)',
+        'dark-sidebar-muted': 'var(--color-dark-sidebar-muted)',
+        primary: 'var(--color-primary)',
+        'warning-amber': 'var(--color-warning-amber)',
+        'danger-red': 'var(--color-danger-red)',
+        'dark-sidebar-border': 'var(--color-dark-sidebar-border)',
+        'card-bg': 'var(--color-card-bg)',
+        'dark-sidebar-hover': 'var(--color-dark-sidebar-hover)',
+        'brand-blue-border': 'var(--color-brand-blue-border)',
+        'border-subtle': 'var(--color-border-subtle)',
+        surface: 'var(--color-surface)',
+        'primary-container': 'var(--color-primary-container)',
+        'warning-soft': 'var(--color-warning-soft)',
+        'warning-border': 'var(--color-warning-border)',
+        'danger-border': 'var(--color-danger-border)',
+        'on-primary-container': 'var(--color-on-primary-container)',
+        'purple-flow': 'var(--color-purple-flow)',
+        'purple-soft': 'var(--color-purple-soft)',
+      },
+      spacing: {
+        'space-xs': 'var(--spacing-space-xs)',
+        'space-sm': 'var(--spacing-space-sm)',
+        'space-md': 'var(--spacing-space-md)',
+        'space-lg': 'var(--spacing-space-lg)',
+        'space-xl': 'var(--spacing-space-xl)',
+        margin: 'var(--spacing-margin)',
+        'margin-mobile': 'var(--spacing-margin-mobile)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'System'],
+      },
+      fontSize: {
+        'badge-micro': [
+          '10px',
+          { lineHeight: '12px', fontWeight: '800', letterSpacing: '0.02em' },
+        ],
+        'body-sm': ['12px', { lineHeight: '18px', fontWeight: '400' }],
+        'body-md': ['13px', { lineHeight: '20px', fontWeight: '400' }],
+        'body-lg': ['14px', { lineHeight: '22px', fontWeight: '400' }],
+        'title-sm': ['14px', { lineHeight: '20px', fontWeight: '700' }],
+        'title-md': [
+          '16px',
+          { lineHeight: '22px', fontWeight: '700', letterSpacing: '-0.005em' },
+        ],
+        'headline-sm': [
+          '20px',
+          { lineHeight: '26px', fontWeight: '700', letterSpacing: '-0.01em' },
+        ],
+        'headline-md': [
+          '24px',
+          { lineHeight: '30px', fontWeight: '800', letterSpacing: '-0.015em' },
+        ],
+        'label-caps': [
+          '11px',
+          { lineHeight: '14px', fontWeight: '800', letterSpacing: '0.04em' },
+        ],
+        'label-numeric-md': [
+          '14px',
+          { lineHeight: '18px', fontWeight: '800' },
+        ],
+        'label-numeric-lg': [
+          '24px',
+          { lineHeight: '28px', fontWeight: '800', letterSpacing: '-0.02em' },
+        ],
+        'display-hero-mobile': [
+          '36px',
+          { lineHeight: '40px', fontWeight: '900', letterSpacing: '-0.02em' },
+        ],
+      },
+      borderRadius: {
+        sm: '0.25rem',
+        DEFAULT: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+        xl: '1.5rem',
+        control: '9px',
+        full: '9999px',
+      },
+    },
   },
   plugins: [],
 };
-
-module.exports = config;
-module.exports.themeExtend = themeExtend;
-module.exports.themes = themes;
-module.exports.themeClasses = themeClasses;
-module.exports.themeVars = themeVars;
-module.exports.colorsFlat = colorsFlat;
-module.exports.colorsFlatDark = colorsFlatDark;
-module.exports.spacing = spacing;
-module.exports.DEFAULT_THEME = "light";
