@@ -1,14 +1,9 @@
 import type { Express } from 'express';
 import { Server } from '../../application/http/server.js';
-import { env } from '../env/env.config.js';
 import { connectDatabase } from '../../infrastructure/db/mongo/connection.js';
-import { createAcompanhamentoController } from './acompanhamento.controller.factory.js';
-import { createCaixaController } from './caixa.controller.factory.js';
-import { createEmprestimoController } from './emprestimo.controller.factory.js';
-import { createContaController } from './conta.controller.factory.js';
-import { createLancamentoController } from './lancamento.controller.factory.js';
-import { createOrcamentoController } from './orcamento.controller.factory.js';
-import { createPreferenciasController } from './preferencias.controller.factory.js';
+import { env } from '../env/env.config.js';
+import { createDecisionController } from './decision.controller.factory.js';
+import { createPlanningController } from './planning.controller.factory.js';
 import { createUserController } from './user.controller.factory.js';
 
 export function createHttpServer(): Server {
@@ -16,13 +11,8 @@ export function createHttpServer(): Server {
     port: env.PORT,
     controllers: [
       createUserController(),
-      createCaixaController(),
-      createContaController(),
-      createLancamentoController(),
-      createEmprestimoController(),
-      createOrcamentoController(),
-      createAcompanhamentoController(),
-      createPreferenciasController(),
+      createPlanningController(),
+      createDecisionController(),
     ],
   });
 }

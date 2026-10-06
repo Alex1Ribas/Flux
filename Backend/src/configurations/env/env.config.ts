@@ -6,7 +6,7 @@ const envFile =
     ? '.env.test'
     : process.env.ENV_FILE ?? '.env';
 
-config({ path: resolve(process.cwd(), envFile) });
+config({ path: resolve(process.cwd(), envFile), quiet: true });
 
 function requireEnv(key: string): string {
   const value = process.env[key];
@@ -14,15 +14,6 @@ function requireEnv(key: string): string {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value.trim();
-}
-
-function requireNumber(key: string): number {
-  const raw = requireEnv(key);
-  const num = Number(raw);
-  if (Number.isNaN(num)) {
-    throw new Error(`Environment variable ${key} must be a number`);
-  }
-  return num;
 }
 
 function optionalNumber(key: string, defaultValue: number): number {
@@ -39,11 +30,15 @@ function optionalNumber(key: string, defaultValue: number): number {
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
-  MONGODB_URI: requireEnv('MONGODB_URI'),
-  PORT: requireNumber('PORT'),
-  JWT_SECRET: requireEnv('JWT_SECRET'),
-  JWT_EXPIRATION: requireEnv('JWT_EXPIRATION'),
-  BCRYPT_SALT_ROUNDS: requireNumber('BCRYPT_SALT_ROUNDS'),
+  get MONGODB_URI(): string {
+    return requireEnv('MONGODB_URI');
+  },
+  PORT: optionalNumber('PORT', 3000),
+  get JWT_SECRET(): string {
+    return requireEnv('JWT_SECRET');
+  },
+  JWT_EXPIRATION: process.env.JWT_EXPIRATION?.trim() || '7d',
+  BCRYPT_SALT_ROUNDS: optionalNumber('BCRYPT_SALT_ROUNDS', 10),
   RATE_LIMIT_WINDOW_MS: optionalNumber('RATE_LIMIT_WINDOW_MS', 900_000),
   RATE_LIMIT_MAX: optionalNumber('RATE_LIMIT_MAX', 10),
 } as const;
