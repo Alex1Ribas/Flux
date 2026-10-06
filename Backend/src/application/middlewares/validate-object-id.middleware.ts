@@ -4,11 +4,7 @@ import { DomainError } from '../../domain/common/errors/DomainError.js';
 import { EErrorCode } from '../../domain/common/errors/enums/EErrorCode.js';
 import { ErrorCatalog } from '../../infrastructure/i18n/error-catalog.js';
 import { handleTranslatedError } from '../../infrastructure/i18n/handle-translated-error.js';
-
-function paramId(value: string | string[] | undefined): string {
-  if (value === undefined) return '';
-  return Array.isArray(value) ? (value[0] ?? '') : value;
-}
+import { paramId } from '../http/param-id.js';
 
 export const validateObjectIdMiddleware: RequestHandler = (req, res, next) => {
   try {
