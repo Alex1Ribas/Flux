@@ -1,0 +1,93 @@
+---
+description: Contratos de domínio — interfaces, enums de entidade vs caso de uso (OBRIGATÓRIO)
+globs: src/**/*.ts
+alwaysApply: true
+---
+
+# Contratos de domínio (`src/domain/**`)
+
+Referência: `AGENTS.md`. **Esta rule aplica-se a todo o projeto TypeScript em `src/`.**
+
+## Princípio: persistência vs caso de uso
+
+**Sempre separar** dois arquivos em `entity/interfaces/`:
+
+| Tipo | Arquivo | Conteúdo |
+|------|---------|----------|
+| **Persistência** | `<feature>.interface.ts` | `E*`, `I*` da entidade, `IParams*` para criar/persistir o agregado |
+| **Caso de uso** | `<feature>.service.interface.ts` | `I*Service`, `IParams*` de fluxos, ports, results |
+
+### Como decidir `IParams*`
+
+| Pergunta | Sim → | Não → |
+|----------|-------|-------|
+| Payload vira entidade persistida? | `<feature>.interface.ts` | `<feature>.service.interface.ts` |
+| Credencial, filtro, ação, update parcial? | `<feature>.service.interface.ts` | — |
+
+## Enums (`E*`) — OBRIGATÓRIO
+
+### Onde declarar
+
+| Tipo | Caminho | Exemplos |
+|------|---------|----------|
+| Entidade / persistência | `entity/interfaces/<feature>.interface.ts` | `EUserRole`, `EPaymentMethod`, `ETransactionStatus` |
+| Caso de uso | `entity/interfaces/<feature>.service.interface.ts` | `EReportType`, `ECredentialVerifyStatus` |
+| Erro global | `domain/common/errors/enums/EErrorCode.ts` | **único** enum em `domain/common/` |
+
+### Proibido (violação comum)
+
+- `src/domain/common/enums/E*.ts` para enums de agregado
+- `src/domain/<feature>/enums/E*.ts`
+- Importar enum de entidade de `domain/common/enums/` em schemas, entities ou `*.interface.ts`
+- Centralizar `EPaymentMethod` em `common` porque income e expense compartilham valores
+
+### Compartilhado entre features
+
+Se dois agregados usam o mesmo conjunto de valores (ex.: método de pagamento):
+
+- Declare o enum em **cada** `<feature>.interface.ts` com os **mesmos valores string** do contrato persistido.
+- Infrastructure: schema de Income importa de `income.interface.ts`; schema de Expense importa de `expense.interface.ts`.
+
+### Precedente no repo
+
+```typescript
+// ✅ domain/user/entity/interfaces/user.interface.ts
+export enum EUserRole { ADMIN = 'ADMIN', USER = 'USER' }
+
+// ✅ domain/income/entity/interfaces/income.interface.ts
+export enum EPaymentMethod { CASH = 'CASH', PIX = 'PIX', /* ... */ }
+
+// ❌ domain/common/enums/EPaymentMethod.ts
+```
+
+## Onde colocar — DEVE
+
+| Símbolo | Caminho |
+|---------|---------|
+| Persistência (`E*`, `I*`, `IParamsCreate*`) | `entity/interfaces/<feature>.interface.ts` |
+| Caso de uso | `entity/interfaces/<feature>.service.interface.ts` |
+| Classe entidade | `entity/<feature>.entity.ts` |
+| Repository | `repository/` |
+| Service impl | `service/` |
+| Cross-cutting (não enum de entidade) | `domain/common/` — helpers, `DomainError`, `EErrorCode` |
+
+## O que NUNCA fazer
+
+- `IParamsLogin*` / `IUserService` em `<feature>.interface.ts`
+- `IParamsCreate*` só em `<feature>.service.interface.ts`
+- `src/domain/<feature>/enums/E*.ts`
+- `src/domain/common/enums/E*.ts` (exceto não usar essa pasta; erros ficam em `common/errors/enums/`)
+- `src/domain/<feature>/interfaces/*.ts` fora de `entity/interfaces/`
+
+## Imports
+
+- `*.service.interface.ts` importa type de `*.interface.ts`
+- `*.interface.ts` **não** importa `*.service.interface.ts`
+- `infrastructure/**` importa enums de entidade do `*.interface.ts` do agregado, não de `common/enums/`
+
+## Checklist antes de concluir
+
+- [ ] Novo `E*` de entidade está em `<feature>.interface.ts`
+- [ ] Não existe arquivo em `domain/common/enums/`
+- [ ] Não existe `domain/<feature>/enums/`
+- [ ] Schema Mongoose usa `Object.values(E*)` do `*.interface.ts` correto
