@@ -1,23 +1,236 @@
 openapi: 3.0.3
 info:
-  title: Finance API
-  version: 1.0.0
-  description: Personal finance management API
+  title: Flux API
+  version: 2.0.0
+  description: Flux — planejamento financeiro mensal e simulador de decisões
 servers:
-  - url: http://localhost:3000
+  - url: /
+security:
+  - bearerAuth: []
+paths:
+  /api/users/register:
+    post:
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+      responses:
+        "201":
+          description: Usuário criado
+        "400":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/users/login:
+    post:
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginUserRequest"
+      responses:
+        "200":
+          description: Token JWT
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginUserResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /api/users/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: Usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Error"
+  /api/planning:
+    get:
+      operationId: getPlan
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 60
+      responses:
+        "200":
+          description: Planejamento mês a mês
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+        "401":
+          $ref: "#/components/responses/Error"
+  /api/planning/settings:
+    patch:
+      operationId: updatePlanningSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePlanningSettingsRequest"
+      responses:
+        "200":
+          description: Configuração atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanningSettings"
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/planning/income-sources:
+    post:
+      operationId: createIncomeSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIncomeSourceRequest"
+      responses:
+        "201":
+          description: Fonte de renda criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSource"
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/planning/income-sources/{id}:
+    patch:
+      operationId: updateIncomeSource
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIncomeSourceRequest"
+      responses:
+        "200":
+          description: Fonte atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSource"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/planning/expenses:
+    post:
+      operationId: createExpense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExpenseRequest"
+      responses:
+        "201":
+          description: Conta criada
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/planning/expenses/{id}:
+    patch:
+      operationId: updateExpense
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateExpenseRequest"
+      responses:
+        "204":
+          description: Conta atualizada
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/planning/expenses/{id}/months/{month}:
+    put:
+      operationId: setExpenseMonth
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetExpenseMonthRequest"
+      responses:
+        "204":
+          description: Valor/fonte do mês ajustado
+        "404":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/decisions/simulate:
+    post:
+      operationId: simulateDecision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulateDecisionRequest"
+      responses:
+        "200":
+          description: Veredito da simulação
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Verdict"
+        "422":
+          $ref: "#/components/responses/Error"
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Erro traduzido
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
   schemas:
-    ErrorMessage:
-      type: object
-      additionalProperties: false
-      properties:
-        message:
-          type: string
     RegisterUserRequest:
       type: object
       additionalProperties: false
@@ -27,25 +240,8 @@ components:
           type: string
         email:
           type: string
-          format: email
         password:
           type: string
-          minLength: 8
-        confPassword:
-          type: string
-    CreateDependenteRequest:
-      type: object
-      additionalProperties: false
-      required: [name, email, password, confPassword]
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
         confPassword:
           type: string
     LoginUserRequest:
@@ -57,10 +253,21 @@ components:
           type: string
         password:
           type: string
-    UpdateUserRequest:
+    LoginUserResponse:
       type: object
-      additionalProperties: false
+      required: [message, token, id]
       properties:
+        message:
+          type: string
+        token:
+          type: string
+        id:
+          type: string
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
         name:
           type: string
         email:
@@ -68,1486 +275,284 @@ components:
         role:
           type: string
           enum: [USER, DEPENDENT]
-    CaixaRequest:
+    PlanningSettings:
       type: object
-      additionalProperties: false
-      required: [nome, tipo]
-      properties:
-        nome:
-          type: string
-        saldo:
-          type: number
-        tipo:
-          type: string
-          enum: [objetivo, orcamento, origem]
-        meta:
-          type: number
-        aporteMensal:
-          type: number
-        orcamentoMensal:
-          type: number
-    CaixaUpdateRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        nome:
-          type: string
-        saldo:
-          type: number
-        tipo:
-          type: string
-          enum: [objetivo, orcamento, origem]
-        meta:
-          type: number
-        aporteMensal:
-          type: number
-        orcamentoMensal:
-          type: number
-    CaixaResponse:
-      type: object
-      additionalProperties: false
-      required: [id, nome, saldo, tipo, comprometido, disponivel]
+      required: [id, reserveRate, initialReserve]
       properties:
         id:
           type: string
-        nome:
-          type: string
-        saldo:
+        reserveRate:
           type: number
-        tipo:
-          type: string
-          enum: [objetivo, orcamento, origem]
-        comprometido:
+        initialReserve:
           type: number
-        disponivel:
-          type: number
-        meta:
-          type: number
-        aporteMensal:
-          type: number
-        orcamentoMensal:
-          type: number
-        createdAt:
-          type: string
-        updatedAt:
-          type: string
-    ContaRequest:
+    IncomeSource:
       type: object
-      additionalProperties: false
-      required: [tipo, descricao, valor, vencimento, caixaId]
+      required: [id, name, payDay, amount]
       properties:
-        tipo:
+        id:
           type: string
-          enum: [a_pagar, a_receber]
-        descricao:
+        name:
           type: string
-        valor:
+        payDay:
+          type: integer
+        amount:
           type: number
-        competencia:
-          type: string
-          description: Occurrence month in yyyy-mm
-        vencimento:
-          type: string
-          description: Due date in yyyy-mm-dd
-        caixaId:
-          type: string
-        recorrenteId:
-          type: string
-          description: Optional recurring template that originated this occurrence
-    ContaUpdateRequest:
+    PlanExpenseLine:
       type: object
-      additionalProperties: false
       properties:
-        tipo:
+        expenseId:
           type: string
-          enum: [a_pagar, a_receber]
-        descricao:
+        name:
           type: string
-        valor:
+        dueDay:
+          type: integer
+          nullable: true
+        dueNote:
+          type: string
+        amount:
           type: number
-        competencia:
+        sourceId:
           type: string
-        vencimento:
+        isAdjusted:
+          type: boolean
+        shareOfSpend:
+          type: number
+        shareOfIncome:
+          type: number
+        shareOfSource:
+          type: number
+    PlanSourceBreakdown:
+      type: object
+      properties:
+        sourceId:
           type: string
-        caixaId:
+        name:
+          type: string
+        income:
+          type: number
+        spend:
+          type: number
+        remaining:
+          type: number
+        commitment:
+          type: number
+    PlanMonth:
+      type: object
+      properties:
+        month:
           type: string
         status:
           type: string
-          enum: [aberta, cancelada]
-        recorrenteId:
-          type: string
-    ContaLiquidarRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        liquidadoEm:
-          type: string
-          description: Settlement date in yyyy-mm-dd
-        caixaId:
-          type: string
-        caixaCompensacao:
-          type: string
-        distribuicao:
+          enum: [past, current, projection]
+        income:
+          type: number
+        spend:
+          type: number
+        surplus:
+          type: number
+        reserve:
+          type: number
+        free:
+          type: number
+        accumulatedReserve:
+          type: number
+        commitment:
+          type: number
+        sources:
           type: array
           items:
-            $ref: '#/components/schemas/DistribuicaoLancamento'
-        distribuirAutomaticamente:
-          type: boolean
-    ContasListaPaginada:
-      type: object
-      additionalProperties: false
-      required: [items, total, pageSize, lastItemId, hasMore]
-      properties:
-        items:
+            $ref: "#/components/schemas/PlanSourceBreakdown"
+        expenses:
           type: array
           items:
-            type: object
-        total:
+            $ref: "#/components/schemas/PlanExpenseLine"
+    Plan:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        currentMonth:
+          type: string
+        settings:
+          $ref: "#/components/schemas/PlanningSettings"
+        incomeSources:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomeSource"
+        summary:
+          type: object
+          properties:
+            monthlyIncome:
+              type: number
+            totalSpend:
+              type: number
+            commitment:
+              type: number
+            projectedReserve:
+              type: number
+            totalFree:
+              type: number
+        months:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanMonth"
+    UpdatePlanningSettingsRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        reserveRate:
+          type: number
+          minimum: 0
+          maximum: 100
+        initialReserve:
+          type: number
+          minimum: 0
+    CreateIncomeSourceRequest:
+      type: object
+      additionalProperties: false
+      required: [name, payDay, amount]
+      properties:
+        name:
+          type: string
+        payDay:
           type: integer
-        pageSize:
+          minimum: 1
+          maximum: 31
+        amount:
+          type: number
+          minimum: 0
+    UpdateIncomeSourceRequest:
+      type: object
+      additionalProperties: false
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          minimum: 0
+    CreateExpenseRequest:
+      type: object
+      additionalProperties: false
+      required: [name, amount]
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+          minimum: 0
+        dueDay:
           type: integer
-        lastItemId:
+          minimum: 1
+          maximum: 31
+          nullable: true
+        dueNote:
+          type: string
+        sourceId:
+          type: string
+        startMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        installments:
+          type: integer
+          minimum: 1
+    UpdateExpenseRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+          minimum: 0
+        dueDay:
+          type: integer
+          minimum: 1
+          maximum: 31
+          nullable: true
+        dueNote:
+          type: string
+        sourceId:
+          type: string
+        endMonth:
           type: string
           nullable: true
-          description: Cursor for the next page (`_id` of the last item)
-        hasMore:
-          type: boolean
-    DistribuicaoLancamento:
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    SetExpenseMonthRequest:
       type: object
       additionalProperties: false
-      required: [caixa, valor]
+      minProperties: 1
       properties:
-        caixa:
-          type: string
-        valor:
+        amount:
           type: number
-    LancamentoRequest:
+          minimum: 0
+        sourceId:
+          type: string
+    ErrorMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    SimulateDecisionRequest:
       type: object
       additionalProperties: false
-      required: [tipo, horizonte, valor, descricao, competencia]
+      required:
+        - mode
       properties:
-        tipo:
+        mode:
           type: string
-          enum: [entrada, saida]
-        horizonte:
-          type: string
-          enum: [presente, futuro]
-        valor:
+          enum: [hoje, aluguel, parcela, avista]
+        day:
+          type: integer
+        available:
           type: number
-        descricao:
-          type: string
-        competencia:
-          type: string
-        observacao:
-          type: string
-        caixaOrigem:
-          type: string
-        caixaCompensacao:
-          type: string
-        distribuicao:
-          type: array
-          items:
-            $ref: '#/components/schemas/DistribuicaoLancamento'
-        parcelaRef:
-          type: string
-        parcelaNum:
+        expense:
           type: number
-        totalParcelas:
-          type: number
-        recorrente:
-          type: boolean
-        competenciaInicial:
+        description:
           type: string
-        duracaoMeses:
+        rent:
           type: number
-        ativo:
-          type: boolean
-        mesesAbatidos:
+        otherExpenses:
           type: number
-        distribuirAutomaticamente:
-          type: boolean
-          description: Applies configured auto-distribution rules after income is credited to origin box
-        meioPagamento:
-          type: string
-          enum: [caixa, cartao]
-          description: cartao creates commitment without immediate debit
-    DistribuirLancamentoRequest:
+        total:
+          type: number
+        installments:
+          type: integer
+        value:
+          type: number
+    VerdictDetail:
       type: object
-      additionalProperties: false
-      required: [itens]
+      required:
+        - label
+        - value
       properties:
-        itens:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/DistribuicaoLancamento'
-    LancamentoUpdateRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        tipo:
-          type: string
-          enum: [entrada, saida]
-        horizonte:
-          type: string
-          enum: [presente, futuro]
-        valor:
-          type: number
-        descricao:
-          type: string
-        competencia:
-          type: string
-        observacao:
-          type: string
-        caixaOrigem:
-          type: string
-        caixaCompensacao:
-          type: string
-        distribuicao:
-          type: array
-          items:
-            $ref: '#/components/schemas/DistribuicaoLancamento'
-        parcelaRef:
-          type: string
-        parcelaNum:
-          type: number
-        totalParcelas:
-          type: number
-        recorrente:
-          type: boolean
-        competenciaInicial:
-          type: string
-        duracaoMeses:
-          type: number
-        ativo:
-          type: boolean
-        mesesAbatidos:
-          type: number
-    OrcamentoItemRequest:
-      type: object
-      additionalProperties: false
-      required: [caixa, valor]
-      properties:
-        caixa:
-          type: string
-        valor:
-          type: number
-    OrcamentoRequest:
-      type: object
-      additionalProperties: false
-      required: [orcamentos]
-      properties:
-        orcamentos:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrcamentoItemRequest'
-    LimitesRiscoRequest:
-      type: object
-      additionalProperties: false
-      required: [saudavel, atencao]
-      properties:
-        saudavel:
-          type: number
-        atencao:
-          type: number
-    ConfigLimitesRiscoRequest:
-      type: object
-      additionalProperties: false
-      required: [global, porCaixa]
-      properties:
-        global:
-          $ref: '#/components/schemas/LimitesRiscoRequest'
-        porCaixa:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/LimitesRiscoRequest'
-    PreferenciasUpdateRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        tiposEntrada:
-          type: array
-          items:
-            type: string
-        tiposSaida:
-          type: array
-          items:
-            type: string
-        limitesRisco:
-          $ref: '#/components/schemas/ConfigLimitesRiscoRequest'
-    CategoriaCreateRequest:
-      type: object
-      additionalProperties: false
-      required: [tipo, categoria]
-      properties:
-        tipo:
-          type: string
-          enum: [entrada, saida]
-        categoria:
-          type: string
-          minLength: 1
-    CategoriaCreateResponse:
-      type: object
-      additionalProperties: false
-      required: [tipo, categoria]
-      properties:
-        tipo:
-          type: string
-          enum: [entrada, saida]
-        categoria:
-          type: string
-    RiscoPrevisto:
-      type: object
-      additionalProperties: false
-      required: [entradaPrevista, comprometido, risco]
-      properties:
-        entradaPrevista:
-          type: number
-        comprometido:
-          type: number
-        risco:
-          type: number
-    LimitesRiscoMensal:
-      type: object
-      additionalProperties: false
-      required: [saudavel, atencao]
-      properties:
-        saudavel:
-          type: number
-        atencao:
-          type: number
-    PontoEvolucaoRisco:
-      type: object
-      additionalProperties: false
-      required: [dia, label, riscoEsperado, riscoReal, diferencial]
-      properties:
-        dia:
-          type: number
         label:
           type: string
-        riscoEsperado:
-          type: number
-        riscoReal:
-          type: number
-        diferencial:
-          type: number
-    CompromissoMes:
+        value:
+          type: string
+    Verdict:
       type: object
-      additionalProperties: false
-      required: [id, descricao, tipo, valor]
-      properties:
-        id:
-          type: string
-        descricao:
-          type: string
-        tipo:
-          type: string
-          enum: [entrada, saida]
-        valor:
-          type: number
-        dia:
-          type: number
-          nullable: true
-        parcelaNum:
-          type: number
-        totalParcelas:
-          type: number
-    ComposicaoRisco:
-      type: object
-      additionalProperties: false
-      required: [descricao, valor, percentual]
-      properties:
-        descricao:
-          type: string
-        valor:
-          type: number
-        percentual:
-          type: number
-    ImpactoRisco:
-      type: object
-      additionalProperties: false
-      required: [id, descricao, tipo, valor, impactoRisco, competencia, direcao]
-      properties:
-        id:
-          type: string
-        descricao:
-          type: string
-        tipo:
-          type: string
-          enum: [despesa_futura, parcelamento, renda_extra, realizacao, abatimento, outro]
-        valor:
-          type: number
-        impactoRisco:
-          type: number
-        competencia:
-          type: string
-        direcao:
-          type: string
-          enum: [aumenta, reduz]
-    AcompanhamentoMes:
-      type: object
-      additionalProperties: false
       required:
-        - competencia
-        - risco
-        - riscoReal
-        - diferencial
-        - diferencialValor
-        - status
-        - dentroPlanejado
-        - limites
-        - evolucao
-        - compromissos
-        - composicao
-        - impactos
+        - kind
+        - title
+        - impact
+        - message
+        - details
       properties:
-        competencia:
+        kind:
           type: string
-        risco:
-          $ref: '#/components/schemas/RiscoPrevisto'
-        riscoReal:
-          $ref: '#/components/schemas/RiscoPrevisto'
-        diferencial:
-          type: number
-        diferencialValor:
-          type: number
-        status:
+          enum: [ok, warn, bad, info]
+        title:
           type: string
-          enum: [saudavel, atencao, critico]
-        dentroPlanejado:
-          type: boolean
-        limites:
-          $ref: '#/components/schemas/LimitesRiscoMensal'
-        evolucao:
+        impact:
+          type: string
+        message:
+          type: string
+        details:
           type: array
           items:
-            $ref: '#/components/schemas/PontoEvolucaoRisco'
-        compromissos:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompromissoMes'
-        composicao:
-          type: array
-          items:
-            $ref: '#/components/schemas/ComposicaoRisco'
-        impactos:
-          type: array
-          items:
-            $ref: '#/components/schemas/ImpactoRisco'
-    CompensationSource:
-      type: object
-      additionalProperties: false
-      required: [id, tipoOrigem, origemId, valorMensalDestinado]
-      properties:
-        id:
-          type: string
-        tipoOrigem:
-          type: string
-          enum: [orcamento, objetivo]
-        origemId:
-          type: string
-        valorMensalDestinado:
-          type: number
-    SimulacaoImpactoRequest:
-      type: object
-      additionalProperties: false
-      required:
-        - valorTotal
-        - duracaoMeses
-        - dataPrimeiroPagamento
-        - modoCompensacao
-        - fontesDeCompensacao
-      properties:
-        valorTotal:
-          type: number
-        duracaoMeses:
-          type: number
-        dataPrimeiroPagamento:
-          type: string
-        modoCompensacao:
-          type: string
-          enum: [declarada, nao-declarada]
-        fontesDeCompensacao:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompensationSource'
-    MonthlyImpact:
-      type: object
-      additionalProperties: false
-      required:
-        - referenciaMes
-        - entradasPrevistas
-        - compromissosAnteriores
-        - novaParcela
-        - totalComprometido
-        - comprometimentoAntes
-        - comprometimentoDepois
-        - variacaoComprometimento
-        - classificacaoAntes
-        - classificacaoDepois
-        - alertas
-      properties:
-        referenciaMes:
-          type: string
-        entradasPrevistas:
-          type: number
-        compromissosAnteriores:
-          type: number
-        novaParcela:
-          type: number
-        totalComprometido:
-          type: number
-        comprometimentoAntes:
-          type: number
-          nullable: true
-        comprometimentoDepois:
-          type: number
-          nullable: true
-        variacaoComprometimento:
-          type: number
-          nullable: true
-        classificacaoAntes:
-          type: string
-          enum: [saudavel, atencao, critico]
-        classificacaoDepois:
-          type: string
-          enum: [saudavel, atencao, critico]
-        alertas:
-          type: array
-          items:
-            type: string
-    BudgetImpact:
-      type: object
-      additionalProperties: false
-      required:
-        - fonteId
-        - nome
-        - valorPlanejadoMensal
-        - valorMensalDestinado
-        - novoValorMensal
-        - percentualReducao
-        - alertas
-      properties:
-        fonteId:
-          type: string
-        nome:
-          type: string
-        valorPlanejadoMensal:
-          type: number
-        valorMensalDestinado:
-          type: number
-        novoValorMensal:
-          type: number
-        percentualReducao:
-          type: number
-          nullable: true
-        alertas:
-          type: array
-          items:
-            type: string
-    GoalImpact:
-      type: object
-      additionalProperties: false
-      required:
-        - fonteId
-        - nome
-        - valorRestanteObjetivo
-        - aporteMensalPlanejado
-        - valorMensalDestinado
-        - novoAporteMensal
-        - prazoOriginalMeses
-        - novoPrazoMeses
-        - diferencaPrazoMeses
-        - status
-        - alertas
-      properties:
-        fonteId:
-          type: string
-        nome:
-          type: string
-        valorRestanteObjetivo:
-          type: number
-        aporteMensalPlanejado:
-          type: number
-        valorMensalDestinado:
-          type: number
-        novoAporteMensal:
-          type: number
-        prazoOriginalMeses:
-          type: number
-          nullable: true
-        novoPrazoMeses:
-          type: number
-          nullable: true
-        diferencaPrazoMeses:
-          type: number
-          nullable: true
-        status:
-          type: string
-          enum: [normal, congelado]
-        alertas:
-          type: array
-          items:
-            type: string
-    ScenarioSummary:
-      type: object
-      additionalProperties: false
-      required:
-        - totalFontesDeclaradas
-        - quantidadeFontes
-        - possuiOrcamento
-        - possuiObjetivo
-        - impactoBruto
-        - piorComprometimentoDepois
-        - piorMes
-        - mesesCriticos
-        - alertasGerais
-      properties:
-        totalFontesDeclaradas:
-          type: number
-        quantidadeFontes:
-          type: number
-        possuiOrcamento:
-          type: boolean
-        possuiObjetivo:
-          type: boolean
-        impactoBruto:
-          type: boolean
-        piorComprometimentoDepois:
-          type: number
-          nullable: true
-        piorMes:
-          type: string
-          nullable: true
-        mesesCriticos:
-          type: number
-        alertasGerais:
-          type: array
-          items:
-            type: string
-    SimulationResult:
-      type: object
-      additionalProperties: false
-      required:
-        - parcelaMensal
-        - mesesAfetados
-        - budgetImpacts
-        - goalImpacts
-        - monthlyImpacts
-        - resumoImpacto
-      properties:
-        parcelaMensal:
-          type: number
-        mesesAfetados:
-          type: array
-          items:
-            type: string
-        budgetImpacts:
-          type: array
-          items:
-            $ref: '#/components/schemas/BudgetImpact'
-        goalImpacts:
-          type: array
-          items:
-            $ref: '#/components/schemas/GoalImpact'
-        monthlyImpacts:
-          type: array
-          items:
-            $ref: '#/components/schemas/MonthlyImpact'
-        resumoImpacto:
-          $ref: '#/components/schemas/ScenarioSummary'
-paths:
-  /api/health:
-    get:
-      summary: Health check
-      operationId: healthCheck
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-  /api/users/register:
-    post:
-      summary: Register first account holder (titular)
-      operationId: registerUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterUserRequest'
-      responses:
-        '201':
-          description: Created
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '403':
-          description: Registration closed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-  /api/users/login:
-    post:
-      summary: Login
-      operationId: loginUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginUserRequest'
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-  /api/users:
-    post:
-      summary: Create dependente (titular only)
-      operationId: createDependente
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateDependenteRequest'
-      responses:
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-    get:
-      summary: List users (titular only)
-      operationId: listUsers
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-  /api/users/{id}:
-    get:
-      summary: Get user by id
-      operationId: getUserById
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-    put:
-      summary: Update user (titular only)
-      operationId: updateUser
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUserRequest'
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-    delete:
-      summary: Delete user (titular only)
-      operationId: deleteUser
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-
-  /api/emprestimos:
-    post:
-      tags: [Emprestimos]
-      operationId: criarEmprestimo
-      summary: Register loan inflow and future installment obligations
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: false
-              required: [valorTotal, duracaoMeses, dataPrimeiroPagamento, caixaOrigem, caixaParcelas]
-              properties:
-                valorTotal:
-                  type: number
-                duracaoMeses:
-                  type: integer
-                  minimum: 1
-                dataPrimeiroPagamento:
-                  type: string
-                caixaOrigem:
-                  type: string
-                caixaParcelas:
-                  type: string
-                descricao:
-                  type: string
-                distribuicao:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DistribuicaoLancamento'
-                distribuirAutomaticamente:
-                  type: boolean
-      responses:
-        '201':
-          description: Loan created
-        '400':
-          description: Validation error
-        '401':
-          description: Unauthorized
-  /api/caixas:
-    post:
-      summary: Create caixa
-      operationId: createCaixa
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CaixaRequest'
-      responses:
-        '201':
-          description: Created
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-    get:
-      summary: List caixas
-      operationId: listCaixas
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-  /api/caixas/{id}:
-    get:
-      summary: Get caixa
-      operationId: getCaixa
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    put:
-      summary: Update caixa
-      operationId: updateCaixa
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CaixaUpdateRequest'
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    delete:
-      summary: Delete caixa
-      operationId: deleteCaixa
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-  /api/contas:
-    post:
-      summary: Create conta
-      operationId: createConta
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContaRequest'
-      responses:
-        '201':
-          description: Created
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-    get:
-      summary: List contas
-      operationId: listContas
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [aberta, liquidada, cancelada]
-        - name: tipo
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [a_pagar, a_receber]
-        - name: competencia
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: pageSize
-          in: query
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-        - name: lastItemId
-          in: query
-          required: false
-          description: Cursor — `_id` do último item da página anterior
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContasListaPaginada'
-        '401':
-          description: Unauthorized
-  /api/contas/sincronizar-recorrentes:
-    post:
-      summary: Materialize Conta occurrences from active recorrentes
-      operationId: sincronizarContasRecorrentes
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: false
-      responses:
-        '204':
-          description: No Content
-        '401':
-          description: Unauthorized
-  /api/contas/{id}:
-    get:
-      summary: Get conta
-      operationId: getConta
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    put:
-      summary: Update conta
-      operationId: updateConta
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContaUpdateRequest'
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    delete:
-      summary: Delete conta
-      operationId: deleteConta
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-  /api/contas/{id}/liquidar:
-    post:
-      summary: Settle conta into a present lancamento
-      operationId: liquidarConta
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContaLiquidarRequest'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-  /api/lancamentos:
-    post:
-      summary: Create lancamento
-      operationId: createLancamento
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LancamentoRequest'
-      responses:
-        '201':
-          description: Created
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-    get:
-      summary: List lancamentos
-      operationId: listLancamentos
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: competencia
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: recorrente
-          in: query
-          required: false
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-  /api/lancamentos/{id}:
-    get:
-      summary: Get lancamento
-      operationId: getLancamento
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    put:
-      summary: Update lancamento
-      operationId: updateLancamento
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LancamentoUpdateRequest'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-    delete:
-      summary: Delete lancamento
-      operationId: deleteLancamento
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-  /api/lancamentos/{id}/distribuir:
-    post:
-      tags: [Lancamentos]
-      operationId: distribuirLancamento
-      summary: Distribute income from origin box to allocation boxes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DistribuirLancamentoRequest'
-      responses:
-        '200':
-          description: Updated income entry with distribution
-        '400':
-          description: Validation error
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not found
-
-  /api/orcamentos/{competencia}:
-    get:
-      summary: List orcamentos by competencia
-      operationId: listOrcamentos
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: competencia
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-    put:
-      summary: Upsert orcamentos by competencia
-      operationId: upsertOrcamentos
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: competencia
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrcamentoRequest'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-  /api/acompanhamento/{competencia}:
-    get:
-      summary: Get monthly acompanhamento
-      operationId: getAcompanhamento
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: competencia
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AcompanhamentoMes'
-        '401':
-          description: Unauthorized
-  /api/acompanhamento/simulacao-impacto:
-    post:
-      summary: Simulate impact of new installment commitment
-      operationId: simularImpactoAcompanhamento
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulacaoImpactoRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SimulationResult'
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-  /api/preferencias:
-    get:
-      summary: Get user preferencias
-      operationId: getPreferencias
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: Unauthorized
-    put:
-      summary: Update user preferencias
-      operationId: updatePreferencias
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PreferenciasUpdateRequest'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-  /api/categorias:
-    get:
-      summary: Search category suggestions by type
-      operationId: buscarCategorias
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: tipo
-          in: query
-          required: true
-          schema:
-            type: string
-            enum: [entrada, saida]
-        - name: q
-          in: query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
-    post:
-      summary: Ensure category exists in user preferences
-      operationId: adicionarCategoria
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoriaCreateRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoriaCreateResponse'
-        '400':
-          description: Bad Request
-        '401':
-          description: Unauthorized
+            $ref: "#/components/schemas/VerdictDetail"
