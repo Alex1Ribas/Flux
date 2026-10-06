@@ -1,18 +1,8 @@
 import type { EUserRole, IUser, IParamsCreateUser } from './user.interface.js';
-import type { IUserRepositoryRead } from '../../repository/user.repository.read.js';
-import type { IUserRepositoryWrite } from '../../repository/user.repository.write.js';
 
 export interface IParamsLoginUser {
-  email: string;
-  password: string;
-}
-
-export type IParamsCreateDependente = IParamsCreateUser;
-
-export interface IParamsUpdateUser {
-  name?: string;
   email?: string;
-  role?: EUserRole;
+  password?: string;
 }
 
 export interface IHashService {
@@ -35,12 +25,8 @@ export interface ICredentialVerifyResult {
   user?: IUser;
 }
 
-/** Port de infra: valida credenciais sem expor senha no contrato de repository */
 export interface IUserCredentialsPort {
-  verify(
-    email: string,
-    plainPassword: string,
-  ): Promise<ICredentialVerifyResult>;
+  verify(email: string, plainPassword: string): Promise<ICredentialVerifyResult>;
 }
 
 export interface ICreateUserResult {
@@ -54,36 +40,8 @@ export interface ILoginUserResult {
   id: string;
 }
 
-export interface IUpdateUserResult {
-  message: string;
-  user: IUser;
-}
-
-export interface IDeleteUserResult {
-  message: string;
-}
-
-export interface IParamsUserService {
-  userRepositoryRead: IUserRepositoryRead;
-  userRepositoryWrite: IUserRepositoryWrite;
-  hashService: IHashService;
-  tokenService: ITokenService;
-  userCredentialsPort: IUserCredentialsPort;
-}
-
 export interface IUserService {
   createUser(params: IParamsCreateUser): Promise<ICreateUserResult>;
-  createDependente(params: IParamsCreateDependente): Promise<ICreateUserResult>;
   loginUser(params: IParamsLoginUser): Promise<ILoginUserResult>;
-  listUsers(): Promise<IUser[]>;
-  getUserById(
-    id: string,
-    requestUserId: string,
-    requestRole: EUserRole,
-  ): Promise<IUser>;
-  updateUserById(
-    id: string,
-    params: IParamsUpdateUser,
-  ): Promise<IUpdateUserResult>;
-  deleteUserById(id: string): Promise<IDeleteUserResult>;
+  getUserById(id: string): Promise<IUser>;
 }
