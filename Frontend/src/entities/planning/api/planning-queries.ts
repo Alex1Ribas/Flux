@@ -12,4 +12,14 @@ export const planningQueries = {
         return response.data;
       },
     }),
+  month: (monthKey: string | null) =>
+    queryOptions({
+      queryKey: [...planningQueries.all(), 'month', monthKey ?? 'current'] as const,
+      queryFn: async () => {
+        const response = await apiClient.get<IPlan>('/planning', {
+          params: { from: monthKey ?? undefined, months: 1 },
+        });
+        return response.data;
+      },
+    }),
 };
