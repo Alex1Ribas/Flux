@@ -4,7 +4,6 @@ import { planningQueries } from '@/entities/planning/api/planning-queries';
 import { formatPercent, periodLabel } from '@/entities/planning/model/month-label';
 import type { IPlan } from '@/entities/planning/model/planning';
 import { KpiCard } from '@/entities/planning/ui/kpi-card';
-import { CreateExpenseButton } from '@/features/create-expense/ui/create-expense-button';
 import { PlanSettingsPanel } from '@/features/edit-plan-settings/ui/plan-settings-panel';
 import { ExportPlanButton } from '@/features/export-plan/ui/export-plan-button';
 import { usePlanHorizonStore } from '@/features/plan-horizon/model/plan-horizon-store';
@@ -107,15 +106,12 @@ export const PlanningBoard = () => {
       <View className="flex-row items-center justify-end gap-2">
         {planQuery.isFetching ? <ActivityIndicator color="#2563eb" /> : null}
         <ExportPlanButton plan={plan} />
-        {hasIncome ? (
-          <CreateExpenseButton currentMonth={plan.currentMonth} incomeSources={plan.incomeSources} />
-        ) : null}
       </View>
       {hasIncome ? null : (
         <SurfaceCard className="gap-1 border-brand-blue-border bg-brand-blue-soft">
           <Text className="text-title-md text-brand-blue-text">Comece pelas suas rendas</Text>
           <Text className="text-body-md text-brand-blue-text">
-            Em “Ajustar entradas e reserva”, adicione cada renda com o dia do pagamento. Depois use “+ Conta” para cadastrar as contas do mês.
+            Em “Ajustar entradas e reserva”, adicione cada renda com o dia do pagamento. Depois cadastre as contas do mês na aba Contas.
           </Text>
         </SurfaceCard>
       )}
