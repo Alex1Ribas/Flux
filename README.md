@@ -90,6 +90,21 @@ Os services recebem `(userId, params)` e os repositórios sempre filtram por usu
 - **API e Web**: Vercel (serverless function para `/api/*`, export estático do Expo para a web).
 - **Mobile**: builds via EAS. Em push na `main`, um workflow do GitHub Actions classifica a mudança: se for só JS, publica um **OTA update** com `expo-updates`; se tocar código nativo, avisa que é preciso um build novo.
 
+## Evolução do projeto
+
+O Flux começou como **finCaixas**, com frontend e API em repositórios separados, e foi unificado neste monorepo em julho de 2026.
+
+A primeira versão ([Flux v1](https://github.com/Alex1Ribas/Flux-v1)) organizava o dinheiro em **caixas**: cada entrada era distribuída entre envelopes, cada saída debitava uma caixa e contas e cartão geravam comprometimento até serem pagos. Usando no dia a dia, o modelo se mostrou trabalhoso: tudo precisava ser registrado, distribuído e liquidado.
+
+Em outubro de 2026 o produto foi redesenhado em torno do **planejamento** em vez do registro: você descreve rendas e contas, e o app projeta os meses seguintes. A troca manteve o mesmo app em produção (mesmo projeto EAS, canal OTA, API e base de usuários) e reduziu o código em cerca de 70%:
+
+| | v1 (caixas) | v2 (planejamento) |
+|---|---|---|
+| Operações da API | 35 | 11 |
+| Código (front + back) | ~19,8 mil linhas | ~6,7 mil linhas |
+| Telas | 10 | 4 |
+| Frontend | Pastas por tipo técnico + Expo Router | Feature-Sliced Design |
+
 ## Rodando localmente
 
 Pré-requisitos: Node 20+, Yarn 1 e uma instância do MongoDB.
