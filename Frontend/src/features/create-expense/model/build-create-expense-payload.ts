@@ -24,18 +24,23 @@ export type TBuildExpenseResult =
   | { ok: true; payload: ICreateExpensePayload }
   | { ok: false; error: string };
 
-export const nextMonthKey = (monthKey: string): string => {
+export const shiftMonthKey = (monthKey: string, offset: number): string => {
   const [year, month] = monthKey.split('-').map(Number);
-  if (month === 12) {
-    return `${year + 1}-01`;
-  }
-  return `${year}-${String(month + 1).padStart(2, '0')}`;
+  const absolute = year * 12 + (month - 1) + offset;
+  return `${Math.floor(absolute / 12)}-${String((absolute % 12) + 1).padStart(2, '0')}`;
 };
 
-export const buildCreateExpensePayload = (form: ICreateExpenseForm): TBuildExpenseResult => {
+export const buildCreateExpensePayload = (
+  form: ICreateExpenseForm,
+  currentMonth: string,
+): TBuildExpenseResult => {
   const name = form.name.trim();
   if (!name) {
     return { ok: false, error: 'Informe o nome da conta.' };
+  }
+
+  if (form.startMonth < currentMonth) {
+    return { ok: false, error: 'A conta não pode começar em um mês passado.' };
   }
 
   let dueDay: number | null = null;

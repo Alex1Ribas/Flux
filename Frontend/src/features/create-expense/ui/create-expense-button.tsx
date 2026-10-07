@@ -9,7 +9,7 @@ import { formatMoneyInput } from '@/shared/lib/money-input';
 import { useCreateExpense } from '../api/use-create-expense';
 import {
   buildCreateExpensePayload,
-  nextMonthKey,
+  shiftMonthKey,
   type ICreateExpenseForm,
 } from '../model/build-create-expense-payload';
 
@@ -68,7 +68,7 @@ export const CreateExpenseButton = ({ currentMonth, incomeSources }: ICreateExpe
   };
 
   const submit = async () => {
-    const result = buildCreateExpensePayload(form);
+    const result = buildCreateExpensePayload(form, currentMonth);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -81,7 +81,9 @@ export const CreateExpenseButton = ({ currentMonth, incomeSources }: ICreateExpe
     }
   };
 
-  const followingMonth = nextMonthKey(currentMonth);
+  const followingMonth = shiftMonthKey(currentMonth, 1);
+  const selectedLabel = monthLabel(form.startMonth);
+  const canGoBack = form.startMonth > currentMonth;
 
   return (
     <>
@@ -168,18 +170,35 @@ export const CreateExpenseButton = ({ currentMonth, incomeSources }: ICreateExpe
 
                 <View className="gap-1.5">
                   <Text className="text-body-sm font-bold text-text-primary">Começa em</Text>
+                  <View className="flex-row items-center justify-between gap-2">
+                    <Pressable
+                      onPress={() => update('startMonth', shiftMonthKey(form.startMonth, -1))}
+                      disabled={!canGoBack}
+                      accessibilityRole="button"
+                      accessibilityLabel="Mês anterior"
+                      accessibilityState={{ disabled: !canGoBack }}
+                      className={cn(
+                        'w-11 min-h-[40px] rounded-control border border-border-subtle bg-card-bg items-center justify-center',
+                        !canGoBack && 'opacity-40',
+                      )}
+                    >
+                      <Text className="text-title-md text-text-primary">‹</Text>
+                    </Pressable>
+                    <Text className="text-title-sm text-text-primary font-bold">
+                      {selectedLabel.name}/{selectedLabel.year}
+                    </Text>
+                    <Pressable
+                      onPress={() => update('startMonth', shiftMonthKey(form.startMonth, 1))}
+                      accessibilityRole="button"
+                      accessibilityLabel="Próximo mês"
+                      className="w-11 min-h-[40px] rounded-control border border-border-subtle bg-card-bg items-center justify-center"
+                    >
+                      <Text className="text-title-md text-text-primary">›</Text>
+                    </Pressable>
+                  </View>
                   <View className="flex-row flex-wrap gap-2">
-                    {[currentMonth, followingMonth].map((monthKey) => {
-                      const label = monthLabel(monthKey);
-                      return (
-                        <Chip
-                          key={monthKey}
-                          label={`${label.name}/${label.year}`}
-                          active={form.startMonth === monthKey}
-                          onPress={() => update('startMonth', monthKey)}
-                        />
-                      );
-                    })}
+                    <Chip label="Este mês" active={form.startMonth === currentMonth} onPress={() => update('startMonth', currentMonth)} />
+                    <Chip label="Próximo mês" active={form.startMonth === followingMonth} onPress={() => update('startMonth', followingMonth)} />
                   </View>
                 </View>
 

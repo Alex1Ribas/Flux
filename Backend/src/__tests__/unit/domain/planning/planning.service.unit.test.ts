@@ -54,6 +54,21 @@ describe('PlanningService', () => {
     });
   });
 
+  describe('when creating an expense', () => {
+    it('should reject a start month in the past', async () => {
+      const { service } = buildService();
+      await expect(
+        service.createExpense('user-1', { name: 'Conta', amount: 10, startMonth: '2026-09' }),
+      ).rejects.toEqual(new DomainError(EErrorCode.VALIDATION_ERROR, 422));
+    });
+
+    it('should accept a future start month', async () => {
+      const { service, planningRepositoryWrite } = buildService();
+      await service.createExpense('user-1', { name: 'Conta', amount: 10, startMonth: '2027-03' });
+      expect(planningRepositoryWrite.createExpense).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('when no period is informed', () => {
     it('should start at the current month with six months', async () => {
       const { service } = buildService();

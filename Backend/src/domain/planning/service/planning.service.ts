@@ -159,7 +159,11 @@ export class PlanningService implements IPlanningService {
     }
     const defaultAmount = parseNonNegativeAmount(params.amount);
     const dueDay = parseDueDay(params.dueDay);
-    const startMonth = parseMonthKey(params.startMonth, currentMonthKey(this.now()));
+    const currentMonth = currentMonthKey(this.now());
+    const startMonth = parseMonthKey(params.startMonth, currentMonth);
+    if (startMonth < currentMonth) {
+      throw validationError();
+    }
 
     let endMonth: string | null = null;
     if (params.installments !== undefined) {
