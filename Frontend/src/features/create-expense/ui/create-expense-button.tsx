@@ -16,6 +16,7 @@ import {
 interface ICreateExpenseButtonProps {
   currentMonth: string;
   incomeSources: IIncomeSource[];
+  initialMonth?: string;
 }
 
 interface IChipProps {
@@ -41,14 +42,18 @@ const Chip = ({ label, active, onPress }: IChipProps) => (
 const INPUT_CLASS =
   'w-full h-[42px] px-3 rounded-control border border-border-subtle bg-card-bg text-body-md text-text-primary';
 
-export const CreateExpenseButton = ({ currentMonth, incomeSources }: ICreateExpenseButtonProps) => {
+export const CreateExpenseButton = ({ currentMonth, incomeSources, initialMonth }: ICreateExpenseButtonProps) => {
+  let defaultStartMonth = currentMonth;
+  if (initialMonth && initialMonth > currentMonth) {
+    defaultStartMonth = initialMonth;
+  }
   const emptyForm = (): ICreateExpenseForm => ({
     name: '',
     amount: formatMoneyInput('0'),
     dueDay: '',
     note: '',
     sourceId: null,
-    startMonth: currentMonth,
+    startMonth: defaultStartMonth,
     installments: '',
   });
   const [open, setOpen] = useState(false);
@@ -88,7 +93,10 @@ export const CreateExpenseButton = ({ currentMonth, incomeSources }: ICreateExpe
   return (
     <>
       <Pressable
-        onPress={() => setOpen(true)}
+        onPress={() => {
+          setForm(emptyForm());
+          setOpen(true);
+        }}
         className="bg-primary-container rounded-control px-4 min-h-[44px] flex-row items-center justify-center"
         style={primaryButtonShadowStyle}
         accessibilityRole="button"
