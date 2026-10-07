@@ -142,9 +142,6 @@ export const ExpensesBoard = () => {
       {hasIncome ? null : (
         <SurfaceCard className="gap-1 border-brand-blue-border bg-brand-blue-soft">
           <Text className="text-title-md text-brand-blue-text">Cadastre suas rendas primeiro</Text>
-          <Text className="text-body-md text-brand-blue-text">
-            No Planejamento, em “Ajustar entradas e reserva”, adicione cada renda. Depois volte aqui para lançar as contas.
-          </Text>
         </SurfaceCard>
       )}
 

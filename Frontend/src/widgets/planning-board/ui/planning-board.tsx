@@ -122,26 +122,12 @@ export const PlanningBoard = () => {
       <View className="flex-row items-end justify-between gap-3 flex-wrap mt-1">
         <View className="flex-1 min-w-[200px]">
           <Text className="text-headline-sm text-text-primary font-bold">Fluxo mensal</Text>
-          <Text className="text-body-sm text-muted mt-1">
-            Abra “Ver contas” para ajustar valor e fonte de cada mês.
-          </Text>
         </View>
         <HorizonSelector />
       </View>
 
       <MonthGrid plan={plan} />
       <ExtendHorizonButton />
-
-      <View className="flex-row gap-2 p-3 rounded-lg border border-border-subtle bg-surface">
-        <Text className="text-primary-container text-title-sm">ⓘ</Text>
-        <Text className="flex-1 text-body-sm text-muted">
-          <Text className="font-bold text-text-primary">Critério usado: </Text>
-          {sourceRuleNote(plan.incomeSources)}
-        </Text>
-      </View>
-      <Text className="text-body-sm text-muted">
-        Contas sem data de término continuam nos meses seguintes. Faturas sem valor informado ficam zeradas até serem editadas.
-      </Text>
     </View>
   );
 };
