@@ -1,64 +1,13 @@
-import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { planningQueries } from '@/entities/planning/api/planning-queries';
-import { formatPercent, periodLabel } from '@/entities/planning/model/month-label';
+import { ActivityIndicator, Text, View, useWindowDimensions } from 'react-native';
 import type { IPlan } from '@/entities/planning/model/planning';
-import { KpiCard } from '@/entities/planning/ui/kpi-card';
-import { PlanSettingsPanel } from '@/features/edit-plan-settings/ui/plan-settings-panel';
-import { ExportPlanButton } from '@/features/export-plan/ui/export-plan-button';
-import { usePlanHorizonStore } from '@/features/plan-horizon/model/plan-horizon-store';
 import { ExtendHorizonButton } from '@/features/plan-horizon/ui/extend-horizon-button';
 import { HorizonSelector } from '@/features/plan-horizon/ui/horizon-selector';
-import { formatMoney } from '@/shared/lib/format-money';
-import { SurfaceCard } from '@/shared/ui/surface-card';
-import { chunk, gridColumns, sourceRuleNote } from '../model/plan-copy';
+import { chunk, gridColumns } from '../model/plan-copy';
 import { MonthCard } from './month-card';
 
 interface IPlanSectionProps {
   plan: IPlan;
 }
-
-const StatusBanner = ({ plan }: IPlanSectionProps) => (
-  <SurfaceCard className="flex-row items-center justify-between gap-3 py-3 px-4 flex-wrap">
-    <View className="flex-row items-center gap-3 flex-1 min-w-[200px]">
-      <View className="w-2 h-2 rounded-full bg-primary-container" />
-      <Text className="text-title-sm text-text-primary">
-        Reserva atual em {formatMoney(plan.settings.initialReserve)}
-        <Text className="text-body-sm text-muted"> · {plan.settings.reserveRate}% da sobra vai para a reserva</Text>
-      </Text>
-    </View>
-    <Text className="text-body-sm text-muted">{periodLabel(plan.from, plan.to)}</Text>
-  </SurfaceCard>
-);
-
-const COMPACT_BREAKPOINT = 700;
-
-const Summary = ({ plan }: IPlanSectionProps) => {
-  const { width } = useWindowDimensions();
-  const compact = width < COMPACT_BREAKPOINT;
-  const sourceNames = plan.incomeSources.map((source) => source.name).join(' + ');
-  return (
-    <View className="flex-row flex-wrap gap-3">
-      <KpiCard label="Renda mensal" compact={compact} value={formatMoney(plan.summary.monthlyIncome)} note={sourceNames} />
-      <KpiCard
-        label={`Gastos em ${plan.months.length} meses`} compact={compact}
-        value={formatMoney(plan.summary.totalSpend)}
-        note={`${formatPercent(plan.summary.commitment)} da renda do período`}
-      />
-      <KpiCard
-        label="Reserva projetada" compact={compact}
-        value={formatMoney(plan.summary.projectedReserve)}
-        note={`${plan.settings.reserveRate}% da sobra de cada mês`}
-        accent
-      />
-      <KpiCard
-        label="Livre após reserva" compact={compact}
-        value={formatMoney(plan.summary.totalFree)}
-        note="Total disponível no período"
-      />
-    </View>
-  );
-};
 
 const MonthGrid = ({ plan }: IPlanSectionProps) => {
   const { width } = useWindowDimensions();
@@ -79,55 +28,24 @@ const MonthGrid = ({ plan }: IPlanSectionProps) => {
   );
 };
 
-export const PlanningBoard = () => {
-  const months = usePlanHorizonStore((state) => state.months);
-  const planQuery = useQuery({ ...planningQueries.plan(months), placeholderData: keepPreviousData });
+interface IPlanningBoardProps {
+  plan: IPlan;
+  isFetching: boolean;
+}
 
-  if (planQuery.isLoading) {
-    return <ActivityIndicator color="#2563eb" className="mt-8" />;
-  }
-
-  if (planQuery.isError || !planQuery.data) {
-    return (
-      <SurfaceCard className="gap-3">
-        <Text className="text-danger-text text-body-md">Não foi possível carregar o planejamento.</Text>
-        <Pressable onPress={() => void planQuery.refetch()} className="self-start px-3 py-2 rounded-control border border-border-subtle">
-          <Text className="text-title-sm text-primary-container">Tentar novamente</Text>
-        </Pressable>
-      </SurfaceCard>
-    );
-  }
-
-  const plan = planQuery.data;
-  const hasIncome = plan.incomeSources.length > 0;
-
-  return (
-    <View className="gap-space-lg">
-      <View className="flex-row items-center justify-end gap-2">
-        {planQuery.isFetching ? <ActivityIndicator color="#2563eb" /> : null}
-        <ExportPlanButton plan={plan} />
+export const PlanningBoard = ({ plan, isFetching }: IPlanningBoardProps) => (
+  <View className="gap-space-lg">
+    <View className="flex-row items-end justify-between gap-3 flex-wrap mt-1">
+      <View className="flex-1 min-w-[200px]">
+        <Text className="text-headline-sm text-text-primary font-bold">Fluxo mensal</Text>
       </View>
-      {hasIncome ? null : (
-        <SurfaceCard className="gap-1 border-brand-blue-border bg-brand-blue-soft">
-          <Text className="text-title-md text-brand-blue-text">Comece pelas suas rendas</Text>
-          <Text className="text-body-md text-brand-blue-text">
-            Em “Ajustar entradas e reserva”, adicione cada renda com o dia do pagamento. Depois cadastre as contas do mês na aba Contas.
-          </Text>
-        </SurfaceCard>
-      )}
-      <StatusBanner plan={plan} />
-      <Summary plan={plan} />
-      <PlanSettingsPanel settings={plan.settings} incomeSources={plan.incomeSources} />
-
-      <View className="flex-row items-end justify-between gap-3 flex-wrap mt-1">
-        <View className="flex-1 min-w-[200px]">
-          <Text className="text-headline-sm text-text-primary font-bold">Fluxo mensal</Text>
-        </View>
+      <View className="flex-row items-center gap-2">
+        {isFetching ? <ActivityIndicator color="#2563eb" /> : null}
         <HorizonSelector />
       </View>
-
-      <MonthGrid plan={plan} />
-      <ExtendHorizonButton />
     </View>
-  );
-};
+
+    <MonthGrid plan={plan} />
+    <ExtendHorizonButton />
+  </View>
+);

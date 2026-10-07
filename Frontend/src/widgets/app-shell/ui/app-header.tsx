@@ -3,12 +3,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabStore, type AppTab } from '@/features/navigation/model/tab-store';
 
 const TITLES: Record<AppTab, string> = {
+  dashboard: 'Dashboard',
   planejamento: 'Planejamento',
   contas: 'Contas',
   simulador: 'Simulador',
 };
 
 const SUBTITLES: Record<AppTab, string> = {
+  dashboard: 'Resumo da renda, gastos e reserva.',
   planejamento: 'Renda, contas e reserva mês a mês.',
   contas: 'Lance e ajuste as contas de cada mês.',
   simulador: 'Confira se uma compra cabe no mês.',

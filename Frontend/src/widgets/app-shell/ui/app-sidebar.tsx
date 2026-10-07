@@ -7,6 +7,7 @@ import { useTabStore, type AppTab } from '@/features/navigation/model/tab-store'
 import { cn } from '@/shared/lib/cn';
 
 const NAV_ITEMS: { tab: AppTab; label: string; icon: string }[] = [
+  { tab: 'dashboard', label: 'Dashboard', icon: '◫' },
   { tab: 'planejamento', label: 'Planejamento', icon: '▦' },
   { tab: 'contas', label: 'Contas', icon: '≡' },
   { tab: 'simulador', label: 'Simulador', icon: '◎' },

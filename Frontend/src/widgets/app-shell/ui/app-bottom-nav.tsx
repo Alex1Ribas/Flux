@@ -4,6 +4,7 @@ import { useTabStore, type AppTab } from '@/features/navigation/model/tab-store'
 import { cn } from '@/shared/lib/cn';
 
 const BOTTOM_ITEMS: { tab: AppTab; label: string; icon: string }[] = [
+  { tab: 'dashboard', label: 'Dashboard', icon: '◫' },
   { tab: 'planejamento', label: 'Planejamento', icon: '▦' },
   { tab: 'simulador', label: 'Simulador', icon: '◎' },
 ];

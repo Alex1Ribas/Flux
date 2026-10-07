@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProviders } from './providers/app-providers';
 import { SessionGate } from './providers/session-gate';
-import { HomePage } from '@/pages/home/ui/home-page';
+import { TabRouter } from './routing/tab-router';
 import { useAtualizacaoOta } from '@/shared/lib/ota/use-atualizacao-ota';
 import { OtaBootstrapFallback } from '@/widgets/app-bootstrap/ui/ota-bootstrap-fallback';
 
@@ -23,7 +23,7 @@ const AppEntry = () => {
       <AppProviders>
         <StatusBar style="dark" />
         <SessionGate>
-          <HomePage />
+          <TabRouter />
         </SessionGate>
       </AppProviders>
     </SafeAreaProvider>
