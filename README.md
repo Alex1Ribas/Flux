@@ -1,38 +1,118 @@
 # Flux
 
-Monorepo do aplicativo financeiro **Flux** — mostra quanto o usuário pode gastar agora sem comprometer contas, parcelas, reserva e os próximos meses.
+**Quanto eu posso gastar agora sem comprometer o resto do mês, e os próximos?**
+
+Flux é um app de planejamento financeiro pessoal que responde essa pergunta. Em vez de só registrar gastos passados, ele projeta os próximos meses a partir das rendas, contas fixas, parcelas e da reserva que você quer guardar, e mostra o valor realmente livre hoje.
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" width="200" alt="Dashboard" />
+  <img src="docs/screenshots/planejamento.png" width="200" alt="Planejamento" />
+  <img src="docs/screenshots/contas.png" width="200" alt="Contas" />
+  <img src="docs/screenshots/simulador.png" width="200" alt="Simulador" />
+</p>
+<p align="center"><sub>Telas com dados fictícios.</sub></p>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![React Native](https://img.shields.io/badge/React_Native-0.86-61DAFB?logo=react&logoColor=black)
+![Expo](https://img.shields.io/badge/Expo-57-000020?logo=expo&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+
+## Funcionalidades
+
+- **Dashboard**: visão do mês atual com renda, gastos, reserva e quanto está livre.
+- **Planejamento**: projeção de 1 a 60 meses. Cada mês considera as contas ativas, sobrescritas pontuais e a reserva acumulada.
+- **Contas**: contas fixas e parceladas com início/fim, valor e fonte de renda por mês (ex.: só a conta de luz de dezembro foi maior).
+- **Rendas**: múltiplas fontes com dia de pagamento, e entradas avulsas que contam só no mês atual. Contas novas são associadas automaticamente à renda que cai antes do vencimento.
+- **Simulador**: "posso comprar isso?". Avalia o gasto contra o valor livre do mês e devolve um veredito (ok / atenção / não cabe) com o impacto.
+- **Exportação**: planejamento exportável em CSV.
+- **Multiusuário**: cadastro aberto com JWT; cada usuário só enxerga o próprio planejamento.
+
+### Como o mês é calculado
+
+```
+sobra    = renda − gastos
+reserva  = max(0, sobra) × % de reserva
+livre    = sobra − reserva
+```
+
+A reserva acumula mês a mês a partir do saldo de reserva atual.
+
+## Arquitetura
+
+Monorepo com Yarn workspaces:
 
 ```
 ./
-├── Frontend/   # Expo / React Native (flux-app) — FSD + TanStack Query + Zustand
-├── Backend/    # API Express 5 + MongoDB (flux-api)
-├── package.json
-└── vercel.json
+├── Frontend/   # App Expo / React Native (iOS, Android e Web)
+├── Backend/    # API REST em Express 5 + MongoDB
+└── .github/    # CI de OTA updates
 ```
 
-## Desenvolvimento
+### Frontend: Feature-Sliced Design
+
+```
+src/
+├── app/        # providers, roteamento, bootstrap
+├── pages/      # dashboard, planejamento, contas, simulador
+├── widgets/    # blocos compostos (planning-board, expenses-board…)
+├── features/   # casos de uso (auth, create-expense, simulator…)
+├── entities/   # modelos de domínio (user, planning, decision, session)
+└── shared/     # UI kit, client HTTP, design tokens, utils
+```
+
+- **TanStack Query** para estado de servidor (cache, invalidação, mutations) e **Zustand** só para estado de cliente (sessão, UI).
+- **NativeWind** (Tailwind) para estilo, compartilhado entre nativo e web.
+- Cada camada só importa das camadas abaixo dela.
+
+### Backend: Clean Architecture
+
+| Camada | Responsabilidade |
+|--------|------------------|
+| `domain/` | Entidades, regras de negócio e contratos de repositório. Sem Express, Mongoose nem env |
+| `infrastructure/` | Schemas Mongoose, repositórios, i18n de erros, segurança (bcrypt/JWT) |
+| `application/` | Controllers, middlewares (auth, rate limit), servidor HTTP |
+| `configurations/` | Composition root: env e factories que injetam as dependências |
+| `contracts/` | Contrato **OpenAPI** (`service.yaml`), validado em runtime em toda requisição |
+
+Os services recebem `(userId, params)` e os repositórios sempre filtram por usuário. Um recurso de outro usuário responde 404.
+
+## Qualidade
+
+- **Testes de unidade** dos services e helpers de domínio com fakes.
+- **Testes de integração** da API com Supertest + `mongodb-memory-server`.
+- **Testes de unidade no app** (Jest) para a lógica das features: validação de formulários, montagem de payloads, stores e exportação CSV.
+- TypeScript estrito nos dois lados (`yarn typecheck`).
+
+## Deploy
+
+- **API e Web**: Vercel (serverless function para `/api/*`, export estático do Expo para a web).
+- **Mobile**: builds via EAS. Em push na `main`, um workflow do GitHub Actions classifica a mudança: se for só JS, publica um **OTA update** com `expo-updates`; se tocar código nativo, avisa que é preciso um build novo.
+
+## Rodando localmente
+
+Pré-requisitos: Node 20+, Yarn 1 e uma instância do MongoDB.
 
 ```bash
-yarn install          # workspaces, na raiz
+yarn install
+
+cp Backend/.env.example Backend/.env     # MONGODB_URI, JWT_SECRET, ...
+cp Frontend/.env.example Frontend/.env   # EXPO_PUBLIC_FLUX_API_URL=http://localhost:3000/api
 
 yarn dev:api          # API em http://localhost:3000/api
 yarn dev:app          # App (Expo)
 yarn dev:web          # Web (Expo)
+```
 
+```bash
 yarn typecheck
 yarn test:api
 yarn test:app
 ```
 
-Variáveis: `Frontend/.env` e `Backend/.env` (veja os `.env.example`). Em dev o app usa `EXPO_PUBLIC_FLUX_API_URL` (com `/api` no final); em build de produção usa `extra.fluxApiBaseUrl` do `app.json` (`https://flux-backend-tizm.vercel.app/api`).
+Em dev, o app usa `EXPO_PUBLIC_FLUX_API_URL`. Em build de produção, usa `extra.fluxApiBaseUrl` do `app.json`.
 
-## Deploy (Vercel)
+## Licença
 
-Mesmas conexões do Flux em produção:
-
-- **API** (`flux-backend-tizm.vercel.app`): projeto Vercel com Root Directory `Backend`, usa `Backend/vercel.json` → `src/index.ts`. Precisa de `MONGODB_URI`.
-- **Monorepo / web** (`vercel.json` na raiz): API em `/api/*` via `Backend/src/index.ts` e web estática em `Frontend/dist`.
-
-## OTA (EAS Update)
-
-`expo-updates` no app + `.github/workflows/eas-hot-update.yml`: em push na `main`, mudanças só de JS em `Frontend/` publicam hot update (`yarn hot`); mudanças nativas apenas avisam que é preciso novo build. Requer o secret `EXPO_TOKEN`.
+[MIT](LICENSE) © Alex Ribas
