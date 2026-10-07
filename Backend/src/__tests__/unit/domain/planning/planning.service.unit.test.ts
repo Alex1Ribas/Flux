@@ -122,6 +122,17 @@ describe('PlanningService', () => {
     });
   });
 
+  describe('when updating an expense with resetMonthOverrides', () => {
+    it('should clear the month overrides', async () => {
+      const { service, planningRepositoryWrite } = buildService();
+      await service.updateExpense('user-1', { id: 'conta-curta', amount: 90, resetMonthOverrides: true });
+      expect(planningRepositoryWrite.updateExpenseById).toHaveBeenCalledWith('user-1', 'conta-curta', {
+        defaultAmount: 90,
+        monthOverrides: [],
+      });
+    });
+  });
+
   describe('when the reserve rate is above 100%', () => {
     it('should reject', async () => {
       const { service } = buildService();

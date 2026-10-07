@@ -218,6 +218,9 @@ export class PlanningService implements IPlanningService {
       }
       update.endMonth = params.endMonth;
     }
+    if (params.resetMonthOverrides === true) {
+      update.monthOverrides = [];
+    }
 
     await this.planningRepositoryWrite.updateExpenseById(userId, expense.id, update);
   }

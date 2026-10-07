@@ -70,6 +70,36 @@ describe('planning API', () => {
     });
   });
 
+  describe('when updating an expense for all months', () => {
+    it('should apply the new default and clear the month adjustments', async () => {
+      const { app, headers } = await setup();
+      await createFixturePlan(app, headers);
+      const before = await request(app).get('/api/planning?from=2026-10&months=3').set(headers);
+      const invoice = before.body.months[2].expenses.find((line: { name: string }) => line.name === 'Fatura');
+
+      await request(app)
+        .put(`/api/planning/expenses/${invoice.expenseId}/months/2026-12`)
+        .set(headers)
+        .send({ amount: 400 })
+        .expect(204);
+      await request(app)
+        .patch(`/api/planning/expenses/${invoice.expenseId}`)
+        .set(headers)
+        .send({ amount: 150, resetMonthOverrides: true })
+        .expect(204);
+
+      const after = await request(app).get('/api/planning?from=2026-10&months=3').set(headers);
+      const invoices = after.body.months.map((month: { expenses: { name: string }[] }) =>
+        month.expenses.find((line) => line.name === 'Fatura'),
+      );
+      expect(invoices).toEqual([
+        expect.objectContaining({ amount: 150, isAdjusted: false }),
+        expect.objectContaining({ amount: 150, isAdjusted: false }),
+        expect.objectContaining({ amount: 150, isAdjusted: false }),
+      ]);
+    });
+  });
+
   describe('when changing incomes and reserve', () => {
     it('should recalculate the plan', async () => {
       const { app, headers } = await setup();

@@ -480,6 +480,9 @@ components:
           type: string
           nullable: true
           pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        resetMonthOverrides:
+          type: boolean
+          description: Quando true, remove os ajustes mês a mês e todos os meses passam a usar o padrão.
     SetExpenseMonthRequest:
       type: object
       additionalProperties: false

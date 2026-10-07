@@ -103,6 +103,7 @@ export interface IParamsUpdateExpenseInput {
   dueNote?: string;
   sourceId?: string;
   endMonth?: string | null;
+  resetMonthOverrides?: boolean;
 }
 
 export interface IParamsUpdateExpense {
@@ -112,6 +113,7 @@ export interface IParamsUpdateExpense {
   dueNote?: string;
   defaultSourceId?: string;
   endMonth?: string | null;
+  monthOverrides?: IExpenseMonthOverride[];
 }
 
 export interface IParamsSetExpenseMonthInput {

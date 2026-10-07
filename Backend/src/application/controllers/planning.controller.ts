@@ -155,6 +155,7 @@ export class PlanningController implements IController {
         dueNote: body.dueNote,
         sourceId: body.sourceId,
         endMonth: body.endMonth,
+        resetMonthOverrides: body.resetMonthOverrides,
       };
       await this.planningService.updateExpense(requestUserId(req), params);
       res.status(204).end();
