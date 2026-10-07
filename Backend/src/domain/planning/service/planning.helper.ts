@@ -26,6 +26,10 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+export function isRecurringSource(source: IIncomeSource): boolean {
+  return !source.month;
+}
+
 export function defaultSourceForDueDay(
   dueDay: number | null,
   sources: IIncomeSource[],
@@ -72,13 +76,15 @@ export function calculateMonth(
     .filter((expense) => isMonthWithin(monthKey, expense.startMonth, expense.endMonth))
     .map((expense) => ({ expense, ...resolveExpenseLine(expense, monthKey) }));
 
-  const income = sources.reduce((sum, source) => sum + source.amount, 0);
+  const income = sources
+    .filter((source) => isRecurringSource(source) || source.month === monthKey)
+    .reduce((sum, source) => sum + source.amount, 0);
   const spend = resolved.reduce((sum, line) => sum + line.amount, 0);
   const surplus = income - spend;
   const reserve = roundMoney((Math.max(0, surplus) * settings.reserveRate) / 100);
   const free = roundMoney(surplus - reserve);
 
-  const sourceBreakdown = sources.map((source) => {
+  const sourceBreakdown = sources.filter(isRecurringSource).map((source) => {
     const sourceSpend = resolved
       .filter((line) => line.sourceId === source.id)
       .reduce((sum, line) => sum + line.amount, 0);
@@ -133,7 +139,7 @@ export function calculateSummary(
   const totalSpend = total('spend');
 
   return {
-    monthlyIncome: months[0]?.income ?? 0,
+    monthlyIncome: months[0]?.sources.reduce((sum, source) => sum + source.income, 0) ?? 0,
     totalSpend,
     commitment: percentage(totalSpend, totalIncome),
     projectedReserve: roundMoney(initialReserve + total('reserve')),
@@ -179,7 +185,7 @@ export function calculatePlan({
     to: addMonths(from, monthCount - 1),
     currentMonth,
     settings,
-    incomeSources: sources,
+    incomeSources: sources.filter(isRecurringSource),
     summary: calculateSummary(months, settings.initialReserve),
     months,
   };

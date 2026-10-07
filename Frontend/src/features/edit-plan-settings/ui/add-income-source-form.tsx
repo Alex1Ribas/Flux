@@ -5,7 +5,7 @@ import { formatMoneyInput } from '@/shared/lib/money-input';
 import { useCreateIncomeSource } from '../api/use-create-income-source';
 import { validateIncomeSource, type IIncomeSourceForm } from '../model/validate-income-source';
 
-const EMPTY_FORM: IIncomeSourceForm = { name: '', payDay: '', amount: '' };
+const EMPTY_FORM: IIncomeSourceForm = { name: '', payDay: '', amount: '', isOneTime: false };
 const INPUT_CLASS =
   'h-[44px] px-3 rounded-control border border-border-subtle bg-card-bg text-body-md text-text-primary';
 
@@ -14,7 +14,7 @@ export const AddIncomeSourceForm = () => {
   const [error, setError] = useState<string | null>(null);
   const createIncomeSource = useCreateIncomeSource();
 
-  const update = (field: keyof IIncomeSourceForm, value: string) => {
+  const update = (field: Exclude<keyof IIncomeSourceForm, 'isOneTime'>, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     setError(null);
   };
@@ -63,6 +63,18 @@ export const AddIncomeSourceForm = () => {
           keyboardType="numeric"
           accessibilityLabel="Valor mensal da renda"
         />
+        <Pressable
+          onPress={() => setForm((current) => ({ ...current, isOneTime: !current.isOneTime }))}
+          className={`h-[44px] px-3 rounded-control border items-center justify-center ${
+            form.isOneTime ? 'border-primary-container bg-brand-blue-soft' : 'border-border-subtle bg-card-bg'
+          }`}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: form.isOneTime }}
+        >
+          <Text className={`text-title-sm ${form.isOneTime ? 'text-brand-blue-text' : 'text-muted'}`}>
+            {form.isOneTime ? '✓ ' : ''}Só este mês
+          </Text>
+        </Pressable>
         <Pressable
           onPress={() => {
             void submit();

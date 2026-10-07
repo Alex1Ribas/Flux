@@ -78,6 +78,7 @@ export interface IParamsCreateIncomeSourceInput {
   name?: string;
   payDay?: number;
   amount?: number;
+  isOneTime?: boolean;
 }
 
 export interface IParamsUpdateIncomeSourceInput {

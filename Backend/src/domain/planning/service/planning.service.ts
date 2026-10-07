@@ -30,6 +30,7 @@ import {
   calculatePlan,
   DEFAULT_PLAN_MONTHS,
   defaultSourceForDueDay,
+  isRecurringSource,
   MAX_PLAN_MONTHS,
 } from './planning.helper.js';
 
@@ -133,7 +134,11 @@ export class PlanningService implements IPlanningService {
       throw validationError();
     }
     const amount = parseNonNegativeAmount(params.amount);
-    return this.planningRepositoryWrite.createIncomeSource(userId, { name, payDay, amount });
+    let month: string | null = null;
+    if (params.isOneTime === true) {
+      month = currentMonthKey(this.now());
+    }
+    return this.planningRepositoryWrite.createIncomeSource(userId, { name, payDay, amount, month });
   }
 
   async updateIncomeSource(
@@ -257,8 +262,9 @@ export class PlanningService implements IPlanningService {
   private resolveSourceId(
     sourceId: string | undefined,
     dueDay: number | null,
-    sources: IIncomeSource[],
+    allSources: IIncomeSource[],
   ): string {
+    const sources = allSources.filter(isRecurringSource);
     if (sourceId !== undefined) {
       if (!sources.some((source) => source.id === sourceId)) {
         throw new DomainError(EErrorCode.INCOME_SOURCE_NOT_FOUND, 404);

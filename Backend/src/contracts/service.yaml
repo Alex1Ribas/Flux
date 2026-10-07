@@ -297,6 +297,10 @@ components:
           type: integer
         amount:
           type: number
+        month:
+          type: string
+          nullable: true
+          description: Mês da entrada avulsa (null para renda recorrente)
     PlanExpenseLine:
       type: object
       properties:
@@ -424,6 +428,8 @@ components:
         amount:
           type: number
           minimum: 0
+        isOneTime:
+          type: boolean
     UpdateIncomeSourceRequest:
       type: object
       additionalProperties: false

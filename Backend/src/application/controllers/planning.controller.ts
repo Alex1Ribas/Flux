@@ -103,6 +103,7 @@ export class PlanningController implements IController {
         name: body.name,
         payDay: body.payDay,
         amount: body.amount,
+        isOneTime: body.isOneTime,
       };
       const result = await this.planningService.createIncomeSource(requestUserId(req), params);
       res.status(201).json(result);

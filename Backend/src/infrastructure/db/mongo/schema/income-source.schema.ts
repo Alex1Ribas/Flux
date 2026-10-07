@@ -7,6 +7,7 @@ export const incomeSourceSchema = new Schema<IMIncomeSource>(
     name: { type: String, required: true, trim: true },
     payDay: { type: Number, required: true, min: 1, max: 31 },
     amount: { type: Number, required: true, min: 0 },
+    month: { type: String, match: /^\d{4}-(0[1-9]|1[0-2])$/, default: null },
   },
   { timestamps: true },
 );

@@ -112,6 +112,24 @@ describe('calculatePlan', () => {
   });
 });
 
+describe('when an income is one-time', () => {
+  it('should count only in its month and stay out of the recurring sources', () => {
+    const bonus: IIncomeSource = { id: 'decimo', name: '13º salário', payDay: 20, amount: 1000, month: '2026-11' };
+    const plan = calculatePlan({
+      from: '2026-10',
+      monthCount: 3,
+      currentMonth: '2026-10',
+      settings,
+      sources: [...sources, bonus],
+      expenses: htmlExpenses,
+    });
+    expect(plan.months.map((month) => month.income)).toEqual([3500, 4500, 3500]);
+    expect(plan.months[1]?.sources).toHaveLength(2);
+    expect(plan.incomeSources).toEqual(sources);
+    expect(plan.summary.monthlyIncome).toEqual(3500);
+  });
+});
+
 describe('defaultSourceForDueDay', () => {
   it('should pick the first income before day 20 and the second from day 20 on', () => {
     expect(defaultSourceForDueDay(15, sources)?.id).toEqual('renda-a');

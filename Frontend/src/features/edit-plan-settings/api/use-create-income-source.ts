@@ -7,6 +7,7 @@ export interface ICreateIncomeSourceInput {
   name: string;
   payDay: number;
   amount: number;
+  isOneTime: boolean;
 }
 
 export const useCreateIncomeSource = () => {

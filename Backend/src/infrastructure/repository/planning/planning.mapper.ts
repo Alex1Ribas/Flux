@@ -21,6 +21,7 @@ export function toIIncomeSource(document: IMIncomeSource): IIncomeSource {
     name: document.name,
     payDay: document.payDay,
     amount: Number(document.amount) || 0,
+    month: document.month ?? null,
   };
 }
 

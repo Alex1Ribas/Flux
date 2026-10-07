@@ -115,6 +115,24 @@ describe('planning API', () => {
     });
   });
 
+  describe('when registering a one-time income', () => {
+    it('should add it to the current month only', async () => {
+      const { app, headers } = await setup();
+      await createFixturePlan(app, headers);
+      const currentMonth = (await request(app).get('/api/planning?months=1').set(headers)).body.currentMonth as string;
+
+      await request(app)
+        .post('/api/planning/income-sources')
+        .set(headers)
+        .send({ name: 'Venda do sofá', payDay: 15, amount: 800, isOneTime: true })
+        .expect(201);
+
+      const plan = await request(app).get(`/api/planning?from=${currentMonth}&months=2`).set(headers).expect(200);
+      expect(plan.body.months[0].income).toEqual(plan.body.months[1].income + 800);
+      expect(plan.body.incomeSources).toHaveLength(2);
+    });
+  });
+
   describe('when creating an expense without any income source', () => {
     it('should answer 404 for the missing source', async () => {
       const { app, headers } = await setup();

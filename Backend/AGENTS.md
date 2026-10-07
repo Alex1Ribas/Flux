@@ -25,7 +25,7 @@ Cadastro aberto: cada usuário tem o próprio planejamento (`user` em `PlanningS
 
 ### Modelo do planejamento
 
-- `IncomeSource` (nome, dia do pagamento, valor) · `PlanningSettings` (reserva % sobre a sobra, reserva atual) · `Expense` (valor padrão, fonte padrão, `startMonth`, `endMonth` opcional, `monthOverrides[]`).
+- `IncomeSource` (nome, dia do pagamento, valor; `isOneTime` grava o mês atual em `month` e a renda soma só naquele mês, sem ser fonte de contas) · `PlanningSettings` (reserva % sobre a sobra, reserva atual) · `Expense` (valor padrão, fonte padrão, `startMonth`, `endMonth` opcional, `monthOverrides[]`).
 - Mês = contas ativas (`startMonth ≤ mês ≤ endMonth`) com override do mês → `sobra = renda − gastos`, `reserva = max(0, sobra) × %`, `livre = sobra − reserva`, reserva acumulada a partir da reserva atual.
 - Fonte padrão de conta nova: última renda paga até o dia do vencimento; antes da primeira renda do mês (ou sem dia) → a renda de dia mais tarde.
 

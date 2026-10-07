@@ -69,6 +69,19 @@ describe('PlanningService', () => {
     });
   });
 
+  describe('when creating a one-time income source', () => {
+    it('should tag it with the current month', async () => {
+      const { service, planningRepositoryWrite } = buildService();
+      await service.createIncomeSource('user-1', { name: 'Venda', payDay: 15, amount: 300, isOneTime: true });
+      expect(planningRepositoryWrite.createIncomeSource).toHaveBeenCalledWith('user-1', {
+        name: 'Venda',
+        payDay: 15,
+        amount: 300,
+        month: '2026-10',
+      });
+    });
+  });
+
   describe('when no period is informed', () => {
     it('should start at the current month with six months', async () => {
       const { service } = buildService();

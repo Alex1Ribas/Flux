@@ -5,6 +5,7 @@ export interface IIncomeSourceForm {
   name: string;
   payDay: string;
   amount: string;
+  isOneTime: boolean;
 }
 
 export type TIncomeSourceResult =
@@ -20,5 +21,5 @@ export const validateIncomeSource = (form: IIncomeSourceForm): TIncomeSourceResu
   if (!Number.isInteger(payDay) || payDay < 1 || payDay > 31) {
     return { ok: false, error: 'O dia do pagamento deve ser entre 1 e 31.' };
   }
-  return { ok: true, input: { name, payDay, amount: parseMoneyInput(form.amount) } };
+  return { ok: true, input: { name, payDay, amount: parseMoneyInput(form.amount), isOneTime: form.isOneTime } };
 };

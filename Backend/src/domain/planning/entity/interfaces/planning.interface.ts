@@ -9,6 +9,7 @@ export interface IIncomeSource {
   name: string;
   payDay: number;
   amount: number;
+  month: string | null;
 }
 
 export interface IExpenseMonthOverride {
@@ -38,6 +39,7 @@ export interface IParamsCreateIncomeSource {
   name: string;
   payDay: number;
   amount: number;
+  month: string | null;
 }
 
 export interface IParamsCreateExpense {
