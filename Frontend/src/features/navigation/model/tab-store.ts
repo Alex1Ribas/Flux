@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AppTab = 'planejamento' | 'simulador';
+export type AppTab = 'planejamento' | 'contas' | 'simulador';
 
 interface ITabStore {
   activeTab: AppTab;

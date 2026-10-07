@@ -5,6 +5,7 @@ import { SimulatorPanel } from '@/features/simulator/ui/simulator-panel';
 import { AppBottomNav } from '@/widgets/app-shell/ui/app-bottom-nav';
 import { AppHeader } from '@/widgets/app-shell/ui/app-header';
 import { AppSidebar } from '@/widgets/app-shell/ui/app-sidebar';
+import { ExpensesBoard } from '@/widgets/expenses-board/ui/expenses-board';
 import { PlanningBoard } from '@/widgets/planning-board/ui/planning-board';
 
 export const HomePage = () => {
@@ -20,6 +21,7 @@ export const HomePage = () => {
         keyboardShouldPersistTaps="handled"
       >
         {activeTab === 'planejamento' ? <PlanningBoard /> : null}
+        {activeTab === 'contas' ? <ExpensesBoard /> : null}
         {activeTab === 'simulador' ? <SimulatorPanel /> : null}
       </ScrollView>
       <AppBottomNav />
